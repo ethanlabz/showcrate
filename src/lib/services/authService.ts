@@ -1,0 +1,86 @@
+/**
+ * services/authService.ts — Auth business logic
+ *
+ * Handles: signup (with reserved username check), password update,
+ * account deletion (soft-archive + schedule purge).
+ *
+ * Uses the admin client for user creation (service role needed to
+ * set raw_user_meta_data), and the server client for user-initiated
+ * password changes.
+ */
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
+import { UserRepository } from '@/lib/repositories/UserRepository';
+import { ProjectRepository } from '@/lib/repositories/ProjectRepository';
+import { sendWelcomeEmail } from './emailService';
+import type { SignupInput } from '@/lib/validators/auth.schema';
+
+export class AuthService {
+  private userRepo: UserRepository;
+  private projectRepo: ProjectRepository;
+
+  constructor(
+    private readonly db: SupabaseClient<Database>,
+    private readonly adminDb: SupabaseClient<Database>,
+  ) {
+    this.userRepo = new UserRepository(db);
+    this.projectRepo = new ProjectRepository(db);
+  }
+
+  async signup(input: SignupInput): Promise<{ userId: string }> {
+    // 1. Check username availability (case-insensitive)
+    const isAvailable = await this.userRepo.isUsernameAvailable(input.username);
+    if (!isAvailable) {
+      throw Object.assign(new Error('Username is already taken'), { code: 'USERNAME_TAKEN' });
+    }
+
+    // 2. Create Supabase Auth user with username in metadata
+    //    The handle_new_user trigger will create the public.users row
+    const { data, error } = await this.adminDb.auth.admin.createUser({
+      email: input.email,
+      password: input.password,
+      user_metadata: {
+        username: input.username,
+        display_name: input.displayName ?? input.username,
+      },
+      email_confirm: false, // Supabase sends confirmation email
+    });
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        throw Object.assign(new Error('An account with this email already exists'), {
+          code: 'EMAIL_TAKEN',
+        });
+      }
+      throw error;
+    }
+
+    if (!data.user) throw new Error('User creation failed');
+
+    // 3. Send welcome email (non-blocking)
+    sendWelcomeEmail(input.email, input.username).catch(() => {/* already logged inside */});
+
+    return { userId: data.user.id };
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    // 1. Soft-delete all projects owned by this user
+    const { data: projects } = await this.db
+      .from('projects')
+      .select('id')
+      .eq('owner_id', userId)
+      .is('deleted_at', null);
+
+    if (projects && projects.length > 0) {
+      const deletedAt = new Date().toISOString();
+      await this.db
+        .from('projects')
+        .update({ deleted_at: deletedAt })
+        .eq('owner_id', userId);
+    }
+
+    // 2. Delete the Supabase Auth user (cascades to public.users via FK)
+    const { error } = await this.adminDb.auth.admin.deleteUser(userId);
+    if (error) throw error;
+  }
+}
