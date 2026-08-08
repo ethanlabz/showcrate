@@ -5,6 +5,7 @@ dist/
 
 # dependencies
 node_modules/
+package-lock.json
 
 # logs
 npm-debug.log*
@@ -25,3 +26,18 @@ pnpm-debug.log*
 
 # Local Netlify folder
 .netlify
+
+
+# ==========================================================
+# Branch specific files: Backend
+# 
+# These files are only relevant to the backend branch
+# and should not be included in any other branches.
+# -----------------------------------------------------------
+# Files:
+# 
+# README.md
+# CHANGELOG.md
+# AGENTS.md
+# CLAUDE.md
+# ==========================================================
