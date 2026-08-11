@@ -7,7 +7,7 @@
  * Then merge any manual augmentations back in.
  */
 
-export type PlatformRole = 'developer' | 'moderator' | 'pro' | 'user' | 'restricted' | 'banned';
+export type PlatformRole = 'developer' | 'admin' | 'pro' | 'user' | 'restricted' | 'banned';
 export type ProjectVisibility = 'public' | 'private' | 'unlisted';
 export type NotificationType =
   | 'collab_invite'

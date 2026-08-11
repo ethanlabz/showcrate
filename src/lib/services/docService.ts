@@ -116,18 +116,8 @@ export class DocService {
     // Check if owner
     const project = await this.projectRepo.findById(projectId);
     if (!project) throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
-    if (project.owner_id === userId) return;
-
-    // Check if accepted collaborator
-    const { data: collab } = await this.db
-      .from('project_collaborators')
-      .select('id')
-      .eq('project_id', projectId)
-      .eq('user_id', userId)
-      .not('accepted_at', 'is', null)
-      .single();
-
-    if (!collab) {
+    
+    if (project.owner_id !== userId) {
       throw Object.assign(new Error('You do not have write access to this project'), {
         code: 'FORBIDDEN',
       });

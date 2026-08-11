@@ -5,7 +5,7 @@
  * Returns null if access is permitted, or a redirect/Response if denied.
  *
  * Role matrix (from README.md):
- *   /admin/**       → developer OR moderator (any admin)
+ *   /admin/**       → developer OR admin
  *   authenticated/* → any authenticated user (not banned)
  *   editor/settings → owner OR accepted collaborator (checked at route level)
  */
@@ -29,7 +29,7 @@ export function checkRouteAccess(
   pathname: string,
   user: SessionUser | null,
 ): GuardResult {
-  // Admin routes: require developer or moderator
+  // Admin routes: require developer or admin
   if (pathname.startsWith(ADMIN_PREFIX)) {
     if (!user) return { allowed: false, redirectTo: '/auth/login' };
     if (!isAdmin(user)) return { allowed: false, status: 403 };

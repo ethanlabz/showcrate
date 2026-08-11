@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { PlatformRole } from '@/types/database';
 
 export const changeRoleSchema = z.object({
-  role: z.enum(['developer', 'moderator', 'pro', 'user', 'restricted', 'banned'] as const),
+  role: z.enum(['developer', 'admin', 'pro', 'user', 'restricted', 'banned'] as const),
   reason: z.string().min(1).max(500).optional(),
 });
 

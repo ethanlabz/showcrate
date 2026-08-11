@@ -1,0 +1,95 @@
+---
+// ==============================================================================================
+
+// This is the "catch-all" route for docs pages.
+// Route            : /[username]/[project]/docs/...
+// File System      : src/pages/[username]/[project]/docs/[...slug].astro
+// Description      : Render a single doc page, with sidebar navigation
+
+// ==============================================================================================
+
+import { createServerClient } from '../../../../lib/supabase/server';
+import { renderMarkdown } from '../../../../lib/render-markdown';
+import Layout from '../../../../layouts/DocsLayout.astro';
+
+// 1. Pull the pieces out of the URL
+const { username, project: projectSlug, slug } = Astro.params;
+const pageSlug = slug || 'index'; // no slug = the project's docs homepage
+
+// 2. Create the request-scoped Supabase client
+const supabase = createServerClient(Astro.cookies);
+
+// 3. Resolve username -> project -> page
+const { data: owner } = await supabase
+  .from('users')
+  .select('id')
+  .eq('username', username)
+  .single();
+
+if (!owner) {
+  return Astro.redirect('/404');
+}
+
+const { data: project } = await supabase
+  .from('projects')
+  .select('id, name, visibility, published, password_hash')
+  .eq('owner_id', owner.id)
+  .eq('slug', projectSlug)
+  .single();
+
+if (!project) {
+  return Astro.redirect('/404');
+}
+
+// 4. Password-protected project check (Pro feature)
+if (project.visibility === 'password') {
+  const hasAccess = Astro.cookies.get(`project-access-${project.id}`)?.value === 'granted';
+  if (!hasAccess) {
+    return Astro.redirect(`/${username}/${projectSlug}/unlock`);
+  }
+}
+
+// 5. Fetch the actual doc page. RLS enforces permissions.
+const { data: page } = await supabase
+  .from('doc_pages')
+  .select('title, content, order_index')
+  .eq('project_id', project.id)
+  .eq('slug', pageSlug)
+  .single();
+
+if (!page) {
+  return Astro.redirect('/404');
+}
+
+// 6. Fetch the sidebar tree — every page in this project, for navigation
+const { data: allPages } = await supabase
+  .from('doc_pages')
+  .select('title, slug, order_index, is_index')
+  .eq('project_id', project.id)
+  .order('order_index', { ascending: true });
+
+// 7. Render markdown -> sanitized HTML
+const html = await renderMarkdown(page.content);
+---
+
+<Layout title={`${page.title} — ${project.name}`}>
+  <div class="docs-shell">
+    <aside class="docs-sidebar">
+      <ul>
+        {allPages?.map((p: { is_index: any; slug: any; title: unknown; }) => (
+          <li>
+            <a href={`/${username}/${projectSlug}/docs/${p.is_index ? '' : p.slug}`}>
+              {p.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+
+    <article class="docs-content">
+      <h1>{page.title}</h1>
+      <!-- set:html because we already sanitized this ourselves -->
+      <div set:html={html} />
+    </article>
+  </div>
+</Layout>

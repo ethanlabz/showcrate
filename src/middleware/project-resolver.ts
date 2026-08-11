@@ -22,7 +22,7 @@ export interface ResolvedProject {
   isOwner: boolean;
   /** True if the current user is an accepted collaborator */
   isCollaborator: boolean;
-  /** True if the current user can write doc pages */
+  /** True if the current user can write doc pages (Owners only) */
   canWrite: boolean;
 }
 
@@ -110,6 +110,6 @@ export async function resolveProject(
     owner,
     isOwner,
     isCollaborator,
-    canWrite: isOwner || isCollaborator,
+    canWrite: isOwner,
   };
 }

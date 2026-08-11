@@ -13,9 +13,9 @@ export interface SessionUser {
   platformRole: PlatformRole;
 }
 
-/** Type guard: is the user an admin (developer or moderator)? */
+/** Type guard: is the user an admin (developer or admin)? */
 export function isAdmin(user: SessionUser): boolean {
-  return user.platformRole === 'developer' || user.platformRole === 'moderator';
+  return user.platformRole === 'developer' || user.platformRole === 'admin';
 }
 
 /** Type guard: is the user a developer? */
@@ -38,7 +38,7 @@ export const PLAN_LIMITS = {
   user: { maxProjects: 7, maxCollaborators: 5, maxVersionSnapshots: 10 },
   pro: { maxProjects: Infinity, maxCollaborators: Infinity, maxVersionSnapshots: Infinity },
   developer: { maxProjects: Infinity, maxCollaborators: Infinity, maxVersionSnapshots: Infinity },
-  moderator: { maxProjects: Infinity, maxCollaborators: Infinity, maxVersionSnapshots: Infinity },
+  admin: { maxProjects: Infinity, maxCollaborators: Infinity, maxVersionSnapshots: Infinity },
   restricted: { maxProjects: 0, maxCollaborators: 0, maxVersionSnapshots: 10 },
   banned: { maxProjects: 0, maxCollaborators: 0, maxVersionSnapshots: 0 },
 } as const satisfies Record<PlatformRole, { maxProjects: number; maxCollaborators: number; maxVersionSnapshots: number }>;
