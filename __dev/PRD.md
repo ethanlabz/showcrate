@@ -8,7 +8,7 @@
 
 **Tagline:** Every project deserves a stage.
 **Domain:** showcrate.io
-**URL pattern:** `showcrate.example.com/{username}/{project}/{page}`
+**URL pattern:** `showcrate.io/{username}/{project}/{page}`
 
 **The one fact every technical decision must respect:** content is database-backed and editable at runtime, not a build artifact. Showcrate renders on request from Postgres rows, not from files compiled ahead of time. Any tool that assumes otherwise — a static site generator, a build-time search indexer, a file-based content collection — does not belong in this stack, no matter how well it's regarded elsewhere.
 
