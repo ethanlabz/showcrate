@@ -1,7 +1,40 @@
 ---
+interface Props {
+  title: string;
+}
 const { title } = Astro.props;
 ---
 
-<div id="authLayout">
-  <slot />
-</div>
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title} — Showcrate</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/styles/global.css" />
+</head>
+<body class="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <!-- Wordmark -->
+    <a href="/" class="flex items-center justify-center gap-2 mb-8 group">
+      <span class="text-2xl font-heading font-semibold tracking-tight text-foreground group-hover:opacity-80 transition-opacity">
+        Showcrate
+      </span>
+    </a>
+
+    <!-- Card -->
+    <div class="bg-card text-card-foreground border border-border rounded-xl shadow-sm p-8">
+      <slot />
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-xs text-muted-foreground mt-6">
+      By continuing, you agree to our{' '}
+      <a href="/terms" class="underline underline-offset-2 hover:text-foreground transition-colors">Terms</a>
+      {' '}and{' '}
+      <a href="/privacy" class="underline underline-offset-2 hover:text-foreground transition-colors">Privacy Policy</a>.
+    </p>
+  </div>
+</body>
+</html>

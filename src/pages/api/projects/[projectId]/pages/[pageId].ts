@@ -16,7 +16,7 @@ export const PATCH: APIRoute = asyncHandler(async ({ request, cookies, locals, p
 
   const db = createServerClient(cookies);
   const docService = new DocService(db);
-  const page = await docService.savePage(params.pageId!, locals.user.id, locals.user.platformRole, parsed.data);
+  const page = await docService.savePage(params.pageId!, locals.user.id, parsed.data);
 
   return ok({ page });
 });

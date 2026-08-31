@@ -18,7 +18,7 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies, locals }) 
 
   const db = createServerClient(cookies);
   const projectService = new ProjectService(db);
-  const project = await projectService.createProject(locals.user.id, locals.user.platformRole, parsed.data);
+  const project = await projectService.createProject(locals.user.id, parsed.data);
 
   return ok({ project }, 201);
 });

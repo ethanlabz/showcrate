@@ -7,7 +7,7 @@
  * Then merge any manual augmentations back in.
  */
 
-export type PlatformRole = 'developer' | 'admin' | 'pro' | 'user' | 'restricted' | 'banned';
+export type PlatformRole = 'developer' | 'moderator' | 'user' | 'restricted' | 'banned';
 export type ProjectVisibility = 'public' | 'private' | 'unlisted';
 export type NotificationType =
   | 'collab_invite'
@@ -51,7 +51,6 @@ export interface ProjectRow {
   tagline: string | null;
   cover_url: string | null;
   visibility: ProjectVisibility;
-  password_hash: string | null;
   published: boolean;
   featured: boolean;
   view_count: number;

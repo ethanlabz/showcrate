@@ -1,132 +1,102 @@
-## Product Overview
+# Showcrate
+
+> ***Every project deserves a stage.***
+
+# Project Overview
 
 **Showcrate** lets anyone sign up, create a project, write documentation in a split-pane markdown editor, invite collaborators, and publish to a public showcase. Visitors can browse, search, and read — no account needed.
 
-**Tagline:** Every project deserves a stage.
-**Domain:** showcrate.io
-**URL pattern:** `showcrate.io/{username}/{project}/{page}`
+<aside>
 
-**The one fact every technical decision must respect:** content is database-backed and editable at runtime, not a build artifact. Showcrate renders on request from Postgres rows, not from files compiled ahead of time. Any tool that assumes otherwise — a static site generator, a build-time search indexer, a file-based content collection — does not belong in this stack, no matter how well it's regarded elsewhere.
+</aside>
 
----
+# Tech Stack
 
-## Tech Stack
-
-| Layer | Tool |
-|---|---|
-| Framework | Astro 7+ — full SSR (`output: 'server'`). Not Astro's "Server Islands" pattern, which is a static-first, mostly-cached model for occasional dynamic fragments — the inverse of what this product needs on every route. |
-| UI | React islands + TypeScript |
-| Styling | Tailwind CSS |
-| UI Components | shadcn/ui + Base UI + Headless UI |
-| Animations | Framer Motion + Lenis SmoothScroll |
-| Animated Components | Animate-UI + ReactBits |
-| Icons | Lucide + SimpleIcons |
-| Editor | CodeMirror 6 (split-pane markdown), via `@uiw/react-codemirror` |
-| Docs Rendering | `unified` / `remark` / `rehype` pipeline (`remark-parse` → `remark-gfm` → `remark-rehype` → `rehype-stringify`), invoked at request time. One shared render module feeds both the editor's live preview and the public doc route. |
-| Search | Fuse.js (client-side, showcase card search only) + Postgres full-text search (`tsvector` + GIN index on `doc_pages`, exposed via RPC) for docs search |
-| Sanitization | `isomorphic-dompurify` (DOMPurify + jsdom) — applied at render time, not save time. Raw markdown is what's stored. |
-| Auth | Supabase Auth (Email + GitHub + Google OAuth) |
+| **Layer** | **Tool(s)** |
+| --- | --- |
+| Framework | [Astro 7](http://astro.build) (SSR mode) |
+| Styling | React islands + [Typescript](http://typescriptlang.org) |
+| Styling | [Tailwind CSS](http://tailwindcss.com) |
+| UI Components | [shadcn/ui](http://ui.shadcn.com) + [Base UI](http://base-ui.com) + [Headless UI](http://headlessui.com) |
+| Animations | [Framer Motion](http://motion.dev) + [Lenis SmoothScroll](http://lenis.dev) |
+| Animated Components | [Animate-UI](http://animate-ui.com) + [ReactBits](http://reactbits.dev) |
+| Icons | [Lucide Icons](http://lucide.dev) |
+| Editor | [CodeMirror 6](http://codemirror.net) (split-pane markdown) |
+| Markdown Pipeline | unified + remark + rehype ― rendered at request time, no build step |
+| Markdown Security | [isomorphic-dompurify](https://www.npmjs.com/package/isomorphic-dompurify) — sanitizes at render time, not save time, so raw markdown is stored untouched and diffs stay clean |
+| Search (Showcase) | [Fuse.js](http://fusejs.io) — client-side fuzzy search over showcase cards |
+| Search (Docs) | Postgres full-text search — `tsvector` column + GIN index on `doc_pages` |
+| Auth | Supabase Auth (Email, Github, Google OAuth) |
 | Database | Supabase Postgres + RLS |
-| Storage | Supabase Storage (avatars, covers, assets) |
-| Email | Resend (welcome, invites, password reset) |
-| Validation | Zod |
-| ID Generation | nanoid |
-| OG Images | astro-og-canvas |
+| Storage | Supabase Storage (avatars, covers assets) |
+| Email | [Resend](http://resend.com) (welcome, invites, password reset) |
+| Validation | [zod](http://zod.dev) |
+| ID Generation | [nanoid](https://www.npmjs.com/package/nanoid) |
+| OG Images | [astro-og-canvas](https://www.npmjs.com/package/astro-og-canvas) |
 | Sitemap | @astrojs/sitemap |
-| Hosting | Netlify (SSR + serverless functions) |
-| DnD | `@dnd-kit/core` + `@dnd-kit/sortable` + `@dnd-kit/utilities` — pin these exact packages. dnd-kit also ships a newer, framework-agnostic `@dnd-kit/dom` core; that is a different API and is not what this project uses. |
-| Markdown Security | `isomorphic-dompurify`, see Sanitization above |
+| Hosting | Netlify (SSR + serverless functions) — single deployment target |
+| DnD | @dnd-kit/core + @dnd-kit/sortable, pinned — `@dnd-kit/dom` is not used |
 
----
+# Roles
 
-## Rendering, Search & Routing
+### 6 Platform Roles
 
-Docs render through the `unified`/`remark`/`rehype` pipeline directly, called at request time and fed by the `doc_pages.content` column — one shared render module serves both the editor's live preview and the public doc route, since a doc edited a minute ago has to be servable immediately.
+| Developer | Full system control, including infrastructure and deployment. 2 people. |
+| --- | --- |
+| Moderator | Full `/admin/**` access — user management, project moderation, reports, template curation, showcase curation, audit log. ~4–5 trusted people. |
+| User | Standard registered account. Default role for all sign-ups. Can create and own projects. |
 
-Docs search runs on a generated `tsvector` column (`doc_pages.fts`) with a GIN index, ranked via `ts_rank` through a Postgres RPC. It updates automatically on every write, inherits the same RLS policies as everything else, and needs no separate index-build step or external service. The showcase gallery's card search stays on Fuse.js, client-side.
+### 2 Project Roles
 
-Every `/{username}/{project}/*` route resolves the project once, centrally, in Astro middleware — not per-page. `middleware.ts` resolves `{username}` and `{project}` into their DB rows, checks visibility and ownership against RLS, and attaches the result to `Astro.locals` (`locals.project`, `locals.viewer`, `locals.isOwner`). Downstream pages read from `Astro.locals`; they do not re-query. An unauthenticated visitor hitting a private project gets a 404, not a 403, consistently.
+| Owner | Full control over the project — content, settings, visibility, collaborators, deletion. One owner per project. Only the Owner can perform any action on a project. |
+| --- | --- |
+| Collaborator | Attribution-only. Zero permissions — cannot edit content, change settings, or take any action. Name is credited on the project. |
 
-Every `/admin/**` route is gated by one check: `platform_role in ('developer', 'admin')`. There's no per-page permission matrix inside the admin panel — Developer and Admin reach the same set of admin pages. Developer's additional authority — service role key, deployment, environment config, direct database access — lives outside the web app entirely; it isn't a route.
+# Sitemap
 
-**Every project-scoped write route is Owner-only.** `/editor` and every `/settings/*`, `/versions`, and `/export` route check `locals.isOwner` and nothing else. There is no collaborator permission tier to branch on — collaborators are attribution, not access. See Roles below.
+### Public
 
----
+```markdown
 
-## Platform Roles (6)
-
-| Role | Description |
-|---|---|
-| Developer | Full system control — infrastructure, deployment, database, and everything Admin can do. 2 people. |
-| Admin | Full access to `/admin` and every route within `/admin/**`. No infrastructure-level access. Trusted individuals, roughly 4–5 people. |
-| User | Standard account. Up to 7 projects, 5 collaborators per project. |
-| Restricted | Penalty box. Can view, limited interaction. Cannot create new projects. |
-| Banned | No access beyond appeal. Projects soft-archived 30 days then purged. |
-
-## Project Roles (2)
-
-| Role | Description |
-|---|---|
-| Owner | Sole controller of the project — the only one who can edit content, change settings or visibility, or manage collaborators. One owner per project. |
-| Collaborator | **Attribution only — no permissions.** A name credited on the project, nothing more. No content edit access, no settings access, no ability to invite or remove anyone. After accepting the invite, the project appears in the collaborator's own project list and, if the project is public, on their public profile alongside their owned work. A collaborator credited on a private project gains no elevated visibility into it — credit is a label, not a grant. |
-
-## Free vs Pro (Future Scope)
-
-| Feature | Free | Pro |
-|---|---|---|
-| Projects | 7 | Unlimited |
-| Collaborators/project | 5 | Unlimited |
-| Version history | 10 snapshots | 60 days |
-| Unlisted projects | ❌ | ✅ |
-| Remove platform branding | ❌ | ✅ |
-
-> "Premium" and all premium-only features ship in v2.
-
----
-
-## Full Sitemap
-
-### Public 🟢
-```
-/                               Landing page (storytelling, Lenis scroll)
-/showcase                       Public discovery gallery
-/templates                      Template browser
-/about                          About page
-/blog                           Blog (placeholder v1)
-/help                           Help center (placeholder v1)
-/terms                          Terms of service
-/privacy                        Privacy policy
-/auth/login                     Login
-/auth/logout                    Logout
-/auth/signup                    Registration
-/auth/forgot-password           Password reset request
-/auth/reset-password            Password reset form
-/{username}                     Public user profile — projects owned + projects collaborated on
-/{username}/{project}           Project overview page — credits any listed collaborators
+/                          Landing page (storytelling, Lenis scroll)
+/showcase                  Public discovery gallery
+/templates                 Template browser
+/about                     About page
+/help                      Help center (placeholder v1)
+/terms                     Terms of service
+/privacy                   Privacy policy
+/auth/login                Login
+/auth/logout               Logout
+/auth/signup               Registration
+/auth/forgot-password      Password reset request
+/auth/reset-password       Password reset form
+/{username}                Public user profile
+/{username}/{project}      Project overview page
 /{username}/{project}/docs/*    Documentation pages
 ```
 
-### Authenticated 🔵
-```
+### Authenticated
+
+```markdown
 /new                                          Project creation wizard
 /notifications                                Notification center
 /settings/profile                             Avatar, display name, bio, links
 /settings/account                             Email, password, OAuth, 2FA
 /settings/notifications                       Email preferences
 /settings/appearance                          Theme, editor font size
-/settings/billing                             Plan, usage, payment, history
 /settings/danger                              Export data, delete account
-/{username}/{project}/editor                  Split-pane markdown editor — Owner only
-/{username}/{project}/settings/general        Rename, description, delete — Owner only
-/{username}/{project}/settings/visibility     Public / Private / Unlisted — Owner only
-/{username}/{project}/settings/collaborators  Invite, manage, remove credits — Owner only
-/{username}/{project}/settings/analytics      Page view counts — Owner only
-/{username}/{project}/settings/danger         Archive, delete — Owner only
-/{username}/{project}/versions                Version history, restore — Owner only
+/{username}/{project}/editor                  Split-pane markdown editor
+/{username}/{project}/settings/general        Rename, description, delete
+/{username}/{project}/settings/visibility     Public/Private/Unlisted
+/{username}/{project}/settings/collaborators  Invite, manage, remove
+/{username}/{project}/settings/seo            Meta title, OG image
+/{username}/{project}/settings/danger         Archive, delete
+/{username}/{project}/versions                Version history, restore
 ```
 
-### Admin 🟣 — Developer and Admin roles
-```
+### Admin
+
+```markdown
 /admin                     Overview stats
 /admin/users               User management
 /admin/projects            All projects across platform
@@ -137,15 +107,33 @@ Every `/admin/**` route is gated by one check: `platform_role in ('developer', '
 /admin/logs                Audit trail
 ```
 
----
+# Database Schema
 
-## Database Schema (core tables)
+<aside>
+
+**Table of Contents**
+
+</aside>
+
+**Detailed Sections**
+
+<aside>
+
+[Showcrate [pub]](https://app.notion.com/p/Showcrate-pub-3b5da1dcb0ce80d8854fe884f0b64562?pvs=21)
+
+</aside>
+
+<aside>
+
+[Design](https://app.notion.com/p/Design-3cada1dcb0ce8077a9cfce263bbccb82?pvs=21)
+
+</aside>
 
 ```sql
 users (id, username, display_name, avatar_url, bio, platform_role, created_at)
 projects (id, owner_id, slug, name, tagline, cover_url, visibility, published, featured, view_count, deleted_at)
 project_redirects (id, owner_id, old_slug, new_slug)
-doc_pages (id, project_id, slug, title, content, order_index, is_index, fts)
+doc_pages (id, project_id, slug, title, content, content_tsv, order_index, is_index)
 page_versions (id, page_id, content, saved_by, created_at)
 project_collaborators (id, project_id, user_id, display_role, visible, accepted_at)
 templates (id, name, description, category, structure JSONB, featured)
@@ -155,76 +143,55 @@ reports (id, reporter_id, project_id, reason, status)
 admin_audit_log (id, actor_id, action, target_type, target_id, metadata)
 ```
 
-`doc_pages.fts` is a generated `tsvector` column — derives automatically from `title` and `content`, never written to directly.
+`doc_pages.content_tsv` is a generated `tsvector` column (title + content, weighted) backed by a GIN index — this is what docs search runs against.
 
-`project_collaborators.display_role` is a credit label ("Designer", "Contributor", etc.) — display only, no permission attached. `visible` controls whether the credit shows on the collaborator's public profile; `accepted_at` gates the whole row — nothing displays until accepted.
+**RLS** is enabled on all tables. Public can only read published + public projects and their doc pages. Owners have full access to their own data. Collaborators have read visibility into projects they're credited on and no write access — attribution carries no permission. Service role key is server-only — never in client-side code.
 
-RLS is enabled on all tables. Public can only read published + public projects and their doc pages. Only the Owner has write access to a project and its `doc_pages` — there is no collaborator write policy, because collaborators don't get one. Service role key is server-only — never in client-side code. `doc_pages.content` and `page_versions.content` are raw markdown; sanitization happens at render time, not before storage.
+# URL & Username Rules
 
----
+<aside>
 
-## URL & Username Rules
+### Usernames
 
-**Usernames:**
-- 5–39 chars, lowercase letters/numbers/hyphens only
+- 3–39 chars, lowercase letters/numbers/hyphens only
 - Cannot start or end with hyphen, no consecutive hyphens
-- Reserved words blocked:
-  ```
-  admin, showcase, templates, new, settings, help, notifications, auth, login, logout, signup, register, forgot-password, reset-password, about, blog, docs, terms, privacy, api, status, explore, contact, editor, code, export, versions, users, projects, reports, logs, billing, account, profile, appearance, danger, seo, analytics, collaborators, general, visibility, following
-  ```
+- Reserved words blocked: admin, showcase, templates, new, settings, help, notifications, auth, login, logout, signup, register, forgot-password, reset-password, about, blog, docs, terms, privacy, api, status, explore, contact, editor, code, export, versions, users, projects, reports, logs, billing, account, profile, appearance, danger, domain, seo, analytics, collaborators, general, visibility, following, dorukaysor, avision, batteringram, showcrate
+</aside>
 
-**Project slugs:**
-- Auto-generated from project name (like: 'kebab-case')
+<aside>
+
+### Project Slugs
+
+- Auto-generated from project name (kebab-case)
 - Unique per user (not globally)
-- Renaming triggers a 301 redirect entry in `project_redirects`
+- Renaming triggers a 301 redirect entry in project_redirects
+</aside>
 
----
+# Team Ownership
 
-## Team
+| **Role** | **Name** | **Work** |
+| --- | --- | --- |
+| Backend Architect | Piyusn Parida | Architecture, DB schema, RLS policies, middleware routing, API routes, auth logic, admin, deployment, unblocking |
+| Frontend Functions | Adarsh Sarangi | Dashboard, editor, settings, collaboration, doc renderer |
+| Frontend Design | Jivitesh Gochhayat | Public pages, auth UI, showcase landing |
+| Assets Management | Saumit Swain | Visual assets, illustrations, brand material |
+| Reports & Presentations | Satyajit Paltasingh | Reporting, presentation decks |
 
-| Person | Area |
-| :----- | :--- |
-| Backend | Architecture, DB schema, admin panel, deployment, API routes, DB queries, auth logic, email, export, unblocking |
-| Frontend 1 | Public pages, auth UI, showcase, doc renderer, landing |
-| Frontend 2 | Dashboard, editor, settings, collaboration, analytics |
-| Helpers | Visual assets (images, video, cover art, OG image templates), documentation and report writing, presentation and pitch deck creation |
+# Critical Rules
 
----
-
-## Critical Rules*
+<aside>
 
 1. **Two Supabase clients:** `supabase.ts` (anon key, client-side) and `supabase-server.ts` (SSR cookie-based, server-side only). Never use the service role key on the client.
-2. **RLS is the security layer.** Test it manually. If a logged-out user can see private data, the policy is wrong.
-3. **Astro SSR:** auth and project-resolution checks go in middleware / `Astro.locals`, not in `useEffect`. React islands have no access to server context.
+2. **RLS is the security layer.** Test it manually. If a logged-out user can see private data, or a Collaborator can write to a project, the policy is wrong — enforcement happens at the database, not the UI.
+3. **Central route resolution happens once, in middleware.** Astro middleware attaches `locals.project`, `locals.viewer`, and `locals.isOwner` once per request. Pages and API routes read from `locals` — they don't re-derive auth state independently. React islands have no access to server context and must receive what they need as props.
 4. **Reserved usernames** must be validated at signup using the list above.
-5. **Markdown rendered from user content must be sanitized with `isomorphic-dompurify` at render time.** No exceptions.
-6. **Plan limits are API logic, not DB logic.** Check `platform_role === 'premium'` in every route that creates projects or adds collaborators.
-7. **Postgres full-text search updates automatically on write** via the generated `fts` column — no separate build/index step to remember.
-8. **`@dnd-kit/core` + `@dnd-kit/sortable`** for drag-and-drop (file tree reorder) — pin these exact packages, do not substitute `@dnd-kit/dom`. Native HTML5 drag-and-drop does not work on mobile.
-9.  **Project rename = 301 redirect entry.** Never break existing URLs.
-10. **Admin route access is a single check:** `platform_role in ('developer', 'admin')`. Don't build a per-page permission matrix inside `/admin/**`.
-11. **Collaborators are not a permission tier.** Every project-scoped write route checks `locals.isOwner` only. Do not add a "collaborator can edit" branch anywhere — that would be a deliberate v2 change, not something to slip in quietly.
-
-12. **`main` branch is always deployable.** Feature branches only. PR to merge. Review within 24 hours.
+5. **Markdown rendered from user content must be sanitized with `isomorphic-dompurify` at render time — never at save time.** No exceptions. This keeps stored markdown raw and diffs clean.
+6. **Doc pages render through the unified/remark/rehype pipeline at request time.** There is no build step for documentation content — every save is live.
+7. **Docs search runs against `doc_pages.content_tsv`.** Keep it in sync on every insert/update via a trigger or generated column — not application-side logic.
+8. **`@dnd-kit/core` + `@dnd-kit/sortable`** for drag-and-drop (file tree reorder), pinned versions. Do not upgrade to `@dnd-kit/dom`. Native HTML5 drag-and-drop does not work on mobile.
+9. **Project rename = 301 redirect entry.** Never break existing URLs.
+10. **Collaborators are attribution-only.** Zero write permissions, zero settings access, zero ability to invite others. Only the project Owner can perform any action on a project.
+11. **`main` branch is always deployable.** Feature branches only. PR to merge. Review within 24 hours.
+</aside>
 
 ---
-
-## Future Scope
-
-Deferred to v2:
-- Comments on doc pages
-- Social graph (likes, following)
-- Blog and Showcrate's own /docs
-- Drag-drop WYSIWYG template editor (v1 templates are pre-populated file structures)
-- Full version diff view
-- Organisations
-- AI doc assistant
-- Public API
-- Embeddable showcase widget
-- Collaborator edit access (v1 collaborators are credit-only)
-
-Not currently planned (may be revisited in a future update if there's demand):
-- PDF export
-- Advanced analytics
-- Password-protected projects
-- Custom domains

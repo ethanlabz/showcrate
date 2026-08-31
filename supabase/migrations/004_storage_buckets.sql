@@ -99,23 +99,15 @@ CREATE POLICY "covers: owner delete"
     )
   );
 
--- assets: owner and accepted collaborators can upload
-CREATE POLICY "assets: writer upload"
+-- assets: only project owner can upload
+CREATE POLICY "assets: owner upload"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'assets'
-    AND (
-      EXISTS (
-        SELECT 1 FROM public.projects p
-        WHERE p.id::text = (storage.foldername(name))[1]
-          AND p.owner_id = auth.uid()
-      )
-      OR EXISTS (
-        SELECT 1 FROM public.project_collaborators pc
-        WHERE pc.project_id::text = (storage.foldername(name))[1]
-          AND pc.user_id = auth.uid()
-          AND pc.accepted_at IS NOT NULL
-      )
+    AND EXISTS (
+      SELECT 1 FROM public.projects p
+      WHERE p.id::text = (storage.foldername(name))[1]
+        AND p.owner_id = auth.uid()
     )
   );
 

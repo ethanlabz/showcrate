@@ -2,7 +2,6 @@
  * services/projectService.ts — Project business logic
  *
  * Enforces:
- * - Plan limits (7 projects for free users)
  * - Slug uniqueness per owner
  * - 301 redirect entry on rename
  * - Soft-delete with 30-day purge window
@@ -11,8 +10,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, ProjectRow } from '@/types/database';
 import { ProjectRepository, nameToSlug } from '@/lib/repositories/ProjectRepository';
 import { DocPageRepository } from '@/lib/repositories/DocPageRepository';
-import { getPlanLimits } from '@/types/auth';
-import type { PlatformRole } from '@/types/database';
 import type { CreateProjectInput, UpdateProjectInput } from '@/lib/validators/project.schema';
 
 export class ProjectService {
@@ -26,26 +23,13 @@ export class ProjectService {
 
   async createProject(
     ownerId: string,
-    ownerRole: PlatformRole,
     input: CreateProjectInput,
   ): Promise<ProjectRow> {
-    // 1. Enforce plan project limit
-    const limits = getPlanLimits(ownerRole);
-    if (limits.maxProjects !== Infinity) {
-      const count = await this.projectRepo.countByOwner(ownerId);
-      if (count >= limits.maxProjects) {
-        throw Object.assign(
-          new Error(`You've reached the limit of ${limits.maxProjects} projects on your plan`),
-          { code: 'PLAN_LIMIT_EXCEEDED' },
-        );
-      }
-    }
-
-    // 2. Generate unique slug from name
+    // 1. Generate unique slug from name
     const baseSlug = nameToSlug(input.name);
     const slug = await this.projectRepo.resolveUniqueSlug(ownerId, baseSlug);
 
-    // 3. Create the project
+    // 2. Create the project
     const project = await this.projectRepo.create({
       owner_id: ownerId,
       slug,
@@ -53,21 +37,20 @@ export class ProjectService {
       tagline: input.tagline ?? null,
       cover_url: null,
       visibility: 'public',
-      password_hash: null,
       published: false,
       featured: false,
     });
 
-    // 4. Apply template if specified
+    // 3. Apply template if specified
     if (input.templateId) {
       await this.applyTemplate(project.id, input.templateId);
     } else {
-      // Create a default index page
+      // Create default index page
       await this.docPageRepo.create({
         projectId: project.id,
         slug: 'index',
         title: 'Getting Started',
-        content: `# ${input.name}\n\n${input.tagline ?? 'Welcome to my project!'}\n\n## Overview\n\nAdd your documentation here.\n`,
+        content: '# Getting Started\n\nWelcome to your new project!\n',
         orderIndex: 0,
         isIndex: true,
       });
@@ -76,64 +59,76 @@ export class ProjectService {
     return project;
   }
 
-  async renameProject(
-    projectId: string,
-    ownerId: string,
-    newName: string,
-  ): Promise<ProjectRow> {
-    const project = await this.projectRepo.findById(projectId);
-    if (!project || project.owner_id !== ownerId) {
-      throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
-    }
-
-    const oldSlug = project.slug;
-    const baseSlug = nameToSlug(newName);
-    const newSlug = await this.projectRepo.resolveUniqueSlug(ownerId, baseSlug);
-
-    // Update project name and slug
-    const updated = await this.projectRepo.update(projectId, { name: newName, slug: newSlug });
-
-    // Create redirect: old URL → new URL (never break existing links)
-    if (oldSlug !== newSlug) {
-      await this.projectRepo.createRedirect(ownerId, oldSlug, newSlug);
-    }
-
-    return updated;
-  }
-
   async updateProject(
     projectId: string,
-    ownerId: string,
+    actorId: string,
     input: UpdateProjectInput,
   ): Promise<ProjectRow> {
     const project = await this.projectRepo.findById(projectId);
-    if (!project || project.owner_id !== ownerId) {
-      throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
+    if (!project) throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
+    if (project.owner_id !== actorId) {
+      throw Object.assign(new Error('Only the project owner can update this project'), {
+        code: 'FORBIDDEN',
+      });
     }
 
-    return this.projectRepo.update(projectId, {
-      ...(input.name !== undefined && { name: input.name, slug: nameToSlug(input.name) }),
-      ...(input.tagline !== undefined && { tagline: input.tagline }),
-      ...(input.coverUrl !== undefined && { cover_url: input.coverUrl }),
-    });
+    // Handle rename → new slug + 301 redirect
+    if (input.name && input.name !== project.name) {
+      const baseSlug = nameToSlug(input.name);
+      const newSlug = await this.projectRepo.resolveUniqueSlug(actorId, baseSlug);
+
+      if (newSlug !== project.slug) {
+        await this.db.from('project_redirects').insert({
+          owner_id: actorId,
+          old_slug: project.slug,
+          new_slug: newSlug,
+        });
+        return this.projectRepo.update(projectId, { ...input, slug: newSlug });
+      }
+    }
+
+    return this.projectRepo.update(projectId, input);
   }
 
-  async publishProject(projectId: string, ownerId: string, published: boolean): Promise<void> {
+  async setVisibility(
+    projectId: string,
+    actorId: string,
+    visibility: 'public' | 'private' | 'unlisted',
+  ): Promise<void> {
     const project = await this.projectRepo.findById(projectId);
-    if (!project || project.owner_id !== ownerId) {
-      throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
+    if (!project) throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
+    if (project.owner_id !== actorId) {
+      throw Object.assign(new Error('Only the project owner can change visibility'), {
+        code: 'FORBIDDEN',
+      });
+    }
+
+    await this.projectRepo.update(projectId, { visibility });
+  }
+
+  async publishProject(projectId: string, actorId: string, published: boolean): Promise<void> {
+    const project = await this.projectRepo.findById(projectId);
+    if (!project) throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
+    if (project.owner_id !== actorId) {
+      throw Object.assign(new Error('Only the project owner can publish this project'), {
+        code: 'FORBIDDEN',
+      });
     }
     await this.projectRepo.update(projectId, { published });
   }
 
-  async deleteProject(projectId: string, ownerId: string): Promise<void> {
+  async deleteProject(projectId: string, actorId: string): Promise<void> {
     const project = await this.projectRepo.findById(projectId);
-    if (!project || project.owner_id !== ownerId) {
-      throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
+    if (!project) throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
+    if (project.owner_id !== actorId) {
+      throw Object.assign(new Error('Only the project owner can delete this project'), {
+        code: 'FORBIDDEN',
+      });
     }
-    // Soft delete — purged after 30 days by a scheduled job
     await this.projectRepo.softDelete(projectId);
   }
+
+  // ── Private helpers ─────────────────────────────────────────────────────
 
   private async applyTemplate(projectId: string, templateId: string): Promise<void> {
     const { data: template } = await this.db
@@ -142,27 +137,29 @@ export class ProjectService {
       .eq('id', templateId)
       .single();
 
-    if (!template) return;
+    if (!template?.structure) {
+      // Fallback to default page if template not found
+      await this.docPageRepo.create({
+        projectId,
+        slug: 'index',
+        title: 'Getting Started',
+        content: '# Getting Started\n\nWelcome to your new project!\n',
+        orderIndex: 0,
+        isIndex: true,
+      });
+      return;
+    }
 
-    const pages = template.structure as Array<{
-      slug: string;
-      title: string;
-      content: string;
-      order_index: number;
-      is_index?: boolean;
-    }>;
-
-    await Promise.all(
-      pages.map((page) =>
-        this.docPageRepo.create({
-          projectId,
-          slug: page.slug,
-          title: page.title,
-          content: page.content,
-          orderIndex: page.order_index,
-          isIndex: page.is_index ?? false,
-        }),
-      ),
-    );
+    const pages = (template.structure as any[]).sort((a, b) => a.order_index - b.order_index);
+    for (const page of pages) {
+      await this.docPageRepo.create({
+        projectId,
+        slug: page.slug,
+        title: page.title,
+        content: page.content ?? '',
+        orderIndex: page.order_index,
+        isIndex: page.is_index ?? false,
+      });
+    }
   }
 }

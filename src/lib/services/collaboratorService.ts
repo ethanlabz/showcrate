@@ -2,21 +2,21 @@
  * services/collaboratorService.ts — Collaboration business logic
  *
  * Enforces:
- * - Collaborator limit per plan (5 for free)
+ * - Only the project owner can invite / remove collaborators
  * - Owner can't invite themselves
- * - Invite via email → look up user → create record + send email + notification
+ * - Invite via userId → create record + send email + notification
+ * - Collaborators are attribution-only: zero write access, zero settings access
+ * - Accepted collaborations are shown on the collaborator's profile page
  */
 import { customAlphabet } from 'nanoid';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database, ProjectCollaboratorRow } from '@/types/database';
+import type { Database, ProjectCollaboratorRow, ProjectRow } from '@/types/database';
 import { CollaboratorRepository } from '@/lib/repositories/CollaboratorRepository';
 import { NotificationRepository } from '@/lib/repositories/NotificationRepository';
 import { ProjectRepository } from '@/lib/repositories/ProjectRepository';
 import { UserRepository } from '@/lib/repositories/UserRepository';
 import { sendCollaboratorInviteEmail } from './emailService';
-import { getPlanLimits } from '@/types/auth';
-import type { PlatformRole } from '@/types/database';
-import type { InviteCollaboratorInput, UpdateCollaboratorInput } from '@/lib/validators/collaborator.schema';
+import type { InviteCollaboratorInput } from '@/lib/validators/collaborator.schema';
 
 // Secure invite token: 32 character alphanumeric
 const generateToken = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 32);
@@ -34,48 +34,13 @@ export class CollaboratorService {
     this.userRepo = new UserRepository(db);
   }
 
-  async invite(
-    projectId: string,
-    inviterId: string,
-    inviterRole: PlatformRole,
-    ownerUsername: string,
-    input: InviteCollaboratorInput,
-  ): Promise<ProjectCollaboratorRow> {
-    const project = await this.projectRepo.findById(projectId);
-    if (!project || project.owner_id !== inviterId) {
-      throw Object.assign(new Error('Only the project owner can invite collaborators'), {
-        code: 'FORBIDDEN',
-      });
-    }
-
-    // Enforce collaborator plan limit
-    const limits = getPlanLimits(inviterRole);
-    if (limits.maxCollaborators !== Infinity) {
-      const count = await this.collabRepo.countAcceptedByProject(projectId);
-      if (count >= limits.maxCollaborators) {
-        throw Object.assign(
-          new Error(`You've reached the collaborator limit of ${limits.maxCollaborators} on your plan`),
-          { code: 'PLAN_LIMIT_EXCEEDED' },
-        );
-      }
-    }
-
-    // Find the invitee by email
-    const { data: authUser } = await (this.db as any).auth.admin.listUsers();
-    // Note: In production, use admin client for this lookup
-    // For now, query public.users is not possible by email directly (it stores no email)
-    // The invite flow uses email → Supabase Auth lookup → user_id
-    // This is handled by the admin client in the API route layer
-    throw new Error('Use the API route invite endpoint which has access to the admin client');
-  }
-
   /**
    * Full invite flow — called from API route with admin client available
+   * so that email → userId lookup is possible.
    */
   async inviteByUserId(
     projectId: string,
     inviterId: string,
-    inviterRole: PlatformRole,
     inviteeUserId: string,
     inviteeEmail: string,
     inviterDisplayName: string,
@@ -94,7 +59,7 @@ export class CollaboratorService {
       throw Object.assign(new Error('You cannot invite yourself'), { code: 'SELF_INVITE' });
     }
 
-    // Check if already invited
+    // Check if already invited/accepted
     const existing = await this.collabRepo.findByProjectAndUser(projectId, inviteeUserId);
     if (existing) {
       throw Object.assign(new Error('This user is already a collaborator or has a pending invite'), {
@@ -102,19 +67,7 @@ export class CollaboratorService {
       });
     }
 
-    // Enforce plan limit
-    const limits = getPlanLimits(inviterRole);
-    if (limits.maxCollaborators !== Infinity) {
-      const count = await this.collabRepo.countAcceptedByProject(projectId);
-      if (count >= limits.maxCollaborators) {
-        throw Object.assign(
-          new Error(`Collaborator limit of ${limits.maxCollaborators} reached`),
-          { code: 'PLAN_LIMIT_EXCEEDED' },
-        );
-      }
-    }
-
-    // Create the collaborator record
+    // Create the collaborator record (pending until accepted)
     const collaborator = await this.collabRepo.invite(
       projectId,
       inviteeUserId,
@@ -124,7 +77,7 @@ export class CollaboratorService {
     // Generate invite token and store in notification payload
     const inviteToken = generateToken();
 
-    // Create notification for invitee
+    // Notify invitee
     await this.notifRepo.create({
       user_id: inviteeUserId,
       type: 'collab_invite',
@@ -139,7 +92,7 @@ export class CollaboratorService {
       },
     });
 
-    // Send invite email (non-blocking)
+    // Send invite email (non-blocking — we don't care if it fails)
     sendCollaboratorInviteEmail({
       to: inviteeEmail,
       inviterName: inviterDisplayName,
@@ -170,7 +123,7 @@ export class CollaboratorService {
 
     await this.collabRepo.accept(collaboratorId);
 
-    // Notify project owner
+    // Notify the project owner
     const project = await this.projectRepo.findById(collab.project_id);
     if (project) {
       const user = await this.userRepo.findById(userId);
@@ -187,10 +140,7 @@ export class CollaboratorService {
     }
   }
 
-  async removeCollaborator(
-    collaboratorId: string,
-    removerId: string,
-  ): Promise<void> {
+  async removeCollaborator(collaboratorId: string, removerId: string): Promise<void> {
     const { data: collab } = await this.db
       .from('project_collaborators')
       .select('*')
@@ -211,7 +161,7 @@ export class CollaboratorService {
 
     await this.collabRepo.remove(collaboratorId);
 
-    // Notify removed collaborator
+    // Notify the removed collaborator
     await this.notifRepo.create({
       user_id: collab.user_id,
       type: 'collab_removed',
@@ -224,5 +174,26 @@ export class CollaboratorService {
 
   async listCollaborators(projectId: string): Promise<ProjectCollaboratorRow[]> {
     return this.collabRepo.findByProject(projectId);
+  }
+
+  /**
+   * Returns all projects a user is credited on as an accepted collaborator.
+   * Used to populate the "Shared Projects" section of a user's profile page.
+   * Only returns visible=true collaborations on public, published projects.
+   */
+  async listSharedProjects(userId: string): Promise<ProjectRow[]> {
+    const { data } = await this.db
+      .from('project_collaborators')
+      .select('project_id, projects!inner(id, owner_id, slug, name, tagline, cover_url, visibility, published, featured, view_count, deleted_at, created_at, updated_at)')
+      .eq('user_id', userId)
+      .not('accepted_at', 'is', null)
+      .eq('visible', true)
+      .eq('projects.published', true)
+      .eq('projects.visibility', 'public')
+      .is('projects.deleted_at', null);
+
+    if (!data) return [];
+
+    return data.map((row: any) => row.projects as ProjectRow);
   }
 }

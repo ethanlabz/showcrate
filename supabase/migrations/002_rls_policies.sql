@@ -185,12 +185,6 @@ CREATE POLICY "doc_pages: owner write"
   USING (owns_project(project_id))
   WITH CHECK (owns_project(project_id));
 
--- Collaborators can update page content only (not insert/delete)
-CREATE POLICY "doc_pages: collaborator update"
-  ON public.doc_pages FOR UPDATE
-  USING (is_accepted_collaborator(project_id))
-  WITH CHECK (is_accepted_collaborator(project_id));
-
 -- ============================================================
 -- page_versions
 -- ============================================================

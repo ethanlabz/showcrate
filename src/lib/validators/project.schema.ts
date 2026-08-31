@@ -17,7 +17,6 @@ export const updateProjectSchema = z.object({
 
 export const projectVisibilitySchema = z.object({
   visibility: z.enum(['public', 'private', 'unlisted']),
-  password: z.string().min(6).max(100).optional(),
 });
 
 export const publishProjectSchema = z.object({

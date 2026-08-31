@@ -38,16 +38,22 @@ async function sendEmail(opts: SendEmailOptions): Promise<void> {
 
 // ── Email templates ────────────────────────────────────────────────────────
 
-export async function sendWelcomeEmail(to: string, username: string): Promise<void> {
+export async function sendWelcomeEmail(to: string, username: string, confirmUrl?: string): Promise<void> {
+  const actionUrl = confirmUrl ?? `${config.site.url}/auth/login`;
   await sendEmail({
     to,
-    subject: 'Welcome to Showcrate 🎉',
+    subject: 'Confirm your email — Showcrate 🎉',
     html: `
-      <h1>Welcome to Showcrate, ${username}!</h1>
-      <p>Every project deserves a stage. Start building yours today.</p>
-      <p><a href="${config.site.url}/new">Create your first project →</a></p>
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; color: #111;">
+        <h1 style="font-size: 22px; font-weight: 600;">Welcome to Showcrate, ${username}!</h1>
+        <p style="font-size: 15px; color: #444; line-height: 1.5;">Every project deserves a stage. Please confirm your email address to complete your registration:</p>
+        <p style="margin: 25px 0;">
+          <a href="${actionUrl}" style="display: inline-block; background: #000000; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">Confirm Email Address →</a>
+        </p>
+        <p style="font-size: 12px; color: #888;">If you didn't create an account on Showcrate, you can safely ignore this email.</p>
+      </div>
     `,
-    text: `Welcome to Showcrate, ${username}! Start building at ${config.site.url}/new`,
+    text: `Welcome to Showcrate, ${username}! Please confirm your email address at: ${actionUrl}`,
   });
 }
 
@@ -64,11 +70,14 @@ export async function sendCollaboratorInviteEmail(opts: {
     to: opts.to,
     subject: `${opts.inviterName} invited you to collaborate on ${opts.projectName}`,
     html: `
-      <h2>You've been invited to collaborate!</h2>
-      <p><strong>${opts.inviterName}</strong> has invited you to collaborate on 
-      <strong>${opts.projectName}</strong> on Showcrate.</p>
-      <p><a href="${acceptUrl}">Accept Invitation →</a></p>
-      <p><small>This invitation link expires in 7 days.</small></p>
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; color: #111;">
+        <h2 style="font-size: 20px; font-weight: 600;">You've been invited to collaborate!</h2>
+        <p style="font-size: 15px; color: #444; line-height: 1.5;"><strong>${opts.inviterName}</strong> has invited you to collaborate on <strong>${opts.projectName}</strong> on Showcrate.</p>
+        <p style="margin: 25px 0;">
+          <a href="${acceptUrl}" style="display: inline-block; background: #000000; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">Accept Invitation →</a>
+        </p>
+        <p style="font-size: 12px; color: #888;">This invitation link expires in 7 days.</p>
+      </div>
     `,
     text: `${opts.inviterName} invited you to collaborate on ${opts.projectName}. Accept at: ${acceptUrl}`,
   });
@@ -79,10 +88,14 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
     to,
     subject: 'Reset your Showcrate password',
     html: `
-      <h2>Password Reset Request</h2>
-      <p>We received a request to reset your password. Click the link below to proceed:</p>
-      <p><a href="${resetUrl}">Reset Password →</a></p>
-      <p><small>This link expires in 1 hour. If you didn't request this, ignore this email.</small></p>
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; color: #111;">
+        <h2 style="font-size: 20px; font-weight: 600;">Password Reset Request</h2>
+        <p style="font-size: 15px; color: #444; line-height: 1.5;">We received a request to reset your password. Click the button below to set a new password:</p>
+        <p style="margin: 25px 0;">
+          <a href="${resetUrl}" style="display: inline-block; background: #000000; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">Reset Password →</a>
+        </p>
+        <p style="font-size: 12px; color: #888;">This link expires in 1 hour. If you didn't request this, ignore this email.</p>
+      </div>
     `,
     text: `Reset your Showcrate password: ${resetUrl} (expires in 1 hour)`,
   });

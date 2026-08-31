@@ -4,10 +4,10 @@
  * Called from the main middleware after session resolution.
  * Returns null if access is permitted, or a redirect/Response if denied.
  *
- * Role matrix (from README.md):
- *   /admin/**       → developer OR admin
+ * Role matrix (from overview.new.md):
+ *   /admin/**       → developer OR moderator
  *   authenticated/* → any authenticated user (not banned)
- *   editor/settings → owner OR accepted collaborator (checked at route level)
+ *   editor/settings → owner only (checked at route level)
  */
 import type { SessionUser } from '@/types/auth';
 import { isAdmin } from '@/types/auth';
@@ -56,6 +56,6 @@ export function checkRouteAccess(
  * Checks if a path like /{username}/{project}/editor or /settings/* requires auth.
  */
 export function isProjectAuthRequired(pathname: string): boolean {
-  // Match /{username}/{project}/editor, /settings/*, /versions, /export
-  return /^\/[^/]+\/[^/]+\/(editor|settings|versions|export)/.test(pathname);
+  // Match /{username}/{project}/editor, /settings/*, /versions
+  return /^\/[^/]+\/[^/]+\/(editor|settings|versions)/.test(pathname);
 }

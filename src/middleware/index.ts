@@ -7,6 +7,18 @@
  * 3. Route guard → redirect or 403 if access denied
  * 4. Project resolution → Astro.locals.project (for project-scoped routes)
  * 5. next() → continue to page/route handler
+ *
+ * ─── LOCALS SHAPE NOTE ─────────────────────────────────────────────────────
+ * Overview.md Critical Rule #3 specifies locals.viewer / locals.isOwner.
+ * This middleware currently sets locals.USER (not locals.viewer).
+ * THE MISMATCH IS INTENTIONAL HERE PENDING A TEAM DECISION:
+ *   - locals.user  → the authenticated SessionUser (set here)
+ *   - locals.viewer → ALIAS for locals.user (added for forward-compat)
+ *   - locals.isOwner is resolved per-project inside project-resolver.ts
+ *     and exposed via locals.project.isOwner — not as a top-level local.
+ * TODO: Decide on canonical name (user vs viewer) and update both here and
+ * all consuming pages/routes. Until then, locals.user is the real shape.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 import { defineMiddleware } from 'astro:middleware';
 import { createServerClient } from '@/lib/supabase/server';
@@ -21,7 +33,10 @@ import { tooManyRequests, forbidden } from '@/lib/api/response';
 declare global {
   namespace App {
     interface Locals {
+      /** Authenticated user. Canonical name. See LOCALS SHAPE NOTE above. */
       user: SessionUser | null;
+      /** Alias for locals.user — matches Overview.md Critical Rule #3 naming */
+      viewer: SessionUser | null;
       project: ResolvedProject | null;
     }
   }
@@ -33,6 +48,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Initialize locals
   locals.user = null;
+  locals.viewer = null;
   locals.project = null;
 
   // ── Step 1: Rate limiting ─────────────────────────────────────────────
@@ -45,7 +61,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const rateLimitKey = tier === 'write' ? `write:${ip}` : `${tier}:${ip}`;
 
   if (!checkRateLimit(rateLimitKey, tier)) {
-    // Return 429 for API routes, redirect for page routes
     if (pathname.startsWith('/api/')) {
       return tooManyRequests();
     }
@@ -59,7 +74,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   } = await supabase.auth.getUser();
 
   if (authUser) {
-    // Fetch the public profile (platform_role, username, etc.)
     const { data: profile } = await supabase
       .from('users')
       .select('username, display_name, avatar_url, platform_role')
@@ -67,7 +81,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       .single();
 
     if (profile) {
-      locals.user = {
+      const sessionUser: SessionUser = {
         id: authUser.id,
         email: authUser.email ?? '',
         username: profile.username,
@@ -75,6 +89,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
         avatarUrl: profile.avatar_url,
         platformRole: profile.platform_role,
       };
+      locals.user = sessionUser;
+      locals.viewer = sessionUser; // keep both names in sync
     }
   }
 
@@ -91,7 +107,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // ── Step 4: Project resolution ─────────────────────────────────────────
-  // Match /{username}/{project}/* pattern
   const projectRouteMatch = pathname.match(/^\/([^/]+)\/([^/]+)(\/.*)?$/);
   if (
     projectRouteMatch &&
@@ -115,16 +130,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
 
     if (result === null) {
-      // Project doesn't exist or user lacks access → 404
       return new Response('Not Found', { status: 404 });
     }
 
     if ('redirect' in result) {
-      // Slug changed → 301 redirect
       return redirect(result.redirect, 301);
     }
 
-    // Check if auth is required for this project sub-route
     if (isProjectAuthRequired(pathname) && !result.canWrite) {
       if (!locals.user) return redirect(`/auth/login?next=${encodeURIComponent(pathname)}`, 302);
       return new Response('Forbidden', { status: 403 });

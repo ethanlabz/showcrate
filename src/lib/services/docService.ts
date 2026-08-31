@@ -2,14 +2,12 @@
  * services/docService.ts — Documentation page business logic
  *
  * Handles: page save (with version snapshot), FTS search,
- * page reorder (validates ownership).
+ * page reorder (validates ownership). Owner-only writes — no exceptions.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, DocPageRow } from '@/types/database';
 import { DocPageRepository } from '@/lib/repositories/DocPageRepository';
 import { ProjectRepository } from '@/lib/repositories/ProjectRepository';
-import { getPlanLimits } from '@/types/auth';
-import type { PlatformRole } from '@/types/database';
 import type {
   CreateDocPageInput,
   UpdateDocPageInput,
@@ -38,7 +36,7 @@ export class DocService {
     actorId: string,
     input: CreateDocPageInput,
   ): Promise<DocPageRow> {
-    // Verify actor has access to this project (owner or collaborator)
+    // Only owner can create pages
     await this.assertWriteAccess(projectId, actorId);
 
     // Check slug uniqueness
@@ -55,7 +53,6 @@ export class DocService {
   async savePage(
     pageId: string,
     actorId: string,
-    ownerRole: PlatformRole,
     input: UpdateDocPageInput,
   ): Promise<DocPageRow> {
     const page = await this.docRepo.findById(pageId);
@@ -66,8 +63,7 @@ export class DocService {
     await this.assertWriteAccess(page.project_id, actorId);
 
     // Save current content as a version snapshot before overwriting
-    const limits = getPlanLimits(ownerRole);
-    await this.createVersionSnapshot(pageId, page.content, actorId, limits.maxVersionSnapshots);
+    await this.createVersionSnapshot(pageId, page.content, actorId);
 
     return this.docRepo.update(pageId, input);
   }
@@ -76,11 +72,7 @@ export class DocService {
     const page = await this.docRepo.findById(pageId);
     if (!page) throw Object.assign(new Error('Page not found'), { code: 'NOT_FOUND' });
 
-    // Only owner can delete pages
-    const project = await this.projectRepo.findById(page.project_id);
-    if (!project || project.owner_id !== actorId) {
-      throw Object.assign(new Error('Only the project owner can delete pages'), { code: 'FORBIDDEN' });
-    }
+    await this.assertWriteAccess(page.project_id, actorId);
 
     if (page.is_index) {
       throw Object.assign(new Error('Cannot delete the index page'), { code: 'CANNOT_DELETE_INDEX' });
@@ -90,12 +82,7 @@ export class DocService {
   }
 
   async reorderPages(projectId: string, actorId: string, input: ReorderPagesInput): Promise<void> {
-    // Only owner can reorder
-    const project = await this.projectRepo.findById(projectId);
-    if (!project || project.owner_id !== actorId) {
-      throw Object.assign(new Error('Only the project owner can reorder pages'), { code: 'FORBIDDEN' });
-    }
-
+    await this.assertWriteAccess(projectId, actorId);
     await this.docRepo.reorder(input.pages.map((p) => ({ id: p.id, orderIndex: p.orderIndex })));
   }
 
@@ -113,12 +100,11 @@ export class DocService {
   // ── Private helpers ─────────────────────────────────────────────────────
 
   private async assertWriteAccess(projectId: string, userId: string): Promise<void> {
-    // Check if owner
     const project = await this.projectRepo.findById(projectId);
     if (!project) throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
-    
+
     if (project.owner_id !== userId) {
-      throw Object.assign(new Error('You do not have write access to this project'), {
+      throw Object.assign(new Error('Only the project owner can edit this project'), {
         code: 'FORBIDDEN',
       });
     }
@@ -128,22 +114,8 @@ export class DocService {
     pageId: string,
     content: string,
     savedBy: string,
-    maxSnapshots: number,
   ): Promise<void> {
     if (!content.trim()) return; // don't snapshot empty content
-
     await this.docRepo.saveVersion(pageId, content, savedBy);
-
-    // Prune old versions beyond plan limit
-    if (maxSnapshots !== Infinity) {
-      const versions = await this.docRepo.getVersions(pageId, maxSnapshots + 10);
-      const toDelete = versions.slice(maxSnapshots);
-      if (toDelete.length > 0) {
-        await this.db
-          .from('page_versions')
-          .delete()
-          .in('id', toDelete.map((v) => v.id));
-      }
-    }
   }
 }

@@ -15,7 +15,6 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- for ILIKE trigram indexes
 CREATE TYPE platform_role AS ENUM (
   'developer',
   'moderator',
-  'pro',
   'user',
   'restricted',
   'banned'
@@ -73,7 +72,7 @@ CREATE TABLE public.users (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
   -- Constraints
-  CONSTRAINT username_length    CHECK (char_length(username) BETWEEN 4 AND 39),
+  CONSTRAINT username_length    CHECK (char_length(username) BETWEEN 3 AND 39),
   CONSTRAINT username_format    CHECK (username ~ '^[a-z0-9][a-z0-9-]*[a-z0-9]$'),
   CONSTRAINT username_no_double_hyphen CHECK (username NOT LIKE '%---%'),
   CONSTRAINT display_name_length CHECK (display_name IS NULL OR char_length(display_name) <= 60),
@@ -89,8 +88,6 @@ CREATE TABLE public.projects (
   tagline      TEXT,
   cover_url    TEXT,
   visibility   project_visibility NOT NULL DEFAULT 'public',
-  -- password_hash: bcrypt hash for password-protected projects (Pro, v2)
-  password_hash TEXT,
   published    BOOLEAN NOT NULL DEFAULT FALSE,
   featured     BOOLEAN NOT NULL DEFAULT FALSE,
   view_count   BIGINT NOT NULL DEFAULT 0,

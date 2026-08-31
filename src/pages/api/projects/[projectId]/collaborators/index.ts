@@ -40,7 +40,6 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies, locals, pa
   const collaborator = await service.inviteByUserId(
     params.projectId!,
     locals.user.id,
-    locals.user.platformRole,
     invitee.id,
     parsed.data.email,
     inviterProfile?.display_name ?? locals.user.username,

@@ -3,23 +3,23 @@
  */
 import { z } from 'zod';
 
-// Reserved usernames (from README.md)
+// Reserved usernames — sourced from overview.new.md
 const RESERVED_USERNAMES = new Set([
   'admin', 'showcase', 'templates', 'new', 'settings', 'help', 'notifications',
   'auth', 'login', 'logout', 'signup', 'register', 'forgot-password', 'reset-password',
   'about', 'blog', 'docs', 'terms', 'privacy', 'api', 'status', 'explore', 'contact',
   'editor', 'code', 'export', 'versions', 'users', 'projects', 'reports', 'logs',
   'billing', 'account', 'profile', 'appearance', 'danger', 'domain', 'seo',
-  'analytics', 'collaborators', 'general', 'visibility', 'following', 'followers', 'search',
-  // Reserved developer usernames
-  'showcrate', 'dorukaysor', 'avision', 'batteringram',
+  'analytics', 'collaborators', 'general', 'visibility', 'following',
+  // Reserved developer / brand usernames
+  'dorukaysor', 'avision', 'batteringram', 'showcrate',
 ]);
 
 export const usernameSchema = z
   .string()
-  .min(4, 'Username must be at least 4 characters')
+  .min(3, 'Username must be at least 3 characters')
   .max(39, 'Username must be at most 39 characters')
-  .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, 'Username must be lowercase letters, numbers, and hyphens only')
+  .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/, 'Username must be lowercase letters, numbers, and hyphens only')
   .refine((v) => !v.includes('--'), 'Username cannot contain consecutive hyphens')
   .refine((v) => !RESERVED_USERNAMES.has(v), 'This username is reserved');
 
@@ -36,7 +36,7 @@ export const signupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.email('Invalid email address'),
+  identifier: z.string().min(1, 'Username or email is required'),
   password: z.string().min(1, 'Password is required'),
 });
 

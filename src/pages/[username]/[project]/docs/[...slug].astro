@@ -32,21 +32,13 @@ if (!owner) {
 
 const { data: project } = await supabase
   .from('projects')
-  .select('id, name, visibility, published, password_hash')
+  .select('id, name, visibility, published')
   .eq('owner_id', owner.id)
   .eq('slug', projectSlug)
   .single();
 
 if (!project) {
   return Astro.redirect('/404');
-}
-
-// 4. Password-protected project check (Pro feature)
-if (project.visibility === 'password') {
-  const hasAccess = Astro.cookies.get(`project-access-${project.id}`)?.value === 'granted';
-  if (!hasAccess) {
-    return Astro.redirect(`/${username}/${projectSlug}/unlock`);
-  }
 }
 
 // 5. Fetch the actual doc page. RLS enforces permissions.
