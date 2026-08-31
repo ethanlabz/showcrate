@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
-    "@astrojs/netlify": "^6.4.1",
+    "@astrojs/netlify": "^8.2.4",
     "@astrojs/react": "^6.0.2",
     "@astrojs/sitemap": "^3.7.3",
     "@base-ui/react": "^1.7.0",
@@ -37,7 +37,9 @@
     "gsap": "^3.15.0",
     "isomorphic-dompurify": "^3.22.0",
     "jsdom": "^30.0.1",
-    "lucide-react": "^1.31.0",
+    "lucide-react": "^1.37.0",
+    "morphicons": "^1.7.1",
+    "motion-icons-react": "^1.1.0",
     "nanoid": "^6.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -57,6 +59,8 @@
   },
   "allowScripts": {
     "@sentry/cli@2.58.6": true,
-    "esbuild@0.25.5": true
+    "esbuild@0.28.2": true,
+    "esbuild@0.28.1": true,
+    "sharp@0.34.5": true
   }
 }
