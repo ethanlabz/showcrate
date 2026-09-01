@@ -1,0 +1,44 @@
+---
+import AuthLayout from '@/layouts/AuthLayout.astro';
+import LoginForm from '@/components/auth/LoginForm';
+
+// Redirect logged-in users away
+if (Astro.locals.user) {
+  return Astro.redirect('/');
+}
+
+const registered = Astro.url.searchParams.get('registered');
+const confirmed = Astro.url.searchParams.get('confirmed');
+---
+
+<AuthLayout title="Sign in">
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-1">
+      <h1 class="text-2xl font-heading font-semibold tracking-tight text-foreground">
+        Welcome back
+      </h1>
+      <p class="text-sm text-muted-foreground">Sign in to your Showcrate account</p>
+    </div>
+
+    {registered && (
+      <div class="rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground">
+        Account created! Check your email to confirm, then sign in below.
+      </div>
+    )}
+
+    {confirmed && (
+      <div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-400">
+        ✓ Email confirmed successfully! You can now sign in below.
+      </div>
+    )}
+
+    <LoginForm client:load />
+
+    <p class="text-center text-sm text-muted-foreground">
+      Don't have an account?{' '}
+      <a href="/auth/signup" class="font-medium text-foreground underline underline-offset-2 hover:opacity-80 transition-opacity">
+        Sign up
+      </a>
+    </p>
+  </div>
+</AuthLayout>

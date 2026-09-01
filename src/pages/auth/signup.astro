@@ -1,0 +1,29 @@
+---
+import AuthLayout from '@/layouts/AuthLayout.astro';
+import SignupForm from '@/components/auth/SignupForm';
+
+// Redirect logged-in users away
+if (Astro.locals.user) {
+  return Astro.redirect('/');
+}
+---
+
+<AuthLayout title="Create account">
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-1">
+      <h1 class="text-2xl font-heading font-semibold tracking-tight text-foreground">
+        Create your account
+      </h1>
+      <p class="text-sm text-muted-foreground">Every project deserves a stage.</p>
+    </div>
+
+    <SignupForm client:load />
+
+    <p class="text-center text-sm text-muted-foreground">
+      Already have an account?{' '}
+      <a href="/auth/login" class="font-medium text-foreground underline underline-offset-2 hover:opacity-80 transition-opacity">
+        Sign in
+      </a>
+    </p>
+  </div>
+</AuthLayout>
