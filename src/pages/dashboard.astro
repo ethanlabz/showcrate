@@ -1,0 +1,116 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import { createServerClient } from "@/lib/supabase/server";
+import { ProjectRepository } from "@/lib/repositories/ProjectRepository";
+import { Plus, Code2, Globe, Clock, Settings, Search } from "lucide-react";
+
+if (!Astro.locals.user) {
+  return Astro.redirect('/auth/login');
+}
+
+const db = createServerClient(Astro.cookies);
+const projectRepo = new ProjectRepository(db);
+const projects = await projectRepo.listByOwner(Astro.locals.user.id);
+---
+
+<AppLayout title="Dashboard | Showcrate">
+  <div class="max-w-7xl mx-auto w-full">
+    
+    <!-- Dashboard Header -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-foreground">Dashboard</h1>
+        <p class="text-muted-foreground mt-1 text-sm">Manage your interactive environments and templates.</p>
+      </div>
+      
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <div class="relative w-full md:w-64">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input 
+            type="text" 
+            placeholder="Search projects..." 
+            class="w-full bg-background border border-border/50 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          />
+        </div>
+        <a href="/new" class="shrink-0 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-md">
+          <Plus class="w-4 h-4" />
+          <span class="hidden sm:inline">New Project</span>
+        </a>
+      </div>
+    </div>
+
+    {/* Project Grid / Empty State */}
+    {projects.length === 0 ? (
+      <div class="border-2 border-dashed border-border/50 rounded-2xl p-12 flex flex-col items-center justify-center text-center bg-card/30 backdrop-blur-sm mt-8 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
+        <div class="bg-primary/10 text-primary w-16 h-16 rounded-full flex items-center justify-center mb-6 relative z-10">
+          <Code2 class="w-8 h-8" />
+        </div>
+        <h2 class="text-2xl font-bold mb-3 relative z-10">No projects yet</h2>
+        <p class="text-muted-foreground max-w-md mx-auto mb-8 relative z-10">
+          Create your first interactive environment to get started. Choose from a template or start from scratch.
+        </p>
+        <div class="flex items-center gap-4 relative z-10">
+          <a href="/templates" class="bg-secondary text-secondary-foreground font-medium px-6 py-2.5 rounded-lg hover:bg-secondary/80 transition-colors">
+            Browse Templates
+          </a>
+          <a href="/new" class="bg-primary text-primary-foreground font-medium px-6 py-2.5 rounded-lg hover:bg-primary/90 transition-colors shadow-md flex items-center gap-2">
+            <Plus class="w-4 h-4" /> Start Blank
+          </a>
+        </div>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project) => (
+          <a href={`/${Astro.locals.user?.username}/${project.slug}`} class="group relative rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm overflow-hidden flex flex-col hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/5">
+            <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            
+            {/* Project Cover / Preview */}
+            <div class="h-40 bg-muted/30 border-b border-border/50 relative overflow-hidden">
+               {project.cover_url ? (
+                 <img src={project.cover_url} alt={project.name} class="w-full h-full object-cover" />
+               ) : (
+                 <div class="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
+                   <Code2 class="w-12 h-12" />
+                 </div>
+               )}
+               {/* Quick Actions overlay */}
+               <div class="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                 <button class="w-8 h-8 rounded-md bg-background/90 backdrop-blur flex items-center justify-center text-muted-foreground hover:text-primary transition-colors border border-border/50 shadow-sm" title="Settings">
+                   <Settings class="w-4 h-4" />
+                 </button>
+               </div>
+            </div>
+            
+            {/* Project Details */}
+            <div class="p-5 flex-1 flex flex-col">
+              <div class="flex items-start justify-between gap-4 mb-2">
+                <h3 class="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">{project.name}</h3>
+                {project.visibility === 'public' && (
+                   <span class="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded border border-emerald-500/20">Public</span>
+                )}
+              </div>
+              <p class="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">
+                {project.tagline || 'No description provided.'}
+              </p>
+              
+              <div class="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30">
+                <div class="flex items-center gap-1.5">
+                  <Clock class="w-3.5 h-3.5" />
+                  <span>{new Date(project.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                </div>
+                
+                {project.published && (
+                  <div class="flex items-center gap-1.5 text-primary">
+                    <Globe class="w-3.5 h-3.5" />
+                    <span>Published</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</AppLayout>

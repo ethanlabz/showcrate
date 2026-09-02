@@ -1,0 +1,65 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import { GradientHeading } from "@/components/public/GradientHeading";
+import { GlassCard } from "@/components/public/GlassCard";
+import { BookOpen, Terminal, Puzzle, Zap } from "lucide-react";
+---
+
+<PublicLayout title="Guides | Showcrate">
+  <div class="relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[400px] bg-primary/20 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
+      <GradientHeading 
+        title="Guides & Tutorials" 
+        subtitle="Step-by-step instructions for getting the most out of Showcrate."
+      />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mt-16">
+        <GlassCard className="p-8 group cursor-pointer">
+          <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Zap className="w-6 h-6" />
+          </div>
+          <h3 class="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Getting Started</h3>
+          <p class="text-muted-foreground mb-6">Learn the basics of Showcrate, how to create your first environment, and how to embed it in your site.</p>
+          <span class="text-primary font-medium text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+            Read guide <span>&rarr;</span>
+          </span>
+        </GlassCard>
+
+        <GlassCard className="p-8 group cursor-pointer">
+          <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Terminal className="w-6 h-6" />
+          </div>
+          <h3 class="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Configuring the Terminal</h3>
+          <p class="text-muted-foreground mb-6">Advanced guide on customizing the terminal environment, setting up startup scripts, and managing dependencies.</p>
+          <span class="text-primary font-medium text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+            Read guide <span>&rarr;</span>
+          </span>
+        </GlassCard>
+
+        <GlassCard className="p-8 group cursor-pointer">
+          <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Puzzle className="w-6 h-6" />
+          </div>
+          <h3 class="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Using Integrations</h3>
+          <p class="text-muted-foreground mb-6">How to connect Showcrate with GitHub, automatically import repositories, and set up PR previews.</p>
+          <span class="text-primary font-medium text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+            Read guide <span>&rarr;</span>
+          </span>
+        </GlassCard>
+
+        <GlassCard className="p-8 group cursor-pointer">
+          <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <h3 class="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Creating Interactive Docs</h3>
+          <p class="text-muted-foreground mb-6">Best practices for writing documentation that leverages Showcrate's interactive environments effectively.</p>
+          <span class="text-primary font-medium text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+            Read guide <span>&rarr;</span>
+          </span>
+        </GlassCard>
+      </div>
+    </div>
+  </div>
+</PublicLayout>

@@ -1,0 +1,38 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Security | Showcrate">
+  <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto prose prose-invert prose-primary">
+      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-4">Security</h1>
+      <p class="text-muted-foreground lead mb-12">How we keep your data and environments safe.</p>
+
+      <p>At Showcrate, security is our top priority. We employ industry-standard practices to ensure that your code, data, and users are protected at all times.</p>
+
+      <h2>Infrastructure Security</h2>
+      <ul>
+        <li><strong>Client-Side Execution:</strong> Environments run entirely in the browser using WebAssembly. We do not execute your arbitrary code on our servers, mitigating massive vectors of attack.</li>
+        <li><strong>Encryption in Transit:</strong> All communications between your browser and our servers are encrypted using TLS 1.3.</li>
+        <li><strong>Encryption at Rest:</strong> All user data, including environment templates and configuration, is encrypted at rest using AES-256.</li>
+      </ul>
+
+      <h2>Application Security</h2>
+      <ul>
+        <li><strong>Authentication:</strong> We use secure, token-based authentication and offer SSO/SAML for Enterprise customers.</li>
+        <li><strong>Regular Audits:</strong> Our codebase undergoes regular automated scanning and manual penetration testing by third-party security firms.</li>
+        <li><strong>Dependency Scanning:</strong> We continuously monitor our dependencies for known vulnerabilities and patch them immediately.</li>
+      </ul>
+
+      <h2>Vulnerability Reporting</h2>
+      <p>If you believe you have found a security vulnerability in Showcrate, we encourage you to let us know right away. We will investigate all legitimate reports and do our best to quickly fix the problem.</p>
+      
+      <p>Please email your findings to <a href="mailto:security@showcrate.com">security@showcrate.com</a>. We ask that you do not publicly disclose the vulnerability until we have had a chance to address it.</p>
+
+      <div class="bg-muted/50 p-6 rounded-xl mt-8 border border-border/50">
+        <h3 class="mt-0">SOC2 Compliance</h3>
+        <p class="mb-0 text-sm">We are currently undergoing our SOC2 Type II audit. For enterprise customers requiring a copy of our latest report, please contact your account manager.</p>
+      </div>
+    </div>
+  </div>
+</PublicLayout>

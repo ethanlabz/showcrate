@@ -1,0 +1,68 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import { GradientHeading } from "@/components/public/GradientHeading";
+import { GlassCard } from "@/components/public/GlassCard";
+---
+
+<PublicLayout title="Blog | Showcrate">
+  <div class="relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-primary/20 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
+      <GradientHeading 
+        title="Showcrate Blog" 
+        subtitle="Thoughts, tutorials, and insights from the Showcrate team."
+      />
+
+      <!-- Featured Post -->
+      <div class="mt-16 max-w-5xl mx-auto mb-16">
+        <GlassCard className="flex flex-col md:flex-row overflow-hidden group cursor-pointer p-0" hoverEffect={true}>
+          <div class="md:w-1/2 h-64 md:h-auto bg-muted/50 relative overflow-hidden">
+             <div class="absolute inset-0 bg-gradient-to-br from-primary/40 to-background group-hover:scale-105 transition-transform duration-700"></div>
+          </div>
+          <div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-primary/20 text-primary text-xs font-bold px-3 py-1 rounded-full">Engineering</span>
+              <span class="text-sm text-muted-foreground">Sep 2, 2026</span>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold mb-4 group-hover:text-primary transition-colors">How we built the new WebAssembly engine</h2>
+            <p class="text-muted-foreground mb-6 line-clamp-3">
+              A deep dive into the technical decisions and architecture behind our new rendering engine that made environments boot 10x faster.
+            </p>
+            <div class="flex items-center gap-3 mt-auto">
+              <div class="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold">ED</div>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium">Emily Developer</span>
+                <span class="text-xs text-muted-foreground">Core Team</span>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+
+      <!-- Post Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <GlassCard className="overflow-hidden group cursor-pointer p-0 flex flex-col" hoverEffect={true}>
+            <div class="h-48 bg-muted/30 relative overflow-hidden">
+               <div class={`absolute inset-0 bg-gradient-to-br from-white/5 to-background group-hover:scale-105 transition-transform duration-500`}></div>
+            </div>
+            <div class="p-6 flex flex-col flex-1">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="text-xs font-medium text-primary uppercase tracking-wider">Tutorial</span>
+                <span class="text-xs text-muted-foreground">Aug {30 - i}, 2026</span>
+              </div>
+              <h3 class="text-xl font-bold mb-3 group-hover:text-primary transition-colors line-clamp-2">Building an interactive React playground with Showcrate</h3>
+              <p class="text-sm text-muted-foreground mb-6 line-clamp-2 flex-1">Learn how to embed a fully functional React development environment in your own documentation.</p>
+              
+              <div class="flex items-center gap-3 mt-auto pt-4 border-t border-border/50">
+                <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">MK</div>
+                <span class="text-sm font-medium">Mark Writer</span>
+              </div>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    </div>
+  </div>
+</PublicLayout>

@@ -1,0 +1,82 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import { GradientHeading } from "@/components/public/GradientHeading";
+import { GlassCard } from "@/components/public/GlassCard";
+import { Code2, Zap, Globe, Shield, Puzzle, Terminal } from "lucide-react";
+---
+
+<PublicLayout title="Features | Showcrate">
+  <div class="relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-primary/20 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
+      <GradientHeading 
+        title="Powerful Features" 
+        subtitle="Everything you need to build, run, and share interactive documentation and sandbox environments in seconds."
+      />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-16 max-w-6xl mx-auto">
+        <GlassCard className="p-8">
+          <div className="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Zap className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Instant Startups</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Environments boot in milliseconds. We use advanced caching and WebAssembly to ensure your users never wait.
+          </p>
+        </GlassCard>
+
+        <GlassCard className="p-8">
+          <div className="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Code2 className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Rich Code Editor</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Built-in Monaco editor with intelligent autocompletion, linting, and syntax highlighting for over 50 languages.
+          </p>
+        </GlassCard>
+
+        <GlassCard className="p-8">
+          <div className="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Globe className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Custom Domains</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Host your interactive documentation on your own custom domain with automatic SSL provisioning.
+          </p>
+        </GlassCard>
+
+        <GlassCard className="p-8">
+          <div className="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Terminal className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Full Terminal Access</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Give your users a fully functional terminal environment to run scripts, install packages, and compile code.
+          </p>
+        </GlassCard>
+
+        <GlassCard className="p-8">
+          <div className="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Puzzle className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Seamless Integrations</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Connect seamlessly with GitHub, GitLab, and Bitbucket. Deploy changes directly from your repository.
+          </p>
+        </GlassCard>
+
+        <GlassCard className="p-8">
+          <div className="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+            <Shield className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Enterprise Security</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Isolated containers, SOC2 compliance, and RBAC ensure your environments and data are always secure.
+          </p>
+        </GlassCard>
+      </div>
+    </div>
+  </div>
+</PublicLayout>

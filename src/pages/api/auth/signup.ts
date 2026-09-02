@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { asyncHandler } from '@/lib/api/async-handler';
-import { ok, unprocessable } from '@/lib/api/response';
+import { ok, unprocessable, serverError } from '@/lib/api/response';
 import { createAdminClient, createServerClient } from '@/lib/supabase/server';
 import { signupSchema } from '@/lib/validators/auth.schema';
 import { AuthService } from '@/lib/services/authService';
@@ -18,6 +18,16 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies }) => {
   const adminDb = createAdminClient();
   const authService = new AuthService(db, adminDb);
 
-  const { userId } = await authService.signup(parsed.data);
-  return ok({ userId }, 201);
+  try {
+    const { userId } = await authService.signup(parsed.data);
+    return ok({ userId }, 201);
+  } catch (err: any) {
+    if (err.code === 'USERNAME_TAKEN' || err.code === 'EMAIL_TAKEN') {
+      return unprocessable(err.message);
+    }
+    if (err.message?.includes('fetch failed') || err.name === 'TypeError') {
+      return unprocessable('Cannot connect to Supabase. Please ensure your .env file has valid SUPABASE_URL credentials.');
+    }
+    throw err;
+  }
 });

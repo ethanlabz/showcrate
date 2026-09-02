@@ -1,0 +1,86 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import { GlassCard } from "@/components/public/GlassCard";
+import { Map, Users, Globe2, Heart, Zap, Shield } from "lucide-react";
+---
+
+<PublicLayout title="About | Showcrate">
+  <div class="relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-primary/10 blur-[150px] rounded-full -z-10 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-24">
+        <span class="text-primary font-semibold tracking-wider uppercase text-sm mb-4 block">About Us</span>
+        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground mb-6">
+          Making code accessible everywhere.
+        </h1>
+        <p class="text-xl text-muted-foreground leading-relaxed">
+          We're a team of developers, designers, and educators building the infrastructure to run code instantly in any browser, with zero configuration.
+        </p>
+      </div>
+
+      <!-- Core Values -->
+      <div class="mb-32 max-w-6xl mx-auto">
+        <h2 class="text-3xl font-bold mb-12 text-center">Our Core Values</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <GlassCard className="p-8">
+             <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+              <Globe2 class="w-6 h-6" />
+            </div>
+            <h3 class="text-xl font-bold mb-3">Accessibility First</h3>
+            <p class="text-muted-foreground">We believe everyone should have access to powerful development environments, regardless of their local hardware capabilities.</p>
+          </GlassCard>
+          
+          <GlassCard className="p-8">
+             <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+              <Zap class="w-6 h-6" />
+            </div>
+            <h3 class="text-xl font-bold mb-3">Zero Friction</h3>
+            <p class="text-muted-foreground">Configuration is the enemy of creativity. We aim to remove all setup steps between having an idea and writing the code for it.</p>
+          </GlassCard>
+
+          <GlassCard className="p-8">
+             <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+              <Heart class="w-6 h-6" />
+            </div>
+            <h3 class="text-xl font-bold mb-3">Community Driven</h3>
+            <p class="text-muted-foreground">We build tools that we want to use ourselves, but we constantly listen to and evolve based on what our community needs.</p>
+          </GlassCard>
+
+          <GlassCard className="p-8">
+             <div class="bg-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary mb-6">
+              <Shield class="w-6 h-6" />
+            </div>
+            <h3 class="text-xl font-bold mb-3">Uncompromising Security</h3>
+            <p class="text-muted-foreground">Running untrusted code safely is hard. We do the heavy lifting with secure, isolated execution environments.</p>
+          </GlassCard>
+        </div>
+      </div>
+
+      <!-- Team -->
+      <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl font-bold mb-12 text-center">Meet the Team</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { name: "AvisION", role: "Team Member" },
+            { name: "Doruk", role: "Team Member" },
+            { name: "Ezabella", role: "Team Member" },
+            { name: "Gay", role: "Team Member" }
+          ].map((member, i) => (
+            <div class="flex flex-col items-center text-center group cursor-pointer">
+              <div class="w-32 h-32 rounded-full bg-secondary mb-6 relative overflow-hidden group-hover:ring-4 ring-primary/30 transition-all">
+                {/* Mock avatar gradient */}
+                <div class={`absolute inset-0 bg-gradient-to-br from-primary/40 to-background/20`}></div>
+                <div class="absolute inset-0 flex items-center justify-center text-2xl font-bold text-foreground/50">
+                  {member.name.split(' ').map(n => n[0]).join('')}
+                </div>
+              </div>
+              <h4 class="font-bold text-lg mb-1">{member.name}</h4>
+              <p class="text-sm text-muted-foreground">{member.role}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</PublicLayout>

@@ -1,11 +1,72 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-
-
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import { GradientHeading } from "@/components/public/GradientHeading";
+import { GlassCard } from "@/components/public/GlassCard";
 ---
 
-<BaseLayout title="Showcase | Showcrate">
-  <div id="showcase">
+<PublicLayout title="Showcase | Showcrate">
+  <div class="relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-primary/20 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
 
+    <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
+      <GradientHeading 
+        title="Showcase" 
+        subtitle="Explore incredible projects, documentation, and interactive environments built by the Showcrate community."
+      />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 max-w-7xl mx-auto">
+        <!-- Mock Showcase Item 1 -->
+        <GlassCard className="overflow-hidden group cursor-pointer">
+          <div class="h-48 bg-muted/50 w-full relative overflow-hidden">
+             <!-- Placeholder for project screenshot -->
+             <div class="absolute inset-0 bg-gradient-to-br from-primary/30 to-background group-hover:scale-105 transition-transform duration-500"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">React Flow Documentation</h3>
+            <p class="text-sm text-muted-foreground mb-4">Interactive node-based UI editor built entirely within a Showcrate environment.</p>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">JD</div>
+              <span class="text-sm font-medium">John Doe</span>
+            </div>
+          </div>
+        </GlassCard>
+
+        <!-- Mock Showcase Item 2 -->
+        <GlassCard className="overflow-hidden group cursor-pointer">
+          <div class="h-48 bg-muted/50 w-full relative overflow-hidden">
+             <div class="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-background group-hover:scale-105 transition-transform duration-500"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Python Data Science Sandbox</h3>
+            <p class="text-sm text-muted-foreground mb-4">A complete Jupyter-like experience running purely in the browser for pandas and matplotlib.</p>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">AS</div>
+              <span class="text-sm font-medium">Alice Smith</span>
+            </div>
+          </div>
+        </GlassCard>
+
+        <!-- Mock Showcase Item 3 -->
+        <GlassCard className="overflow-hidden group cursor-pointer">
+          <div class="h-48 bg-muted/50 w-full relative overflow-hidden">
+             <div class="absolute inset-0 bg-gradient-to-br from-green-500/30 to-background group-hover:scale-105 transition-transform duration-500"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Tailwind CSS Playground</h3>
+            <p class="text-sm text-muted-foreground mb-4">Live preview environment for testing complex Tailwind utility combinations instantly.</p>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">TW</div>
+              <span class="text-sm font-medium">Tailwind Labs</span>
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+      
+      <div class="flex justify-center mt-16">
+        <button class="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium px-8 py-3 rounded-full transition-colors">
+          Load More Projects
+        </button>
+      </div>
+    </div>
   </div>
-</BaseLayout>
+</PublicLayout>

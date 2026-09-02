@@ -1,0 +1,67 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+---
+
+<PublicLayout title="Documentation | Showcrate">
+  <div class="flex max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Mock Sidebar -->
+    <aside class="hidden md:block w-64 shrink-0 pr-8 border-r border-border/40">
+      <div class="sticky top-24">
+        <h4 class="font-bold mb-4 text-foreground">Getting Started</h4>
+        <ul class="space-y-2 mb-8 text-sm">
+          <li><a href="#" class="text-primary font-medium">Introduction</a></li>
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">Quickstart</a></li>
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">Installation</a></li>
+        </ul>
+        
+        <h4 class="font-bold mb-4 text-foreground">Core Concepts</h4>
+        <ul class="space-y-2 mb-8 text-sm">
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">Environments</a></li>
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">Templates</a></li>
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">Editor Configuration</a></li>
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">Dependencies</a></li>
+        </ul>
+
+        <h4 class="font-bold mb-4 text-foreground">API Reference</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">REST API</a></li>
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">SDKs</a></li>
+          <li><a href="#" class="text-muted-foreground hover:text-foreground">Webhooks</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 md:pl-12 max-w-3xl">
+      <div class="prose prose-invert prose-primary max-w-none">
+        <h1 class="text-4xl font-bold tracking-tight mb-2">Introduction</h1>
+        <p class="text-xl text-muted-foreground mb-8">Welcome to the Showcrate documentation.</p>
+
+        <p>Showcrate is a platform for building, deploying, and sharing live interactive documentation environments directly in the browser.</p>
+
+        <h2>What is an Environment?</h2>
+        <p>An environment in Showcrate is a secure, isolated container running entirely in the browser using WebAssembly. It provides a full file system, node runtime, and terminal interface without requiring any backend infrastructure.</p>
+
+        <div class="bg-muted p-4 rounded-lg my-6 border border-border">
+          <p class="m-0 text-sm font-mono text-muted-foreground"># Example command to start</p>
+          <p class="m-0 font-mono text-primary">npm install @showcrate/sdk</p>
+        </div>
+
+        <h2>Why use Showcrate?</h2>
+        <ul>
+          <li><strong>Zero backend:</strong> Everything runs on the client.</li>
+          <li><strong>Instant feedback:</strong> Users can edit code and see results immediately.</li>
+          <li><strong>Secure:</strong> Isolated execution means no risk to your servers.</li>
+        </ul>
+
+        <p>Ready to jump in? Head over to the Quickstart guide.</p>
+        
+        <div class="mt-12 flex justify-end">
+          <a href="#" class="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/80 font-medium">
+            Next: Quickstart &rarr;
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+</PublicLayout>

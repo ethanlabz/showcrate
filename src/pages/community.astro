@@ -1,0 +1,74 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import { GradientHeading } from "@/components/public/GradientHeading";
+import { GlassCard } from "@/components/public/GlassCard";
+import { MessageSquare, Github, Twitter } from "lucide-react";
+---
+
+<PublicLayout title="Community | Showcrate">
+  <div class="relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-primary/20 blur-[150px] rounded-full -z-10 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8 text-center">
+      <GradientHeading 
+        title="Join the Community" 
+        subtitle="Connect with thousands of developers building the future of interactive documentation."
+        align="center"
+      />
+
+      <div class="flex justify-center mt-12 mb-24">
+        <div class="flex -space-x-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+             <div class={`w-12 h-12 rounded-full border-2 border-background flex items-center justify-center font-bold text-xs bg-gradient-to-br from-primary/80 to-primary text-primary-foreground z-[${10-i}]`}>
+               U{i}
+             </div>
+          ))}
+          <div class="w-12 h-12 rounded-full border-2 border-background flex items-center justify-center font-bold text-xs bg-secondary text-secondary-foreground z-0">
+             +5k
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto text-left">
+        <GlassCard className="p-8 flex flex-col items-center text-center">
+          <div class="bg-[#5865F2]/20 text-[#5865F2] w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+            <MessageSquare class="w-8 h-8" />
+          </div>
+          <h3 class="text-xl font-bold mb-3">Discord Server</h3>
+          <p class="text-muted-foreground text-sm mb-6 flex-1">
+            Chat with the core team, ask questions, and share your Showcrate projects with the community in real-time.
+          </p>
+          <a href="#" class="bg-[#5865F2] hover:bg-[#5865F2]/90 text-white font-medium w-full py-2.5 rounded-lg transition-colors">
+            Join Discord
+          </a>
+        </GlassCard>
+
+        <GlassCard className="p-8 flex flex-col items-center text-center">
+          <div class="bg-foreground/10 text-foreground w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+            <Github class="w-8 h-8" />
+          </div>
+          <h3 class="text-xl font-bold mb-3">GitHub Discussions</h3>
+          <p class="text-muted-foreground text-sm mb-6 flex-1">
+            Request features, report bugs, or contribute to our open-source tools and examples.
+          </p>
+          <a href="#" class="bg-foreground text-background hover:bg-foreground/90 font-medium w-full py-2.5 rounded-lg transition-colors">
+            View on GitHub
+          </a>
+        </GlassCard>
+
+        <GlassCard className="p-8 flex flex-col items-center text-center">
+          <div class="bg-[#1DA1F2]/20 text-[#1DA1F2] w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+            <Twitter class="w-8 h-8" />
+          </div>
+          <h3 class="text-xl font-bold mb-3">Twitter / X</h3>
+          <p class="text-muted-foreground text-sm mb-6 flex-1">
+            Follow us for the latest announcements, updates, and community highlights.
+          </p>
+          <a href="#" class="bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white font-medium w-full py-2.5 rounded-lg transition-colors">
+            Follow @showcrate
+          </a>
+        </GlassCard>
+      </div>
+    </div>
+  </div>
+</PublicLayout>

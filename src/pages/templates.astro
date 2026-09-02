@@ -1,0 +1,143 @@
+---
+import PublicLayout from "@/layouts/PublicLayout.astro";
+import { GradientHeading } from "@/components/public/GradientHeading";
+import { GlassCard } from "@/components/public/GlassCard";
+---
+
+<PublicLayout title="Templates | Showcrate">
+  <div class="relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-primary/20 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
+      <GradientHeading 
+        title="Starter Templates" 
+        subtitle="Jumpstart your project with our official templates. Get a full environment running in seconds."
+      />
+
+      <!-- Template Categories/Filters (Mock) -->
+      <div class="flex flex-wrap justify-center gap-3 mb-12">
+        <button class="px-6 py-2 rounded-full text-sm font-medium bg-primary text-primary-foreground">All</button>
+        <button class="px-6 py-2 rounded-full text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">Frontend</button>
+        <button class="px-6 py-2 rounded-full text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">Backend</button>
+        <button class="px-6 py-2 rounded-full text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">Fullstack</button>
+        <button class="px-6 py-2 rounded-full text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">Data Science</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:gap-8 gap-6 max-w-7xl mx-auto">
+        <!-- Template 1: React -->
+        <GlassCard className="p-6 flex flex-col group cursor-pointer" hoverEffect={true}>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-[#61DAFB]/20 flex items-center justify-center text-[#61DAFB]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-11.5 -10.23174 23 20.46348"><circle cx="0" cy="0" r="2.05" fill="currentColor"/><g stroke="currentColor" stroke-width="1" fill="none"><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg group-hover:text-primary transition-colors">React + Vite</h3>
+              <p class="text-xs text-muted-foreground">Frontend</p>
+            </div>
+          </div>
+          <p class="text-sm text-muted-foreground mb-6 flex-1">
+            A fast, modern React starter template powered by Vite. Includes HMR, Tailwind CSS support, and minimal configuration.
+          </p>
+          <button class="w-full bg-secondary text-secondary-foreground font-medium py-2 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+            Use Template
+          </button>
+        </GlassCard>
+
+        <!-- Template 2: Node.js -->
+        <GlassCard className="p-6 flex flex-col group cursor-pointer" hoverEffect={true}>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-[#339933]/20 flex items-center justify-center text-[#339933]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M11.87 1.83a2 2 0 011.9.1l8 4.6a2 2 0 011 1.73v9.2a2 2 0 01-1 1.73l-8 4.6a2 2 0 01-1.9 0l-8-4.6a2 2 0 01-1-1.73v-9.2a2 2 0 011-1.73l8-4.6z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg group-hover:text-primary transition-colors">Node.js Express</h3>
+              <p class="text-xs text-muted-foreground">Backend</p>
+            </div>
+          </div>
+          <p class="text-sm text-muted-foreground mb-6 flex-1">
+            A robust backend template featuring Express.js, nodemon for hot-reloading, and a pre-configured REST API structure.
+          </p>
+          <button class="w-full bg-secondary text-secondary-foreground font-medium py-2 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+            Use Template
+          </button>
+        </GlassCard>
+
+        <!-- Template 3: Next.js -->
+        <GlassCard className="p-6 flex flex-col group cursor-pointer" hoverEffect={true}>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-foreground/10 flex items-center justify-center text-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/><polyline points="2 15.5 12 8.5 22 15.5"/><line x1="12" y1="2" x2="12" y2="8.5"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg group-hover:text-primary transition-colors">Next.js Fullstack</h3>
+              <p class="text-xs text-muted-foreground">Fullstack</p>
+            </div>
+          </div>
+          <p class="text-sm text-muted-foreground mb-6 flex-1">
+            The complete React framework. This template includes App Router, Server Components, and API routes out of the box.
+          </p>
+          <button class="w-full bg-secondary text-secondary-foreground font-medium py-2 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+            Use Template
+          </button>
+        </GlassCard>
+        
+        <!-- Template 4: Vue -->
+        <GlassCard className="p-6 flex flex-col group cursor-pointer" hoverEffect={true}>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-[#4FC08D]/20 flex items-center justify-center text-[#4FC08D]">
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256"><path fill="currentColor" d="M128 205.2L12 5.5h52.1l63.9 110.6L191.9 5.5H244z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg group-hover:text-primary transition-colors">Vue 3 + Vite</h3>
+              <p class="text-xs text-muted-foreground">Frontend</p>
+            </div>
+          </div>
+          <p class="text-sm text-muted-foreground mb-6 flex-1">
+            Approachable, versatile, and performant. A standard Vue 3 starter with Composition API and Vite build tooling.
+          </p>
+          <button class="w-full bg-secondary text-secondary-foreground font-medium py-2 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+            Use Template
+          </button>
+        </GlassCard>
+
+        <!-- Template 5: Python -->
+        <GlassCard className="p-6 flex flex-col group cursor-pointer" hoverEffect={true}>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-[#3776AB]/20 flex items-center justify-center text-[#3776AB]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12.01 2.37c-3.15 0-5.83.6-5.83.6L5.94 4.5l-.27.8s-.24 2.87-.24 5.24l.02.83 2.15.1s.14-1.22.6-1.8c.45-.6 2.05-.6 3.65-.6h.5v-.54c0-1.85 1.25-2.06 1.83-2.06h1.28v-1.12s-.03-2.45-3.45-2.98z"/><path d="M12.01 21.63c3.15 0 5.83-.6 5.83-.6l.24-1.53.27-.8s.24-2.87.24-5.24l-.02-.83-2.15-.1s-.14 1.22-.6 1.8c-.45.6-2.05.6-3.65.6h-.5v.54c0 1.85-1.25 2.06-1.83 2.06h-1.28v1.12s.03 2.45 3.45 2.98z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg group-hover:text-primary transition-colors">Python FastAPI</h3>
+              <p class="text-xs text-muted-foreground">Backend</p>
+            </div>
+          </div>
+          <p class="text-sm text-muted-foreground mb-6 flex-1">
+            High performance, easy to learn, fast to code. Includes automatic interactive API documentation via Swagger UI.
+          </p>
+          <button class="w-full bg-secondary text-secondary-foreground font-medium py-2 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+            Use Template
+          </button>
+        </GlassCard>
+        
+        <!-- Template 6: Blank -->
+        <GlassCard className="p-6 flex flex-col group cursor-pointer" hoverEffect={true}>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-muted-foreground border border-border border-dashed">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-lg group-hover:text-primary transition-colors">Blank Slate</h3>
+              <p class="text-xs text-muted-foreground">Custom</p>
+            </div>
+          </div>
+          <p class="text-sm text-muted-foreground mb-6 flex-1">
+            Start entirely from scratch. A completely empty environment with just an index.html and a basic package.json.
+          </p>
+          <button class="w-full bg-secondary text-secondary-foreground font-medium py-2 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+            Start from Scratch
+          </button>
+        </GlassCard>
+      </div>
+    </div>
+  </div>
+</PublicLayout>
