@@ -1,22 +1,90 @@
 ---
-/** ===================================================================================================
- * This is the base/root layout.
- * 
- */
+// src/layouts/BaseLayout.astro
+import "../styles/global.css";
 
-const { title } = Astro.props;
+export interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;   // resolved absolute or root-relative URL — generation strategy is decided elsewhere
+  noIndex?: boolean;
+}
+
+const {
+  title,
+  description = "Showcrate. Every project deserves a stage.",
+  ogImage,
+  noIndex = false,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const resolvedOgImage = ogImage ? new URL(ogImage, Astro.site).toString() : undefined;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
+    <script is:inline>
+      const getThemePreference = () => {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+          return localStorage.getItem('theme');
+        }
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      };
+      const isDark = getThemePreference() === 'dark';
+      document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
+      
+      // Watch for system theme changes
+      if (typeof window !== 'undefined') {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem('theme')) {
+            document.documentElement.classList[e.matches ? 'add' : 'remove']('dark');
+          }
+        });
+      }
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <title>{title} · Showcrate</title>
+    <meta name="description" content={description} />
+    {noIndex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    {resolvedOgImage && <meta property="og:image" content={resolvedOgImage} />}
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
+
+    <!-- Fonts: self-host before launch — third-party font CDNs block render and leak visitor IPs -->
+    <!-- <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin /> -->
+
+    <slot name="head" />
   </head>
-  <body>
-    <main>
-      <slot />
-    </main>
+  <body class="bg-background text-foreground antialiased min-h-screen">
+    <slot />
+    
+    <script>
+      import Lenis from 'lenis';
+
+      const lenis = new Lenis();
+      // Expose to window for GSAP synchronization
+      (window as any).lenis = lenis;
+
+      function raf(time: number) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+
+      requestAnimationFrame(raf);
+    </script>
   </body>
 </html>

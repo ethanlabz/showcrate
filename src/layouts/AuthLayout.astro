@@ -1,40 +1,55 @@
 ---
-interface Props {
+import BaseLayout from "./BaseLayout.astro";
+
+export interface Props {
   title: string;
+  description?: string;
+  ogImage?: string;
+  noIndex?: boolean;
 }
-const { title } = Astro.props;
+
+const { title, description, ogImage, noIndex } = Astro.props;
 ---
 
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{title} — Showcrate</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="stylesheet" href="/src/styles/global.css" />
-</head>
-<body class="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
-  <div class="w-full max-w-md">
-    <!-- Wordmark -->
-    <a href="/" class="flex items-center justify-center gap-2 mb-8 group">
-      <span class="text-2xl font-heading font-semibold tracking-tight text-foreground group-hover:opacity-80 transition-opacity">
+<BaseLayout
+  title={title}
+  description={description}
+  ogImage={ogImage}
+  noIndex={noIndex}
+>
+  <div class="container relative flex min-h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+    <div class="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
+      <div class="absolute inset-0 bg-zinc-900" />
+      <a href="/" class="relative z-20 flex items-center text-lg font-medium hover:text-primary transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" class="mr-2 h-6 w-6"><rect width="256" height="256" fill="none"></rect><line x1="208" y1="128" x2="128" y2="208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></line><line x1="192" y1="40" x2="40" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></line></svg>
         Showcrate
-      </span>
-    </a>
-
-    <!-- Card -->
-    <div class="bg-card text-card-foreground border border-border rounded-xl shadow-sm p-8">
-      <slot />
+      </a>
+      <div class="relative z-20 mt-auto">
+        <blockquote class="space-y-2">
+          <p class="text-lg">
+            "Showcrate empowers developers to bring their ideas to life faster, providing all the building blocks for modern web applications out of the box."
+          </p>
+          <footer class="text-sm">Sofia Davis</footer>
+        </blockquote>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <p class="text-center text-xs text-muted-foreground mt-6">
-      By continuing, you agree to our{' '}
-      <a href="/terms" class="underline underline-offset-2 hover:text-foreground transition-colors">Terms</a>
-      {' '}and{' '}
-      <a href="/privacy" class="underline underline-offset-2 hover:text-foreground transition-colors">Privacy Policy</a>.
-    </p>
+    <div class="lg:p-8 w-full">
+      <div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <slot />
+
+        <p class="px-8 text-center text-sm text-muted-foreground">
+          By clicking continue, you agree to our{" "}
+          <a href="/terms" class="underline underline-offset-4 hover:text-primary">
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" class="underline underline-offset-4 hover:text-primary">
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </div>
+    </div>
   </div>
-</body>
-</html>
+</BaseLayout>
