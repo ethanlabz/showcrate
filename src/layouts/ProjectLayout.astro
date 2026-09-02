@@ -1,7 +1,90 @@
 ---
-const { title } = Astro.props;
+import AppLayout from "./AppLayout.astro";
+
+export interface Props {
+  title: string;
+  description?: string;
+  noIndex?: boolean;
+}
+
+const { title, description, noIndex = false } = Astro.props;
+const resolvedProject = Astro.locals.project;
+const project = resolvedProject?.project;
+const owner = resolvedProject?.owner;
+const isOwner = resolvedProject?.isOwner;
+
+const currentPath = Astro.url.pathname;
+
+// A helper to determine if a tab is active
+const isActive = (path: string) => {
+  if (owner && project && path === `/${owner.username}/${project.slug}`) {
+    return currentPath === path;
+  }
+  return currentPath.startsWith(path);
+};
 ---
 
-<div id="projectLayout">
-  <slot />
-</div>
+<AppLayout title={title} description={description} noIndex={noIndex}>
+  {project && owner ? (
+    <div class="space-y-6">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight">
+            <a href={`/${owner.username}`} class="text-muted-foreground hover:text-foreground transition-colors">{owner.username}</a>
+            <span class="text-muted-foreground font-light mx-1">/</span>
+            <span>{project.name}</span>
+          </h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href={`/${owner.username}/${project.slug}/~editor`} class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
+            Open Editor
+          </a>
+        </div>
+      </div>
+
+      <div class="border-b border-border overflow-x-auto scrollbar-hide">
+        <nav class="-mb-px flex gap-6 min-w-max px-1" aria-label="Tabs">
+          <a
+            href={`/${owner.username}/${project.slug}`}
+            class={`whitespace-nowrap border-b-2 py-3 text-sm font-medium transition-colors ${
+              isActive(`/${owner.username}/${project.slug}`) && !currentPath.includes('/versions') && !currentPath.includes('/settings')
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+            }`}
+          >
+            Overview
+          </a>
+          <a
+            href={`/${owner.username}/${project.slug}/versions`}
+            class={`whitespace-nowrap border-b-2 py-3 text-sm font-medium transition-colors ${
+              isActive(`/${owner.username}/${project.slug}/versions`)
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+            }`}
+          >
+            Versions
+          </a>
+          
+          {isOwner && (
+            <a
+              href={`/${owner.username}/${project.slug}/settings`}
+              class={`whitespace-nowrap border-b-2 py-3 text-sm font-medium transition-colors ${
+                isActive(`/${owner.username}/${project.slug}/settings`)
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+              }`}
+            >
+              Settings
+            </a>
+          )}
+        </nav>
+      </div>
+      
+      <div class="pt-4">
+        <slot />
+      </div>
+    </div>
+  ) : (
+    <slot />
+  )}
+</AppLayout>

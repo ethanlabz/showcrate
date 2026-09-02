@@ -1,0 +1,17 @@
+---
+import EditorLayout from "@/layouts/EditorLayout.astro";
+import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
+
+// Inject mock data into Astro.locals if needed, or pass directly to layout
+// Since EditorLayout uses Astro.locals.project, we'll let it fallback to "Untitled Project"
+// or we can set it here if we want to mock it.
+// Actually, Astro.locals is read-only in this context without middleware, 
+// but EditorLayout handles undefined gracefully.
+---
+
+<EditorLayout 
+  title="Editor | Showcrate"
+  description="Live markdown editor environment"
+>
+  <EditorWorkspace client:load />
+</EditorLayout>

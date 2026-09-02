@@ -1,0 +1,102 @@
+---
+export interface Props {
+  id: string;
+  frameCount: number;
+  sequencePath: string; // e.g. "/videos/sequence-1/frame_"
+}
+
+const { id, frameCount, sequencePath } = Astro.props;
+---
+
+<div id={`scrub-container-${id}`} class="relative w-full h-[400vh] canvas-scrubber-wrapper" data-id={id} data-frames={frameCount} data-path={sequencePath}>
+  <div class="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center bg-background">
+    <canvas id={`scrub-canvas-${id}`} class="absolute inset-0 w-full h-full object-cover opacity-100 z-0"></canvas>
+    <!-- Semi-transparent overlay to ensure text readability -->
+    <div class="absolute inset-0 bg-background/60 z-[1]"></div>
+    
+    <!-- Content overlay container -->
+    <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Initialize all canvas scrubbers on the page
+  const initScrubbers = () => {
+    const wrappers = document.querySelectorAll('.canvas-scrubber-wrapper');
+    
+    wrappers.forEach(wrapper => {
+      const el = wrapper as HTMLElement;
+      const id = el.dataset.id;
+      const frameCount = parseInt(el.dataset.frames || "0");
+      const sequencePath = el.dataset.path;
+      
+      const canvas = document.getElementById(`scrub-canvas-${id}`) as HTMLCanvasElement;
+      if (!canvas || !sequencePath) return;
+      
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      
+      const images: HTMLImageElement[] = [];
+      const imageSeq = { frame: 0 };
+
+      // Preload the images
+      for (let i = 1; i <= frameCount; i++) {
+        const img = new Image();
+        const padIndex = String(i).padStart(4, '0');
+        img.src = `${sequencePath}${padIndex}.webp`;
+        images.push(img);
+      }
+
+      images[0].onload = () => {
+        resizeAndRender();
+      };
+
+      function resizeAndRender() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        render();
+      }
+
+      function render() {
+        if (!context || !canvas) return;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        const img = images[imageSeq.frame];
+        if (!img || !img.complete) return;
+
+        const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+        const x = (canvas.width / 2) - (img.width / 2) * scale;
+        const y = (canvas.height / 2) - (img.height / 2) * scale;
+        
+        context.drawImage(img, x, y, img.width * scale, img.height * scale);
+      }
+
+      // Sync the frame sequence to the scroll position of the wrapper
+      gsap.to(imageSeq, {
+        frame: frameCount - 1,
+        snap: "frame",
+        ease: "none",
+        scrollTrigger: {
+          trigger: wrapper,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.1, // Very snappy scrub
+        },
+        onUpdate: render
+      });
+
+      window.addEventListener('resize', resizeAndRender);
+    });
+  };
+
+  // Run on mount
+  document.addEventListener('DOMContentLoaded', initScrubbers);
+  // Support Astro View Transitions if enabled later
+  document.addEventListener('astro:page-load', initScrubbers);
+</script>

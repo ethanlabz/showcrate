@@ -1,7 +1,96 @@
 ---
-const { title } = Astro.props;
+import BaseLayout from "./BaseLayout.astro";
+
+import { DocsSearch } from "../components/docs/DocsSearch";
+import { DocsMobileNav } from "../components/docs/DocsMobileNav";
+import { ThemeToggle } from "../components/ThemeToggle";
+
+export interface Props {
+  title: string;
+  description?: string;
+  noIndex?: boolean;
+}
+
+const { title, description, noIndex = false } = Astro.props;
+
+// Mocked doc_pages tree for now - you would fetch this from DB
+// e.g. const docsTree = await db.select().from(doc_pages).orderBy(doc_pages.order_index);
+const currentPath = Astro.url.pathname;
 ---
 
-<div id="docsLayout">
-  <slot />
-</div>
+<BaseLayout
+  title={title}
+  description={description}
+  noIndex={noIndex}
+>
+  <div class="flex min-h-screen flex-col">
+    <header class="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div class="container flex h-14 items-center">
+        <div class="mr-4 flex md:hidden items-center">
+          <DocsMobileNav currentPath={currentPath} client:load />
+        </div>
+        <div class="mr-4 hidden md:flex">
+          <a class="mr-6 flex items-center space-x-2" href="/">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" class="h-6 w-6"><rect width="256" height="256" fill="none"></rect><line x1="208" y1="128" x2="128" y2="208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></line><line x1="192" y1="40" x2="40" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></line></svg>
+            <span class="hidden font-bold sm:inline-block">Showcrate Docs</span>
+          </a>
+        </div>
+        
+        <div class="flex flex-1 items-center space-x-2 justify-end">
+          <div class="w-full flex-1 md:w-auto md:flex-none">
+            <DocsSearch client:load />
+          </div>
+          <nav class="flex items-center space-x-2">
+            <ThemeToggle client:load />
+            <a href="/auth/login" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+              Back to App
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+      <aside class="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block">
+        <div class="h-full py-6 pr-6 lg:py-8 overflow-y-auto">
+          <div class="w-full">
+            <div class="pb-4">
+              <h4 class="mb-1 rounded-md px-2 py-1 text-sm font-semibold">Getting Started</h4>
+              <div class="grid grid-flow-row auto-rows-max text-sm">
+                <a href="/docs/introduction" class={`group flex w-full items-center rounded-md border border-transparent px-2 py-1 hover:underline ${currentPath === '/docs/introduction' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Introduction</a>
+                <a href="/docs/quickstart" class={`group flex w-full items-center rounded-md border border-transparent px-2 py-1 hover:underline ${currentPath === '/docs/quickstart' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Quickstart</a>
+              </div>
+            </div>
+            
+            <div class="pb-4">
+              <h4 class="mb-1 rounded-md px-2 py-1 text-sm font-semibold">Features</h4>
+              <div class="grid grid-flow-row auto-rows-max text-sm">
+                <a href="/docs/editor" class={`group flex w-full items-center rounded-md border border-transparent px-2 py-1 hover:underline ${currentPath === '/docs/editor' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Code Editor</a>
+                <a href="/docs/deployments" class={`group flex w-full items-center rounded-md border border-transparent px-2 py-1 hover:underline ${currentPath === '/docs/deployments' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Deployments</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+      
+      <main class="relative py-6 lg:gap-10 lg:py-8 xl:grid xl:grid-cols-[1fr_300px]">
+        <div class="mx-auto w-full min-w-0 prose prose-neutral dark:prose-invert max-w-3xl">
+          <slot />
+        </div>
+        
+        <!-- Optional Right TOC Sidebar (Table of Contents) -->
+        <div class="hidden text-sm xl:block">
+          <div class="sticky top-16 -mt-10 pt-4">
+            <div class="space-y-2">
+              <p class="font-medium">On This Page</p>
+              <ul class="m-0 list-none">
+                {/* TOC items would be injected here or handled by the MDX component */}
+                <li class="mt-0 pt-2"><a href="#" class="inline-block no-underline text-muted-foreground hover:text-foreground">Overview</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</BaseLayout>
