@@ -20,9 +20,9 @@ const owner = resolvedProject?.owner;
   description={description}
   noIndex={noIndex}
 >
-  <div class="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
+  <div class="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground font-mono">
     {/* Editor Chrome Topbar */}
-    <header class="flex h-12 shrink-0 items-center justify-between border-b bg-background px-4">
+    <header class="flex h-12 shrink-0 items-center justify-between border-b-2 border-border bg-card px-4">
       <div class="flex items-center gap-2 sm:gap-4">
         <a href={project && owner ? `/${owner.username}/${project.slug}` : "/dashboard"} class="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" class="h-5 w-5"><rect width="256" height="256" fill="none"></rect><line x1="208" y1="128" x2="128" y2="208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></line><line x1="192" y1="40" x2="40" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></line></svg>
@@ -45,19 +45,19 @@ const owner = resolvedProject?.owner;
       
       <div class="flex items-center gap-2 sm:gap-4 shrink-0">
         {/* Save Status Indicator */}
-        <div class="flex items-center gap-2 text-xs text-muted-foreground mr-1 sm:mr-0">
-          <div class="h-2 w-2 rounded-full bg-green-500"></div>
-          <span class="hidden sm:inline-block">Saved</span>
+        <div class="flex items-center gap-2 text-xs text-muted-foreground mr-1 sm:mr-0 border-2 border-border bg-background px-2 py-1">
+          <div class="h-2 w-2 bg-green-500"></div>
+          <span class="hidden sm:inline-block font-bold uppercase tracking-wider">Saved</span>
         </div>
         
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3">
-            <span class="hidden sm:inline-block">Preview</span>
+          <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 rounded-none border-2 border-border hover:bg-border/50">
+            <span class="hidden sm:inline-block uppercase tracking-wider font-bold text-xs">Preview</span>
             <span class="sm:hidden">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
             </span>
           </Button>
-          <Button size="sm" className="h-8 px-2 sm:px-3">Publish</Button>
+          <Button size="sm" className="h-8 px-2 sm:px-3 rounded-none border-2 border-primary bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-wider font-bold text-xs">Publish</Button>
         </div>
       </div>
     </header>
