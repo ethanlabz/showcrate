@@ -63,7 +63,7 @@
 }
 
 .dark {
-  --background: #14161B;
+  --background: #161616;
   --surface: #1B1B22;
   --surface-raised: #22232B;
   --border: #2A2A33;
@@ -72,7 +72,7 @@
   --accent: #C9A96A;
   --accent-hover: #DDC490;
   --accent-active: #A68751;
-  --accent-foreground: #14161B;
+  --accent-foreground: #161616;
 
   --secondary: #6B5B7A;
   --secondary-hover: #9B87A8;
@@ -82,7 +82,7 @@
   --text: #EDEBE6;
   --text-secondary: #A8A6A0;
   --text-muted: #6E6C68;
-  --text-inverse: #14161B;
+  --text-inverse: #161616;
 
   --success: #5B9279;
   --success-bg: #1A2620;
