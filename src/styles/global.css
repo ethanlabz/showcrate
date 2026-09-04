@@ -138,6 +138,21 @@
   --color-link: var(--link);
   --color-link-hover: var(--link-hover);
 
+  /* Shadcn UI backward compatibility mappings */
+  --color-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--text-inverse);
+  --color-muted: var(--surface-raised);
+  --color-muted-foreground: var(--text-muted);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+  --color-input: var(--border-strong);
+  --color-ring: var(--focus-ring);
+
   --font-heading: var(--font-heading);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -156,10 +171,10 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-focus-ring/50;
     }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-text;
     }
   html {
     @apply font-mono;
