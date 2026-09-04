@@ -1,5 +1,6 @@
 import React from "react";
 import { GlassCard } from "./GlassCard";
+import { motion } from "framer-motion";
 
 const events = [
   {
@@ -42,7 +43,14 @@ export function Timeline() {
   return (
     <div className="max-w-4xl mx-auto relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary before:via-primary/50 before:to-transparent">
       {events.map((event, index) => (
-        <div key={event.version} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-12">
+        <motion.div 
+          key={event.version} 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ margin: "-100px" }}
+          transition={{ duration: 0.5, delay: index * 0.1 }}
+          className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-12"
+        >
           {/* Timeline Node */}
           <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-primary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 ml-0 z-10">
             <div className="w-2 h-2 rounded-full bg-background" />
@@ -71,7 +79,7 @@ export function Timeline() {
               ))}
             </ul>
           </GlassCard>
-        </div>
+        </motion.div>
       ))}
     </div>
   );

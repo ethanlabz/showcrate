@@ -7,9 +7,9 @@ export function PublicHeader() {
   return (
     <>
       {/* Universal Top Header (Visible everywhere) */}
-      <div className="sticky top-0 z-50 w-full 2xl:pt-8 pointer-events-none transition-all duration-500">
-        <header className="pointer-events-auto mx-auto w-full 2xl:max-w-[1700px] border-b 2xl:border border-border/40 bg-background/95 2xl:bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 2xl:rounded-[2rem] 2xl:shadow-2xl transition-all duration-500">
-          <div className="w-full max-w-7xl 2xl:max-w-none mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex h-16 2xl:h-20 items-center justify-between">
+      <div className="sticky top-0 z-50 w-full xl:pt-6 xl:px-6 pointer-events-none transition-all duration-500">
+        <header className="pointer-events-auto mx-auto w-full max-w-7xl border-b xl:border border-border/40 bg-background/95 xl:bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 xl:rounded-full xl:shadow-2xl transition-all duration-500">
+          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex h-16 xl:h-20 items-center justify-between">
           <div className="flex items-center gap-6">
             <a className="flex items-center space-x-2" href="/">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-6 w-6 text-primary">

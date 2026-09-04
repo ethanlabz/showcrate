@@ -1,0 +1,37 @@
+---
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { BookOpen, Bell } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+---
+
+<LandingLayout title="Blog - Showcrate">
+  <div class="relative min-h-screen pb-32 flex flex-col justify-center items-center">
+    <!-- Abstract Background -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/20 rounded-full blur-[100px] pointer-events-none"></div>
+    
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-3xl">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-card border border-border shadow-2xl mb-8">
+        <BookOpen className="w-10 h-10 text-primary" />
+      </div>
+      
+      <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight mb-6">
+        The Showcrate Blog
+      </h1>
+      <p class="text-xl text-muted-foreground leading-relaxed mb-12 text-balance">
+        We are currently writing our first articles about interactive documentation, React, and Astro. Stay tuned.
+      </p>
+      
+      <div class="max-w-md mx-auto p-2 bg-background border border-border rounded-full flex items-center shadow-lg">
+        <div class="pl-4 pr-2 text-muted-foreground">
+          <Bell className="w-5 h-5" />
+        </div>
+        <input 
+          type="email" 
+          placeholder="Enter your email to be notified..." 
+          class="flex-1 bg-transparent border-none outline-none text-sm px-2 text-foreground"
+        />
+        <Button className="rounded-full px-6">Subscribe</Button>
+      </div>
+    </div>
+  </div>
+</LandingLayout>

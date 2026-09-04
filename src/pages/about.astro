@@ -1,0 +1,49 @@
+---
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { Timeline } from "@/components/pages/public/Timeline";
+import { Rocket, Target, Users } from "lucide-react";
+---
+
+<LandingLayout title="About - Showcrate">
+  <div class="relative min-h-screen pb-32">
+    <!-- Hero Background -->
+    <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/10 to-transparent pointer-events-none"></div>
+    
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 text-center max-w-4xl mb-24">
+      <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8">
+        We're on a mission to kill static docs.
+      </h1>
+      <p class="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto text-balance mb-12">
+        Documentation shouldn't be a wall of text that gets outdated the moment you hit publish. It should be a living, breathing playground.
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left border-y border-border/50 py-12">
+        <div>
+          <Users className="w-8 h-8 text-primary mb-4" />
+          <h3 class="font-bold text-xl mb-2">For Developers</h3>
+          <p class="text-muted-foreground text-sm">Built by developers who were tired of maintaining complex doc sites.</p>
+        </div>
+        <div>
+          <Rocket className="w-8 h-8 text-primary mb-4" />
+          <h3 class="font-bold text-xl mb-2">Fast Execution</h3>
+          <p class="text-muted-foreground text-sm">We leverage WebContainers to run actual Node.js environments in the browser.</p>
+        </div>
+        <div>
+          <Target className="w-8 h-8 text-primary mb-4" />
+          <h3 class="font-bold text-xl mb-2">Focused Mission</h3>
+          <p class="text-muted-foreground text-sm">Our single goal is to make learning APIs and libraries as frictionless as possible.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Section -->
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold tracking-tight mb-4">Our Journey</h2>
+        <p class="text-muted-foreground text-lg">How we got here and where we're going.</p>
+      </div>
+      
+      <Timeline client:load />
+    </div>
+  </div>
+</LandingLayout>

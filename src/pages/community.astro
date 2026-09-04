@@ -1,0 +1,55 @@
+---
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { MessageSquare, Github } from "lucide-react";
+---
+
+<LandingLayout title="Community - Showcrate">
+  <div class="relative min-h-screen pb-32">
+    <!-- Hero Background -->
+    <div class="absolute top-0 right-0 w-full h-[500px] bg-gradient-to-b from-secondary/10 to-transparent pointer-events-none"></div>
+    
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 text-center max-w-4xl mb-24">
+      <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8">
+        Join the Community
+      </h1>
+      <p class="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-balance">
+        Connect with other developers building the next generation of documentation.
+      </p>
+    </div>
+
+    <!-- Community Grid -->
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Discord Card -->
+        <a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="group relative rounded-3xl border border-indigo-500/30 bg-card/40 backdrop-blur-md overflow-hidden hover:border-indigo-500 hover:shadow-[0_0_40px_rgba(99,102,241,0.2)] transition-all duration-500 hover:-translate-y-2 block">
+          <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div class="p-10 relative z-10 text-center flex flex-col items-center">
+            <div class="w-20 h-20 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg mb-8 group-hover:scale-110 transition-transform duration-500">
+              <MessageSquare className="w-10 h-10" />
+            </div>
+            <h3 class="text-3xl font-bold mb-4 text-foreground">Discord Server</h3>
+            <p class="text-muted-foreground leading-relaxed">
+              Chat with the core team, get help with your projects, and share your Showcrate sites with the community.
+            </p>
+          </div>
+        </a>
+
+        <!-- GitHub Card -->
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="group relative rounded-3xl border border-foreground/20 bg-card/40 backdrop-blur-md overflow-hidden hover:border-foreground/50 hover:shadow-[0_0_40px_rgba(255,255,255,0.1)] transition-all duration-500 hover:-translate-y-2 block">
+          <div class="absolute inset-0 bg-gradient-to-br from-foreground/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div class="p-10 relative z-10 text-center flex flex-col items-center">
+            <div class="w-20 h-20 rounded-2xl bg-foreground text-background flex items-center justify-center shadow-lg mb-8 group-hover:scale-110 transition-transform duration-500">
+              <Github className="w-10 h-10" />
+            </div>
+            <h3 class="text-3xl font-bold mb-4 text-foreground">GitHub</h3>
+            <p class="text-muted-foreground leading-relaxed">
+              Contribute to the open source core of Showcrate. Report issues, suggest features, and submit pull requests.
+            </p>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+</LandingLayout>

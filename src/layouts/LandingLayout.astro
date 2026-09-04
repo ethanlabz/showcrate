@@ -19,7 +19,19 @@ const { title, description, ogImage, noIndex } = Astro.props;
   ogImage={ogImage}
   noIndex={noIndex}
 >
-  <div class="flex flex-col min-h-screen">
+  <div class="flex flex-col min-h-screen relative">
+    {/* Global Ambient Background */}
+    <div class="fixed inset-0 z-[-1] pointer-events-none bg-background">
+      {/* Subtle Grid */}
+      <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+      
+      {/* Glowing Ambient Orbs */}
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] max-w-[1920px] h-[100vh] overflow-hidden opacity-40 dark:opacity-20">
+        <div class="absolute -top-[20%] -left-[10%] w-[50vw] max-w-[800px] aspect-square rounded-full bg-primary/20 blur-[100px] sm:blur-[120px] mix-blend-normal"></div>
+        <div class="absolute top-[10%] -right-[10%] w-[40vw] max-w-[600px] aspect-square rounded-full bg-blue-500/10 blur-[100px] sm:blur-[120px] mix-blend-normal"></div>
+      </div>
+    </div>
+
     <PublicHeader client:load />
 
     <main class="flex-1">
@@ -28,7 +40,7 @@ const { title, description, ogImage, noIndex } = Astro.props;
 
     <footer class="border-t border-border/40 bg-card/30">
       <div
-        class="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 md:pt-24 md:pb-12"
+        class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 md:pt-24 md:pb-12"
       >
         <div
           class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-12 md:gap-8 mb-16"

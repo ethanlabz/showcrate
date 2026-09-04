@@ -1,0 +1,112 @@
+---
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { ArrowRight, Book, Layers, LayoutTemplate, Terminal, Zap, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+
+const templates = [
+  {
+    title: "Component Library",
+    description: "The perfect starting point for React/Vue/Svelte component libraries. Includes live playgrounds.",
+    icon: Layers,
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
+    hover: "hover:border-blue-500/50 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]",
+  },
+  {
+    title: "API Reference",
+    description: "Clean, interactive REST and GraphQL API documentation with built-in request testing.",
+    icon: Terminal,
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    hover: "hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]",
+  },
+  {
+    title: "SaaS Product Docs",
+    description: "Comprehensive multi-section documentation tailored for SaaS products and knowledge bases.",
+    icon: Book,
+    color: "text-purple-500",
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/20",
+    hover: "hover:border-purple-500/50 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]",
+  },
+  {
+    title: "CLI Tooling",
+    description: "Showcase your command line interface with interactive terminal outputs and arg parsing.",
+    icon: Zap,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    hover: "hover:border-amber-500/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]",
+  }
+];
+---
+
+<LandingLayout title="Templates - Showcrate">
+  <div class="relative min-h-screen pb-32">
+    <!-- Hero Background -->
+    <div class="absolute inset-0 -top-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background pointer-events-none"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
+    
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 text-center max-w-4xl mb-24">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 text-primary mb-8 shadow-lg shadow-primary/10">
+        <LayoutTemplate className="w-8 h-8" />
+      </div>
+      <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 text-balance">
+        Start with a Template
+      </h1>
+      <p class="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-balance">
+        Don't start from scratch. Choose a professionally designed template tailored for your specific use case.
+      </p>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8">
+        {templates.map((template) => {
+          const Icon = template.icon;
+          return (
+            <div class={`group relative rounded-3xl border bg-card/60 backdrop-blur-md overflow-hidden transition-all duration-500 hover:-translate-y-1 cursor-pointer flex flex-col sm:flex-row ${template.border} ${template.hover}`}>
+              
+              <!-- Icon Side -->
+              <div class={`sm:w-48 p-8 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-border/50 ${template.bg}`}>
+                <div class={`w-20 h-20 rounded-2xl bg-background shadow-md flex items-center justify-center group-hover:scale-110 transition-transform duration-500`}>
+                  <Icon className={`w-10 h-10 ${template.color}`} />
+                </div>
+              </div>
+
+              <!-- Content Side -->
+              <div class="p-8 flex-1 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-2xl font-bold text-foreground">{template.title}</h3>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <p class="text-muted-foreground leading-relaxed">
+                    {template.description}
+                  </p>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-border/50 flex items-center justify-between">
+                  <span class="text-sm font-semibold text-foreground">Free Template</span>
+                  <div class="flex items-center gap-2 text-sm font-bold text-primary opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                    Use Template <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      <!-- Bottom Section -->
+      <div class="mt-24 text-center">
+        <p class="text-muted-foreground mb-4">Can't find what you're looking for?</p>
+        <Button variant="outline" className="rounded-full border-border/50 hover:bg-muted">
+          Request a Template
+        </Button>
+      </div>
+    </div>
+  </div>
+</LandingLayout>

@@ -1,0 +1,26 @@
+---
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { Timeline } from "@/components/pages/public/Timeline";
+---
+
+<LandingLayout title="Changelog - Showcrate">
+  <div class="relative min-h-screen pb-32">
+    <!-- Hero Background -->
+    <div class="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-primary/10 to-transparent pointer-events-none"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
+    
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 max-w-4xl mb-24 text-center">
+      <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8">
+        Changelog
+      </h1>
+      <p class="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-balance">
+        New updates and improvements to Showcrate. See what we've been working on.
+      </p>
+    </div>
+
+    <!-- Timeline Section -->
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+      <Timeline client:load />
+    </div>
+  </div>
+</LandingLayout>

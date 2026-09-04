@@ -1,11 +1,35 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-
-
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { Star } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { ShowcaseDirectory } from "@/components/pages/public/ShowcaseDirectory";
 ---
 
-<BaseLayout>
-  <div id="showcase">
+<LandingLayout title="Showcase - Showcrate">
+  <div class="relative min-h-screen pb-32">
+    <!-- Hero Background -->
+    <div class="absolute inset-0 -top-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background pointer-events-none"></div>
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
+    
 
+    <!-- Interactive Showcase Directory -->
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+      
+      <ShowcaseDirectory client:load />
+
+      <!-- CTA -->
+      <div class="mt-32 text-center p-12 rounded-3xl border border-primary/20 bg-primary/5 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+        <div class="relative z-10">
+          <h2 class="text-3xl font-bold mb-4 text-foreground">Want to be featured?</h2>
+          <p class="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
+            Build something incredible with Showcrate and let us know. We'd love to showcase your work to the community.
+          </p>
+          <Button size="lg" className="rounded-full shadow-lg shadow-primary/20 px-8">
+            Submit your project
+          </Button>
+        </div>
+      </div>
+    </div>
   </div>
-</BaseLayout>
+</LandingLayout>

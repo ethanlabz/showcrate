@@ -1,0 +1,61 @@
+---
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { PricingTable } from "@/components/pages/public/PricingTable";
+import { HelpCircle } from "lucide-react";
+---
+
+<LandingLayout title="Pricing - Showcrate">
+  <div class="relative min-h-screen pb-32">
+    <!-- Huge Glow -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/10 blur-[120px] rounded-full pointer-events-none mix-blend-screen"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+    
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 text-center max-w-3xl mb-16">
+      <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8">
+        Simple, transparent pricing
+      </h1>
+      <p class="text-xl sm:text-2xl text-muted-foreground leading-relaxed text-balance">
+        Start for free, upgrade when you need more power and environments.
+      </p>
+    </div>
+
+    <div class="relative z-20 px-4 sm:px-6 lg:px-8">
+      <PricingTable client:load />
+    </div>
+    
+    <!-- Trusted By -->
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 mt-32 max-w-5xl text-center border-t border-border/40 pt-16">
+      <p class="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-8">Trusted by innovative teams</p>
+      <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+        <!-- SVG Logos Placeholders -->
+        <div class="text-2xl font-black font-sans tracking-tighter">Acme Corp</div>
+        <div class="text-2xl font-black font-sans tracking-tighter">Stark Ind.</div>
+        <div class="text-2xl font-black font-sans tracking-tighter">Globex</div>
+        <div class="text-2xl font-black font-sans tracking-tighter">Soylent</div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 mt-32 max-w-4xl">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+        <p class="text-muted-foreground text-lg">Everything you need to know about the product and billing.</p>
+      </div>
+      
+      <div class="grid gap-6">
+        {[
+          { q: "Can I change my plan later?", a: "Absolutely. You can upgrade or downgrade your plan at any time. Prorated charges will be applied automatically." },
+          { q: "What counts as an environment?", a: "An environment is a single live playground instance running on your documentation. The Hobby plan allows up to 3 concurrent environments." },
+          { q: "Do you offer discounts for open source?", a: "Yes! We love open source. Contact our support team with a link to your repository for a free Pro license." },
+        ].map(faq => (
+          <div class="p-8 rounded-2xl bg-card/40 border border-border/50 backdrop-blur-sm">
+            <h4 class="text-xl font-bold mb-3 flex items-center gap-3">
+              <HelpCircle className="w-5 h-5 text-primary" /> {faq.q}
+            </h4>
+            <p class="text-muted-foreground pl-8">{faq.a}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</LandingLayout>

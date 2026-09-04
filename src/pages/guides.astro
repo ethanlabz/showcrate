@@ -1,0 +1,38 @@
+---
+import LandingLayout from "@/layouts/LandingLayout.astro";
+import { GraduationCap, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+---
+
+<LandingLayout title="Guides - Showcrate">
+  <div class="relative min-h-screen pb-32 flex flex-col justify-center items-center">
+    <!-- Abstract Background -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
+    
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-3xl">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 shadow-2xl shadow-primary/20 mb-8">
+        <GraduationCap className="w-10 h-10 text-primary" />
+      </div>
+      
+      <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight mb-6">
+        Guides & Tutorials
+      </h1>
+      <p class="text-xl text-muted-foreground leading-relaxed mb-12 text-balance">
+        Deep dives into building interactive documentation. Our tutorial series is currently in production.
+      </p>
+      
+      <div class="inline-flex items-center gap-4">
+        <a href="/docs/introduction">
+          <Button variant="outline" size="lg" className="rounded-full px-8">
+            Read the Docs
+          </Button>
+        </a>
+        <a href="/templates">
+          <Button size="lg" className="rounded-full px-8 gap-2">
+            Browse Templates <ArrowRight className="w-4 h-4" />
+          </Button>
+        </a>
+      </div>
+    </div>
+  </div>
+</LandingLayout>
