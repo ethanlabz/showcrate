@@ -3,12 +3,12 @@ import { Home, LayoutGrid, FileCode2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-export function PublicHeader() {
+export function Nav() {
   return (
     <>
       {/* Universal Top Header (Visible everywhere) */}
       <div className="sticky top-0 z-50 w-full xl:pt-6 xl:px-6 2xl:px-12 pointer-events-none transition-all duration-500">
-        <header className="pointer-events-auto mx-auto w-full max-w-7xl 2xl:max-w-[1700px] border-b xl:border border-border/40 bg-background/95 xl:bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 xl:rounded-full xl:shadow-2xl transition-all duration-500">
+        <header className="pointer-events-auto mx-auto w-full max-w-7xl 2xl:max-w-[1700px] border-b xl:border border-border/40 bg-background/95 xl:bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/60 xl:rounded-full xl:shadow-2xl transition-all duration-500">
           <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-16 flex h-16 xl:h-20 items-center justify-between">
           <div className="flex items-center gap-6">
             <a className="flex items-center space-x-2" href="/">

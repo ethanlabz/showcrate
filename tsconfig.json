@@ -16,7 +16,7 @@
   "include": [
     ".astro/types.d.ts",
     "**/*"
-  ],
+, "src/components/pages/home/Nav.tsx"  ],
   "exclude": [
     "dist",
     "node_modules"

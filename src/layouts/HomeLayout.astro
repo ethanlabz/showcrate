@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
 
-import { PublicHeader } from "../components/pages/public/PublicHeader";
+import { Nav } from "../components/pages/home/Nav";
 
 export interface Props {
   title: string;
@@ -23,16 +23,27 @@ const { title, description, ogImage, noIndex } = Astro.props;
     {/* Global Ambient Background */}
     <div class="fixed inset-0 z-[-1] pointer-events-none bg-background">
       {/* Subtle Grid */}
-      <div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
-      
+      <div
+        class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"
+      >
+      </div>
+
       {/* Glowing Ambient Orbs */}
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] max-w-[1920px] h-[100vh] overflow-hidden opacity-40 dark:opacity-20">
-        <div class="absolute -top-[20%] -left-[10%] w-[50vw] max-w-[800px] aspect-square rounded-full bg-primary/20 blur-[100px] sm:blur-[120px] mix-blend-normal"></div>
-        <div class="absolute top-[10%] -right-[10%] w-[40vw] max-w-[600px] aspect-square rounded-full bg-blue-500/10 blur-[100px] sm:blur-[120px] mix-blend-normal"></div>
+      <div
+        class="absolute top-0 left-1/2 -translate-x-1/2 w-screen max-w-[1920px] h-screen overflow-hidden opacity-40 dark:opacity-20"
+      >
+        <div
+          class="absolute top-[-20%] left-[-10%] w-[50vw] max-w-200 aspect-square rounded-full bg-primary/20 blur-[100px] sm:blur-[120px] mix-blend-normal"
+        >
+        </div>
+        <div
+          class="absolute top-[10%] right-[-10%] w-[40vw] max-w-150 aspect-square rounded-full bg-blue-500/10 blur-[100px] sm:blur-[120px] mix-blend-normal"
+        >
+        </div>
       </div>
     </div>
 
-    <PublicHeader client:load />
+    <Nav client:load />
 
     <main class="flex-1">
       <slot />
@@ -155,25 +166,29 @@ const { title, description, ogImage, noIndex } = Astro.props;
                 <a
                   href="/features"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Features</a>
+                  >Features</a
+                >
               </li>
               <li>
                 <a
                   href="/pricing"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Pricing</a>
+                  >Pricing</a
+                >
               </li>
               <li>
                 <a
                   href="/showcase"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Showcase</a>
+                  >Showcase</a
+                >
               </li>
               <li>
                 <a
                   href="/changelog"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Changelog</a>
+                  >Changelog</a
+                >
               </li>
             </ul>
           </div>
@@ -184,25 +199,29 @@ const { title, description, ogImage, noIndex } = Astro.props;
                 <a
                   href="/docs"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Documentation</a>
+                  >Documentation</a
+                >
               </li>
               <li>
                 <a
                   href="/blog"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Blog</a>
+                  >Blog</a
+                >
               </li>
               <li>
                 <a
                   href="/guides"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Guides</a>
+                  >Guides</a
+                >
               </li>
               <li>
                 <a
                   href="/community"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Community</a>
+                  >Community</a
+                >
               </li>
             </ul>
           </div>
@@ -213,25 +232,29 @@ const { title, description, ogImage, noIndex } = Astro.props;
                 <a
                   href="/terms"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Terms of Service</a>
+                  >Terms of Service</a
+                >
               </li>
               <li>
                 <a
                   href="/privacy"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Privacy Policy</a>
+                  >Privacy Policy</a
+                >
               </li>
               <li>
                 <a
                   href="/security"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Security</a>
+                  >Security</a
+                >
               </li>
               <li>
                 <a
                   href="/contact"
                   class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >Contact Us</a>
+                  >Contact Us</a
+                >
               </li>
             </ul>
           </div>

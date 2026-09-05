@@ -13,19 +13,21 @@ config:
 ---
 flowchart BT
  subgraph s1["Layout Architecture"]
-        a["Base Layout"]
+        A["Base Layout"]
         
-        b["Home Layout"]
+        B["Home Layout"]
         
-        c["App Layout"]
-        c1["Docs Layout"]
-        c2["Editor Layout"]
-        c3["Project Layout"]
+        C["App Layout"]
+        C1["Editor Layout"]
 
-        d["Auth Layout"]
+        D["Project Layout"]
+        D1["Docs Layout"]
+
+        E["Auth Layout"]
   end
-    a --> b & c & d
-    c --> c1 & c2 & c3
+    A --> B & C & D & E
+    C --> C1
+    D --> D1
 
 ```
 
