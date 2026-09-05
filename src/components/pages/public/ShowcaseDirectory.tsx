@@ -150,7 +150,7 @@ export function ShowcaseDirectory() {
   return (
     <div className="w-full">
       {/* Hero Section with Search */}
-      <div className="text-center max-w-4xl mx-auto mb-16 pt-32 lg:pt-40">
+      <div className="text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-16 pt-32 lg:pt-40">
         
         {/* Centered Search Bar */}
         <div className="relative w-full max-w-lg mx-auto mb-8 z-20">
@@ -172,7 +172,7 @@ export function ShowcaseDirectory() {
           </div>
         </div>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl 2xl:text-8xl font-extrabold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
           Built with Showcrate
         </h1>
         <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
@@ -181,7 +181,7 @@ export function ShowcaseDirectory() {
       </div>
 
       {/* Toolbar */}
-      <div className="bg-background/80 backdrop-blur-xl border-b border-border/50 pb-6 pt-4 mb-12">
+      <div className="bg-card/80 backdrop-blur-xl border-b border-border/50 pb-6 pt-4 mb-12 shadow-sm">
         <div className="flex flex-col gap-4">
           
           <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
@@ -269,7 +269,7 @@ export function ShowcaseDirectory() {
       </div>
 
       {/* Results Grid/List */}
-      <motion.div layout className={`w-full ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8' : 'flex flex-col gap-4'}`}>
+      <motion.div layout className={`w-full ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 2xl:gap-10' : 'flex flex-col gap-4'}`}>
         <AnimatePresence mode="popLayout">
           {filteredAndSortedProjects.length === 0 ? (
             <motion.div 

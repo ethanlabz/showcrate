@@ -65,7 +65,7 @@ export function Timeline() {
                 </span>
                 <span className="text-sm text-muted-foreground">{event.date}</span>
               </div>
-              <h3 className="text-xl font-bold text-foreground">{event.title}</h3>
+              <h3 className="text-xl font-bold text-foreground font-sans">{event.title}</h3>
             </div>
             <p className="text-muted-foreground mb-6 leading-relaxed">
               {event.description}
