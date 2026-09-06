@@ -1,7 +1,6 @@
 // src/components/ui/MobileNav.tsx
 import { useState, useEffect, useRef } from "react";
 import { Home, LayoutGrid, FileCode2, HelpCircle } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 
 interface NavLink {
   href: string;

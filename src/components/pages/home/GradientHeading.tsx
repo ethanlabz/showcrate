@@ -15,7 +15,7 @@ export function GradientHeading({ title, subtitle, className, align = "center" }
       "items-center text-center": align === "center",
       "items-end text-right": align === "right",
     }, className)}>
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-foreground via-foreground/90 to-primary/80 pb-2">
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-linear-to-br from-foreground via-foreground/90 to-primary/80 pb-2">
         {title}
       </h1>
       {subtitle && (

@@ -32,13 +32,13 @@ export function Nav({ currentPath }: Props) {
     <>
       {/* Universal Top Header (Visible everywhere) */}
       <div className="sticky top-0 z-9999 w-full xl:pt-6 xl:px-6 2xl:px-12 pointer-events-none transition-all duration-500">
-        <header className="pointer-events-auto mx-auto w-full max-w-7xl 2xl:max-w-[1700px] border-b xl:border border-border/40 bg-background/95 xl:bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/60 xl:rounded-full xl:shadow-2xl transition-all duration-500">
+        <header className="pointer-events-auto mx-auto w-full max-w-7xl 2xl:max-w-[1700px] border-b xl:border border-border/40 bg-background/95 xl:bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/60 xl:rounded-xl xl:shadow-2xl transition-all duration-500">
           <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-16 flex h-16 xl:h-20 items-center justify-between">
             <div className="flex items-center gap-6">
               <Logo />
 
               {/* Desktop Navigation Links (hidden on mobile) */}
-              <nav className="hidden sm:block lg:flex items-center gap-6 text-sm font-medium">
+              <nav className="hidden md:block lg:flex items-center gap-6 text-sm font-medium">
                 <div className="flex items-center gap-8">
                   <ul className="hidden items-center gap-6 text-sm font-medium md:flex">
                     {navLinks.map((link) => (
@@ -64,7 +64,7 @@ export function Nav({ currentPath }: Props) {
                 Log in
               </a>
               <a href="/auth/signup">
-                <Button size="sm" className="rounded-full shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm">Sign up</Button>
+                <Button size="sm" className="shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm">Sign up</Button>
               </a>
             </div>
           </div>
@@ -74,7 +74,7 @@ export function Nav({ currentPath }: Props) {
       {/* tablet will be same as Desktop for HomeLayout */}
 
       {/* Mobile Floating Bottom Dock (hidden on tablet and desktop) */}
-      <MobileNav navLinks={navLinks} currentPath={currentPath} />
+      <MobileNav navLinks={navLinks} currentPath={currentPath} data-lenis-prevent />
     </>
   );
 }
