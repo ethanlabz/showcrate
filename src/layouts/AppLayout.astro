@@ -1,11 +1,14 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
 
+import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { UserMenu } from "../components/pages/app/UserMenu";
-import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 import { AppHeader } from "../components/pages/app/AppHeader";
 import { MobileBottomNav } from "../components/pages/app/MobileBottomNav";
+import { Sidebar } from "@/components/ui/Sidebar"
 
 export interface Props {
   title: string;
@@ -17,18 +20,96 @@ const { title, description, noIndex = true } = Astro.props;
 const user = Astro.locals.user;
 ---
 
-<BaseLayout
-  title={title}
-  description={description}
-  noIndex={noIndex}
->
+<BaseLayout title={title} description={description} noIndex={noIndex}>
   <div class="flex min-h-screen w-full flex-col bg-muted/40 pb-16 md:pb-0">
-    <AppHeader user={user} client:load />
-    
+    <!-- <AppHeader user={user} client:load /> -->
+
+    <header
+      class="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:static sm:h-16 sm:border-0 sm:bg-transparent sm:px-6"
+    >
+      <div class="flex items-center gap-4">
+        <a href="/" class="flex items-center gap-2 font-semibold">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 256 256"
+            class="h-6 w-6 md:h-5 md:w-5"
+          >
+            <rect width="256" height="256" fill="none"></rect>
+            <line
+              x1="208"
+              y1="128"
+              x2="128"
+              y2="208"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="16"></line>
+            <line
+              x1="192"
+              y1="40"
+              x2="40"
+              y2="192"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="16"></line>
+          </svg>
+          <span class="sr-only">Showcrate</span>
+        </a>
+
+        <nav
+          class="hidden md:flex flex-1 items-center gap-6 text-sm font-medium"
+        >
+          <a
+            href="/dashboard"
+            class="text-muted-foreground transition-colors hover:text-foreground"
+            >Dashboard</a
+          >
+          <a
+            href="/projects"
+            class="text-muted-foreground transition-colors hover:text-foreground"
+            >Projects</a
+          >
+        </nav>
+      </div>
+
+      <div
+        class="flex items-center justify-end gap-2 sm:gap-4 md:flex-none"
+      >
+        <a href="/new" class="hidden md:block">
+          <Button size="sm">New Project</Button>
+        </a>
+        <ThemeToggle />
+        <a
+          href="/notifications"
+          class="text-muted-foreground hover:text-foreground flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent transition-colors"
+        >
+          <Bell className="h-4 w-4" />
+          <span class="sr-only">Notifications</span>
+        </a>
+
+        {
+          user ? (
+            <UserMenu user={user} />
+          ) : (
+            <a href="/auth/login" class="text-sm font-medium">
+              Log in
+            </a>
+          )
+        }
+      </div>
+    </header>
+
+    <div id="sidebar">
+
+    </div>
+
     <main class="flex-1 p-4 sm:p-6 md:p-8">
       <slot />
     </main>
-    
+
     <MobileBottomNav client:load />
   </div>
 </BaseLayout>

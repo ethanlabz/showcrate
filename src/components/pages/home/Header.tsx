@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Home, LayoutGrid, FileCode2, HelpCircle } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import MobileNav from "@/components/pages/home/MobileNav";
 
@@ -27,7 +27,7 @@ interface Props {
   currentPath: string;
 }
 
-export function Nav({ currentPath }: Props) {
+export function Header({ currentPath }: Props) {
   return (
     <>
       {/* Universal Top Header (Visible everywhere) */}
