@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 export function DocsSearch() {
   return (
