@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { UserMenu } from "./UserMenu";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface User {
   username?: string | null;

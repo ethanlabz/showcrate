@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Home, LayoutGrid, FileCode2, HelpCircle } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import MobileNav from "@/components/pages/home/MobileNav";
 
 const navLinks = [
