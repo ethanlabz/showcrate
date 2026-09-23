@@ -17,6 +17,7 @@ const {
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
 const resolvedOgImage = ogImage ? new URL(ogImage, Astro.site).toString() : undefined;
 ---
 
@@ -69,7 +70,7 @@ const resolvedOgImage = ogImage ? new URL(ogImage, Astro.site).toString() : unde
 
     <slot name="head" />
   </head>
-  <body class="bg-background text-foreground antialiased min-h-screen">
+  <body class="bg-background text-foreground antialiased min-h-screen min-w-screen">
     <slot />
     
     <script>

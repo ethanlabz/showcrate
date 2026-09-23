@@ -1,10 +1,10 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import { EditorWorkspace } from "@/components/pages/editor/EditorWorkspace";
+import HomeLayout from "@/layouts/HomeLayout.astro";
+import { PlaygroundEditor } from "@/components/pages/playground/PlaygroundEditor.tsx";
 ---
 
-<BaseLayout title="Markdown Playground" noIndex={true}>
-  <div class="h-screen w-full flex flex-col">
-    <EditorWorkspace client:only="react" />
+<HomeLayout title="Playground | Showcrate" noIndex={true}>
+  <div class="min-h-[calc(100vh-8rem)] w-full flex flex-col bg-surface-raised pt-8 pb-12">
+    <PlaygroundEditor client:only="react" />
   </div>
-</BaseLayout>
+</HomeLayout>

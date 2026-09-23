@@ -1,303 +1,503 @@
-import { useEffect, useRef, useState } from "react";
-import DOMPurify from "isomorphic-dompurify";
+import { memo, useEffect, useRef, useState } from "react";
+import { motion, Reorder } from "framer-motion";
 
-const markdownSource = `# Showcrate
+/**
+ * Static script for the intro "reveal" animation.
+ * Mirrors the real v1 block set (schema.ts): heading, paragraph,
+ * callout, code, bulleted list.
+ */
+type Segment = { text: string; bold?: boolean };
 
-The fastest way to build **live** docs.
+type Block =
+  | { id: string; type: "heading"; segments: Segment[] }
+  | { id: string; type: "paragraph"; segments: Segment[] }
+  | { id: string; type: "callout"; tone: "tip"; segments: Segment[] }
+  | { id: string; type: "bulleted"; items: string[] }
+  | { id: string; type: "code"; language: "javascript"; lines: CodeToken[][] };
 
-> "Just like a README, but interactive."
+type CodeToken = { text: string; className?: string };
 
-## Snippets become Workspaces
+const INITIAL_BLOCKS: Block[] = [
+  {
+    id: "b1",
+    type: "heading",
+    segments: [{ text: "Showcrate" }],
+  },
+  {
+    id: "b2",
+    type: "paragraph",
+    segments: [
+      { text: "The fastest way to build " },
+      { text: "live", bold: true },
+      { text: " docs." },
+    ],
+  },
+  {
+    id: "b3",
+    type: "callout",
+    tone: "tip",
+    segments: [
+      {
+        text: "Drag the handle to reorder blocks. No markup to write.",
+      },
+    ],
+  },
+  {
+    id: "b4",
+    type: "code",
+    language: "javascript",
+    lines: [
+      [
+        { text: "import", className: "text-[#ff7b72]" },
+        { text: " { serve } " },
+        { text: "from", className: "text-[#ff7b72]" },
+        { text: ' "showcrate"' + ";", className: "text-[#a5d6ff]" },
+      ],
+      [{ text: "" }],
+      [
+        { text: "serve", className: "text-[#d2a8ff]" },
+        { text: "(() => " },
+        { text: "new", className: "text-[#ff7b72]" },
+        { text: " Response(" },
+        { text: '"Hello!"', className: "text-[#a5d6ff]" },
+        { text: "));" },
+      ],
+    ],
+  },
+  {
+    id: "b5",
+    type: "bulleted",
+    items: ["Live autosave", "No build step", "Version history built in"],
+  },
+];
 
-\`\`\`javascript
-import { serve } from "showcrate";
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-serve(() => new Response("Hello!"));
-\`\`\``;
-
-function renderMarkdown(text: string): string {
-  const codeBlocks: string[] = [];
-  let processedText = text.replace(
-    /```[a-z]*\n([\s\S]*?)\n```/gim,
-    (_match, code) => {
-      codeBlocks.push(code.replace(/</g, "&lt;").replace(/>/g, "&gt;"));
-      return `__CODEBLOCK_${codeBlocks.length - 1}__`;
-    },
-  );
-
-  processedText = processedText
-    .replace(
-      /^### (.*$)/gim,
-      '<h3 class="text-xl font-bold mt-6 mb-2 text-foreground">$1</h3>',
-    )
-    .replace(
-      /^## (.*$)/gim,
-      '<h2 class="text-2xl font-bold mt-6 mb-3 text-foreground border-b border-border/30 pb-2">$1</h2>',
-    )
-    .replace(
-      /^# (.*$)/gim,
-      '<h1 class="text-3xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-linear-to-br from-primary to-secondary mb-6 tracking-tight">$1</h1>',
-    )
-    .replace(
-      /^> (.*$)/gim,
-      '<blockquote class="border-l-4 border-primary pl-4 py-2 italic text-muted-foreground my-4 bg-primary/10 rounded-r-md">$1</blockquote>',
-    )
-    .replace(
-      /\*\*(.*?)\*\*/gim,
-      '<strong class="text-foreground font-bold">$1</strong>',
-    )
-    .replace(
-      /`(.*?)`/gim,
-      '<code class="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-sm border border-border/50">$1</code>',
-    )
-    .replace(/\n\n/g, '<div class="h-4"></div>')
-    .replace(/\n/g, "<br/>");
-
-  processedText = processedText
-    .replace(/<\/h([1-6])><br\/>/g, "</h$1>")
-    .replace(/<\/blockquote><br\/>/g, "</blockquote>")
-    .replace(/<\/div><br\/>/g, "</div>");
-
-  codeBlocks.forEach((code, index) => {
-    processedText = processedText.replace(
-      `__CODEBLOCK_${index}__`,
-      `<pre class="bg-[#0d1117] text-[#c9d1d9] p-4 rounded-xl border border-border mt-4 mb-6 overflow-x-auto text-xs sm:text-sm font-mono shadow-inner leading-relaxed"><code>${code}</code></pre>`,
-    );
+function segmentsToVisibleText(segments: Segment[], visibleChars: number) {
+  let remaining = visibleChars;
+  return segments.map((seg) => {
+    const take = Math.max(0, Math.min(seg.text.length, remaining));
+    remaining -= take;
+    return { ...seg, text: seg.text.slice(0, take) };
   });
-
-  return DOMPurify.sanitize(processedText);
 }
 
-export function InteractiveEditor() {
-  const editorRef = useRef<HTMLTextAreaElement | null>(null);
-  const previewRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const tabCodeRef = useRef<HTMLButtonElement | null>(null);
-  const tabPreviewRef = useRef<HTMLButtonElement | null>(null);
-  const paneCodeRef = useRef<HTMLDivElement | null>(null);
-  const panePreviewRef = useRef<HTMLDivElement | null>(null);
+function totalChars(segments: Segment[]) {
+  return segments.reduce((sum, s) => sum + s.text.length, 0);
+}
 
-  const [previewHtml, setPreviewHtml] = useState("");
+/** Uncontrolled contentEditable — never touches innerHTML. */
+const EditableText = memo(function EditableText({
+  value,
+  onCommit,
+  as: Tag = "span",
+  className,
+  singleLine = false,
+}: {
+  value: string;
+  onCommit: (next: string) => void;
+  as?: "span" | "h1" | "p";
+  className?: string;
+  singleLine?: boolean;
+}) {
+  const ref = useRef<HTMLElement | null>(null);
+  const mountedValue = useRef(value);
 
   useEffect(() => {
-    const editor = editorRef.current;
+    if (ref.current && ref.current.textContent !== value) {
+      ref.current.textContent = value;
+    }
+  }, [value]);
+
+  return (
+    <Tag
+      ref={ref as never}
+      contentEditable
+      suppressContentEditableWarning
+      className={className}
+      onBlur={(e) => {
+        const next = (e.currentTarget.textContent ?? "").trim();
+        if (next !== mountedValue.current) {
+          mountedValue.current = next;
+          onCommit(next || value);
+        }
+      }}
+      onKeyDown={(e) => {
+        if (singleLine && e.key === "Enter") {
+          e.preventDefault();
+          (e.currentTarget as HTMLElement).blur();
+        }
+      }}
+    >
+      {value}
+    </Tag>
+  );
+});
+
+function BlockChrome({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="group/block relative flex items-start gap-1 px-1 py-1 rounded-md hover:bg-muted/30 transition-colors">
+      <div className="flex items-center gap-0.5 pt-1 opacity-0 group-hover/block:opacity-100 transition-opacity shrink-0 select-none">
+        <button
+          type="button"
+          aria-label="Add block"
+          className="h-5 w-5 rounded hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
+        >
+          <span className="text-xs leading-none">+</span>
+        </button>
+        <button
+          type="button"
+          aria-label="Drag to reorder"
+          className="h-5 w-5 rounded hover:bg-muted flex items-center justify-center text-muted-foreground cursor-grab transition-colors"
+        >
+          <span className="text-xs leading-none">⠿</span>
+        </button>
+      </div>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
+const HeadingBlock = memo(function HeadingBlock({
+  text,
+  onCommit,
+}: {
+  text: string;
+  onCommit: (v: string) => void;
+}) {
+  return (
+    <BlockChrome>
+      <EditableText
+        as="h1"
+        value={text}
+        onCommit={onCommit}
+        singleLine
+        className="text-3xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-linear-to-br from-primary to-secondary tracking-tight outline-none"
+      />
+    </BlockChrome>
+  );
+});
+
+const ParagraphBlock = memo(function ParagraphBlock({
+  segments,
+  onCommit,
+}: {
+  segments: Segment[];
+  onCommit: (v: string) => void;
+}) {
+  const flat = segments.map((s) => s.text).join("");
+  return (
+    <BlockChrome>
+      <p className="text-base sm:text-lg text-foreground leading-relaxed outline-none">
+        <EditableText value={flat} onCommit={onCommit} className="outline-none" />
+      </p>
+    </BlockChrome>
+  );
+});
+
+const CalloutBlock = memo(function CalloutBlock({
+  text,
+  onCommit,
+}: {
+  text: string;
+  onCommit: (v: string) => void;
+}) {
+  return (
+    <BlockChrome>
+      <div className="flex gap-2 items-start rounded-lg border border-primary/20 bg-primary/10 px-3 py-2.5">
+        <span className="text-primary text-sm mt-0.5" aria-hidden>
+          💡
+        </span>
+        <EditableText
+          value={text}
+          onCommit={onCommit}
+          className="text-sm text-foreground/90 leading-relaxed outline-none flex-1"
+        />
+      </div>
+    </BlockChrome>
+  );
+});
+
+const BulletedListBlock = memo(function BulletedListBlock({
+  items,
+  onCommitItem,
+}: {
+  items: string[];
+  onCommitItem: (index: number, v: string) => void;
+}) {
+  return (
+    <BlockChrome>
+      <ul className="space-y-1.5">
+        {items.map((item, i) => (
+          <li key={i} className="flex gap-2 items-start text-sm text-foreground/90">
+            <span className="text-primary mt-0.5" aria-hidden>
+              •
+            </span>
+            <EditableText
+              value={item}
+              onCommit={(v) => onCommitItem(i, v)}
+              singleLine
+              className="outline-none flex-1"
+            />
+          </li>
+        ))}
+      </ul>
+    </BlockChrome>
+  );
+});
+
+const CodeBlockBlock = memo(function CodeBlockBlock({ lines }: { lines: CodeToken[][] }) {
+  return (
+    <BlockChrome>
+      <pre className="bg-[#0d1117] text-[#c9d1d9] p-4 rounded-xl border border-border overflow-x-auto text-xs sm:text-sm font-mono shadow-inner leading-relaxed">
+        <code>
+          {lines.map((line, i) => (
+            <div key={i}>
+              {line.length === 0 || (line.length === 1 && line[0].text === "") ? (
+                <br />
+              ) : (
+                line.map((tok, j) => (
+                  <span key={j} className={tok.className}>
+                    {tok.text}
+                  </span>
+                ))
+              )}
+            </div>
+          ))}
+        </code>
+      </pre>
+    </BlockChrome>
+  );
+});
+
+export function InteractiveEditor() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [typedChars, setTypedChars] = useState(0);
+  const [interactive, setInteractive] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  // Single robust effect handling both SSR-safe media queries and the observer
+  useEffect(() => {
     const container = containerRef.current;
-    if (!editor || !container) return;
+    if (!container) return;
 
-    let userTookControl = false;
-    let typeWriter: ReturnType<typeof setInterval> | null = null;
+    const isReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
+    setReducedMotion(isReduced);
 
-    editor.value = "";
-    setPreviewHtml(renderMarkdown(""));
+    if (isReduced) {
+      setRevealedCount(blocks.length);
+      setTypedChars(Infinity);
+      setInteractive(true);
+      return;
+    }
+
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !userTookControl) {
-          let i = 0;
-          const speed = Math.max(20, Math.floor(4000 / markdownSource.length));
-
-          typeWriter = setInterval(() => {
-            if (userTookControl || i >= markdownSource.length) {
-              if (typeWriter) clearInterval(typeWriter);
-              return;
-            }
-            const nextValue = markdownSource.substring(0, i + 1);
-            editor.value = nextValue;
-            editor.scrollTop = editor.scrollHeight;
-            setPreviewHtml(renderMarkdown(nextValue));
-            i++;
-          }, speed);
-
-          observer.disconnect();
-        }
+        if (!entries[0].isIntersecting || cancelled) return;
+        observer.disconnect();
+        playIntro();
       },
-      { threshold: 0.4 },
+      { threshold: 0.1 },
     );
-
     observer.observe(container);
 
-    const handleFocus = (e: FocusEvent) => {
-      if (!e.isTrusted) return;
-      userTookControl = true;
-    };
+    function playIntro() {
+      blocks.forEach((_, i) => {
+        timers.push(
+          setTimeout(() => {
+            if (cancelled) return;
+            setRevealedCount(i + 1);
+          }, i * 420),
+        );
+      });
 
-    const handleInput = (e: Event) => {
-      if (!(e instanceof InputEvent) || !e.isTrusted) return;
-      userTookControl = true;
-      setPreviewHtml(renderMarkdown((e.target as HTMLTextAreaElement).value));
-    };
+      const paragraph = blocks.find((b) => b.type === "paragraph");
+      const paragraphChars = paragraph ? totalChars((paragraph as any).segments) : 0;
+      const paragraphStart = 420; // when block b2 becomes visible
+      let i = 0;
+      const tick = () => {
+        if (cancelled) return;
+        i++;
+        setTypedChars(i);
+        if (i < paragraphChars) {
+          timers.push(setTimeout(tick, 22));
+        }
+      };
+      timers.push(setTimeout(tick, paragraphStart));
 
-    editor.addEventListener("focus", handleFocus);
-    editor.addEventListener("input", handleInput);
+      timers.push(
+        setTimeout(() => {
+          if (!cancelled) setInteractive(true);
+        }, blocks.length * 420 + 300),
+      );
+    }
 
     return () => {
+      cancelled = true;
       observer.disconnect();
-      if (typeWriter) clearInterval(typeWriter);
-      editor.removeEventListener("focus", handleFocus);
-      editor.removeEventListener("input", handleInput);
+      timers.forEach(clearTimeout);
     };
   }, []);
 
-  useEffect(() => {
-    const tabCode = tabCodeRef.current;
-    const tabPreview = tabPreviewRef.current;
-    const paneCode = paneCodeRef.current;
-    const panePreview = panePreviewRef.current;
-
-    if (!tabCode || !tabPreview || !paneCode || !panePreview) return;
-
-    const showCode = () => {
-      paneCode.classList.remove("hidden");
-      paneCode.classList.add("flex");
-      panePreview.classList.add("hidden");
-      panePreview.classList.remove("flex");
-
-      tabCode.classList.replace("border-transparent", "border-primary");
-      tabCode.classList.replace("text-muted-foreground", "text-foreground");
-      tabPreview.classList.replace("border-primary", "border-transparent");
-      tabPreview.classList.replace("text-foreground", "text-muted-foreground");
-    };
-
-    const showPreview = () => {
-      panePreview.classList.remove("hidden");
-      panePreview.classList.add("flex");
-      paneCode.classList.add("hidden");
-      paneCode.classList.remove("flex");
-
-      tabPreview.classList.replace("border-transparent", "border-primary");
-      tabPreview.classList.replace("text-muted-foreground", "text-foreground");
-      tabCode.classList.replace("border-primary", "border-transparent");
-      tabCode.classList.replace("text-foreground", "text-muted-foreground");
-    };
-
-    tabCode.addEventListener("click", showCode);
-    tabPreview.addEventListener("click", showPreview);
-
-    return () => {
-      tabCode.removeEventListener("click", showCode);
-      tabPreview.removeEventListener("click", showPreview);
-    };
-  }, []);
+  function updateBlock(id: string, updater: (b: Block) => Block) {
+    setBlocks((prev) => prev.map((b) => (b.id === id ? updater(b) : b)));
+  }
 
   return (
-    <div className="w-full max-w-7xl 2xl:max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div
-        ref={containerRef}
-        id="editor-mockup-container"
-        className="editor-window opacity-0 translate-y-12 scale-95 relative w-full max-w-6xl mx-auto"
-      >
-        <div className="absolute inset-0 bg-linear-to-r from-primary to-secondary blur-3xl opacity-20 rounded-full"></div>
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 
+        FIX 1: Removed `editor-window opacity-0 translate-y-12 scale-95` 
+        This prevents GSAP's inline styles from conflicting with React's hydration 
+      */}
+      <div ref={containerRef} className="relative w-full">
+        <div className="absolute inset-0 bg-linear-to-r from-primary to-secondary blur-3xl opacity-20 rounded-full" />
         <div className="relative rounded-2xl border border-border bg-background/80 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col group hover:border-primary/50 transition-colors duration-500">
-          {/* Window Header */}
+          
+          {/* Window chrome */}
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/80 bg-muted/20 backdrop-blur-md">
             <div className="flex items-center gap-4">
               <div className="flex gap-1.5 sm:gap-2">
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#FF5F56] border border-[#E0443E]"></div>
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#27C93F] border border-[#1AAB29]"></div>
+                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
+                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
+                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-[#27C93F] border border-[#1AAB29]" />
               </div>
-
               <div className="hidden sm:flex items-center text-[11px] text-muted-foreground font-mono bg-background/50 px-2 py-1 rounded-md border border-border/50 shadow-inner select-none">
                 <svg
                   className="w-3 h-3 mr-1.5 text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                  ></path>
+                  />
                 </svg>
-                showcrate<span className="mx-1.5 text-border">/</span>
-                <span className="text-foreground">README.md</span>
+                overview<span className="mx-1.5 text-border">/</span>
+                <span className="text-foreground">index</span>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              {/* <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold tracking-wide uppercase text-success bg-success/10 border border-success/20 px-2.5 py-1 rounded-full select-none">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
-                </span>
-                Live
-              </div> */}
-              <a
-                href="/playground"
-                className="flex relative z-50 items-center gap-1.5 h-6 px-2.5 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors cursor-pointer group"
-                title="Open in Playground"
+            <a
+              href="/playground"
+              className="flex items-center gap-1.5 h-6 px-2.5 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors group"
+              title="Open in Playground"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                Open in Playground
+              </span>
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden
               >
-                <span className="text-[10px] font-bold uppercase tracking-wider group-hover:text-primary transition-colors">
-                  Open in Playground
-                </span>
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </a>
+          </div>
+
+          {/* 
+            FIX 2: Replaced min-h-87.5 with min-h-[22rem] to ensure standard height support
+          */}
+          <div className="bg-background p-4 sm:p-8 min-h-88 flex flex-col gap-1 overflow-hidden">
+            {blocks.slice(0, interactive ? blocks.length : revealedCount).map((block, i) => {
+              const isRevealing = !interactive && i === revealedCount - 1;
+              let blockContent = null;
+
+              // Construct the inner block content
+              switch (block.type) {
+                case "heading":
+                  blockContent = (
+                    <HeadingBlock
+                      text={block.segments[0].text}
+                      onCommit={(v) =>
+                        updateBlock(block.id, (b) =>
+                          b.type === "heading" ? { ...b, segments: [{ text: v }] } : b,
+                        )
+                      }
+                    />
+                  );
+                  break;
+                case "paragraph": {
+                  const visible =
+                    isRevealing && typedChars !== Infinity
+                      ? segmentsToVisibleText(block.segments, typedChars)
+                      : block.segments;
+                  blockContent = (
+                    <ParagraphBlock
+                      segments={visible}
+                      onCommit={(v) =>
+                        updateBlock(block.id, (b) =>
+                          b.type === "paragraph" ? { ...b, segments: [{ text: v }] } : b,
+                        )
+                      }
+                    />
+                  );
+                  break;
+                }
+                case "callout":
+                  blockContent = (
+                    <CalloutBlock
+                      text={block.segments[0].text}
+                      onCommit={(v) =>
+                        updateBlock(block.id, (b) =>
+                          b.type === "callout" ? { ...b, segments: [{ text: v }] } : b,
+                        )
+                      }
+                    />
+                  );
+                  break;
+                case "bulleted":
+                  blockContent = (
+                    <BulletedListBlock
+                      items={block.items}
+                      onCommitItem={(idx, v) =>
+                        updateBlock(block.id, (b) => {
+                          if (b.type !== "bulleted") return b;
+                          const items = [...b.items];
+                          items[idx] = v;
+                          return { ...b, items };
+                        })
+                      }
+                    />
+                  );
+                  break;
+                case "code":
+                  blockContent = <CodeBlockBlock lines={block.lines} />;
+                  break;
+              }
+
+              // FIX 3: Replaced the manual Tailwind transition string logic with Motion's layout animations
+              return (
+                <motion.div
+                  layout // This tells Motion to automatically animate any layout shifts (like adding/reordering blocks)
+                  key={block.id}
+                  initial={reducedMotion ? false : { opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  ></path>
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          {/* Mobile Tabs */}
-          <div className="sm:hidden flex border-b border-border/80 bg-card">
-            <button
-              ref={tabCodeRef}
-              type="button"
-              className="flex-1 py-3 text-xs font-bold border-b-2 border-primary text-foreground transition-colors uppercase tracking-widest"
-            >
-              Editor
-            </button>
-            <button
-              ref={tabPreviewRef}
-              type="button"
-              className="flex-1 py-3 text-xs font-bold border-b-2 border-transparent text-muted-foreground transition-colors uppercase tracking-widest"
-            >
-              Preview
-            </button>
-          </div>
-
-          {/* Split Content */}
-          <div className="grid grid-cols-1 sm:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-border/80">
-            {/* Left: Editor Pane */}
-            <div
-              ref={paneCodeRef}
-              className="sm:col-span-3 bg-card/40 p-0 overflow-hidden min-h-62.5 sm:min-h-87.5 flex flex-col font-mono text-sm relative group/editor border-r border-transparent focus-within:border-primary/50 transition-colors"
-            >
-              <textarea
-                ref={editorRef}
-                className="w-full h-full min-h-62.5 sm:min-h-87.5 p-4 sm:p-6 bg-transparent text-primary/80 focus:text-primary whitespace-pre-wrap leading-relaxed outline-none resize-none z-10 font-mono placeholder:text-muted-foreground/50 transition-colors"
-                spellCheck="false"
-                placeholder="Type some markdown here..."
-              ></textarea>
-              <div className="absolute top-4 right-4 bg-primary/20 text-primary text-[10px] uppercase font-bold px-2 py-1 rounded opacity-50 group-focus-within/editor:opacity-100 transition-opacity pointer-events-none z-20">
-                Editable
-              </div>
-            </div>
-
-            {/* Right: Preview Pane */}
-            <div
-              ref={panePreviewRef}
-              className="hidden sm:flex sm:col-span-2 bg-background flex-col items-center justify-center p-6 min-h-62.5 sm:min-h-87.5 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[12px_12px]"></div>
-
-              <div
-                ref={previewRef}
-                className="relative z-10 text-left flex flex-col w-full h-full border border-dashed border-primary/20 rounded-lg bg-card/30 p-4 overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
-              />
-            </div>
+                  {blockContent}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
