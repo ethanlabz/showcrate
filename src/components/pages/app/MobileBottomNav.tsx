@@ -4,7 +4,7 @@ import { LayoutDashboard, Folder, Plus } from "lucide-react";
 export function MobileBottomNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t bg-background/90 backdrop-blur-md px-6 pb-safe">
-      <a href="/" className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors">
+      <a href="/dashboard" className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors">
         <LayoutDashboard className="h-5 w-5" />
         <span className="text-[10px] font-medium leading-none">Dashboard</span>
       </a>

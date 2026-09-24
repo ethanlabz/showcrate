@@ -92,7 +92,7 @@ export function Header({ currentPath, user }: Props) {
             <div className='flex items-center justify-end space-x-2 sm:space-x-4'>
               <ThemeToggle />
               {user ? (
-                <a href='/'>
+                <a href='/dashboard'>
                   <Button
                     size='sm'
                     className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm rounded-full'

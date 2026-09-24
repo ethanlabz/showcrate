@@ -1,37 +1,14 @@
 ---
 import HomeLayout from "@/layouts/HomeLayout.astro";
-import AppLayout from "@/layouts/AppLayout.astro";
-import Dashboard from "@/components/pages/app/Dashboard";
-import { createServerClient } from "@/lib/supabase/server";
-import { ProjectRepository } from "@/lib/repositories/ProjectRepository";
 import "lenis/dist/lenis.css";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { ChevronRight, Zap, CheckCircle2 } from "lucide-react";
 
 import { InteractiveEditor } from "@/components/pages/home/InteractiveEditor.tsx";
 import { Separator } from "@/components/ui/separator";
-
-const user = Astro.locals.user;
-
-let userProjects: any[] = [];
-if (user) {
-  const db = createServerClient(Astro.cookies);
-  const projectRepo = new ProjectRepository(db);
-  try {
-    userProjects = await projectRepo.listByOwner(user.id);
-  } catch {
-    userProjects = [];
-  }
-}
 ---
 
-{
-  user ? (
-    <AppLayout title="Dashboard">
-      <Dashboard client:load username={user.username} initialProjects={userProjects} />
-    </AppLayout>
-  ) : (
-    <HomeLayout title="Welcome">
+<HomeLayout title="Welcome">
   <div class="relative w-full">
     <!-- ========================================== -->
     <!-- 1. HERO SECTION                            -->
@@ -475,17 +452,14 @@ import &#123; Button &#125; from "showcrate";
     </section>
   </div>
 </HomeLayout>
-  )
-}
 
 <script>
   import { animate, scroll, inView, stagger } from "framer-motion";
 
-  if (document.querySelector("#hero-section")) {
-    const isMobile = window.innerWidth < 768;
+  const isMobile = window.innerWidth < 768;
 
-    // 1. Parallax Hero Section
-    const heroContainer = document.querySelector("#hero-section .max-w-7xl");
+  // 1. Parallax Hero Section
+  const heroContainer = document.querySelector("#hero-section .max-w-7xl");
   if (heroContainer) {
     scroll(
       animate(heroContainer, { y: [0, isMobile ? 80 : 150], opacity: [1, 0] }),
@@ -588,6 +562,5 @@ import &#123; Button &#125; from "showcrate";
         offset: ["start 95%", isMobile ? "start 50%" : "start 35%"],
       }
     );
-  }
   }
 </script>

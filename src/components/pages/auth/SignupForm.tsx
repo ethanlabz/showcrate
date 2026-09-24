@@ -65,7 +65,7 @@ export default function SignupForm() {
       const res = await fetch('/api/auth/oauth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, next: '/' }),
+        body: JSON.stringify({ provider, next: '/dashboard' }),
       });
       const json = await res.json();
       if (!res.ok) {

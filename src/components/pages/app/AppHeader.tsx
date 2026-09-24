@@ -30,7 +30,7 @@ export function AppHeader({ user }: AppHeaderProps) {
         </a>
         
         <nav className="hidden md:flex flex-1 items-center gap-6 text-sm font-medium">
-          <a href="/" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</a>
+          <a href="/dashboard" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</a>
           <a href="/projects" className="text-muted-foreground transition-colors hover:text-foreground">Projects</a>
         </nav>
       </div>
