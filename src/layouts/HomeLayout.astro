@@ -10,6 +10,7 @@ export interface Props {
 }
 
 const { title, description, ogImage, noIndex } = Astro.props;
+const user = Astro.locals.user;
 ---
 
 <BaseLayout
@@ -20,7 +21,7 @@ const { title, description, ogImage, noIndex } = Astro.props;
 >
   <div class="flex flex-col min-h-screen">
     <header>
-      <Header client:load currentPath={Astro.url.pathname} />
+      <Header client:load currentPath={Astro.url.pathname} user={user} />
     </header>
 
     <main class="flex-1">

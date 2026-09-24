@@ -49,9 +49,14 @@ function Logo() {
 
 interface Props {
   currentPath: string;
+  user?: {
+    username?: string | null;
+    email: string;
+    avatarUrl?: string | null;
+  } | null;
 }
 
-export function Header({ currentPath }: Props) {
+export function Header({ currentPath, user }: Props) {
   return (
     <>
       {/* Universal Top Header (Visible everywhere) */}
@@ -86,20 +91,33 @@ export function Header({ currentPath }: Props) {
             {/* Universal Global Actions */}
             <div className='flex items-center justify-end space-x-2 sm:space-x-4'>
               <ThemeToggle />
-              <a
-                href='/auth/login'
-                className='text-sm font-medium transition-colors hover:text-primary hidden sm:inline-block rounded-full'
-              >
-                Log in
-              </a>
-              <a href='/auth/signup'>
-                <Button
-                  size='sm'
-                  className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm rounded-full'
-                >
-                  Sign up
-                </Button>
-              </a>
+              {user ? (
+                <a href='/'>
+                  <Button
+                    size='sm'
+                    className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm rounded-full'
+                  >
+                    Dashboard
+                  </Button>
+                </a>
+              ) : (
+                <>
+                  <a
+                    href='/auth/login'
+                    className='text-sm font-medium transition-colors hover:text-primary hidden sm:inline-block rounded-full'
+                  >
+                    Log in
+                  </a>
+                  <a href='/auth/signup'>
+                    <Button
+                      size='sm'
+                      className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm rounded-full'
+                    >
+                      Sign up
+                    </Button>
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </header>

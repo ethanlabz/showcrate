@@ -103,6 +103,9 @@
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
   --shadow-glow-accent: 0 0 24px rgba(201, 169, 106, 0.15);
+
+  --popover: #14161B;
+  --popover-foreground: #F2EFE8;
 }
 
 @theme inline {

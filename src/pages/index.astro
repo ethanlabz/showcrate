@@ -1,65 +1,82 @@
 ---
-import HomeLayout from '@/layouts/HomeLayout.astro';
-import 'lenis/dist/lenis.css';
-import { Button } from '@/components/ui/button';
-import { ChevronRight, Zap, CheckCircle2 } from 'lucide-react';
+import HomeLayout from "@/layouts/HomeLayout.astro";
+import AppLayout from "@/layouts/AppLayout.astro";
+import Dashboard from "@/components/pages/app/Dashboard";
+import { createServerClient } from "@/lib/supabase/server";
+import { ProjectRepository } from "@/lib/repositories/ProjectRepository";
+import "lenis/dist/lenis.css";
+import { Button } from "@/components/ui/Button";
+import { ChevronRight, Zap, CheckCircle2 } from "lucide-react";
 
-import { InteractiveEditor } from '@/components/pages/home/InteractiveEditor.tsx';
-import { Separator } from '@/components/ui/separator';
+import { InteractiveEditor } from "@/components/pages/home/InteractiveEditor.tsx";
+import { Separator } from "@/components/ui/separator";
+
+const user = Astro.locals.user;
+
+let userProjects: any[] = [];
+if (user) {
+  const db = createServerClient(Astro.cookies);
+  const projectRepo = new ProjectRepository(db);
+  try {
+    userProjects = await projectRepo.listByOwner(user.id);
+  } catch {
+    userProjects = [];
+  }
+}
 ---
 
-<HomeLayout title='Welcome'>
-  <div class='relative w-full'>
+{
+  user ? (
+    <AppLayout title="Dashboard">
+      <Dashboard client:load username={user.username} initialProjects={userProjects} />
+    </AppLayout>
+  ) : (
+    <HomeLayout title="Welcome">
+  <div class="relative w-full">
     <!-- ========================================== -->
     <!-- 1. HERO SECTION                            -->
     <!-- Headline, CTA buttons, and preview mockup  -->
     <!-- ========================================== -->
     <section
-      id='hero-section'
-      class='relative min-h-screen flex flex-col pt-4 sm:pt-20 md:pt-20 lg:pt-20 overflow-hidden pb-32 sm:pb-20 md:pb-24 lg:pb-32 justify-center'
+      id="hero-section"
+      class="relative lg:min-h-screen min-h-[70vh] flex flex-col pt-4 sm:pt-20 md:pt-20 lg:pt-20 pb-32 sm:pb-20 md:pb-24 lg:pb-32 justify-center"
     >
-      <!-- Abstract Background -->
-      <!-- <div
-        class='absolute inset-0 -top-40 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-primary/30 via-background to-background pointer-events-none'
-      >
-      </div> -->
-
       <div
-        class='w-full max-w-7xl relative z-10 mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12'
+        class="w-full max-w-7xl relative z-10 mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12"
       >
         <!-- Left Column: Text -->
         <div
-          class='flex-1 text-center lg:text-left flex flex-col items-center lg:items-start w-full z-20'
+          class="flex-1 text-center lg:text-left flex flex-col items-center lg:items-start w-full z-20"
         >
           <h1
-            class='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter max-w-5xl mb-3 sm:mb-6 md:mb-8 bg-clip-text text-transparent bg-linear-to-b from-foreground to-foreground/50'
+            class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter max-w-5xl mb-3 sm:mb-6 md:mb-8 bg-clip-text text-transparent bg-linear-to-b from-foreground to-foreground/50"
           >
-            Every project <br class='hidden lg:block' />deserves <br />a Stage
+            Every project <br class="hidden lg:block" />deserves <br />a Stage
           </h1>
 
           <p
-            class='text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mb-6 sm:mb-10 md:mb-12 leading-relaxed'
+            class="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mb-6 sm:mb-10 md:mb-12 leading-relaxed"
           >
             Stop writing boring walls of text. Showcrate brings your code to
             life with interactive, dynamic, and beautiful documentation.
           </p>
 
           <div
-            class='flex flex-col sm:flex-row gap-3 sm:gap-6 w-full sm:w-auto items-center lg:items-start'
+            class="flex flex-col sm:flex-row gap-3 sm:gap-6 w-full sm:w-auto items-center lg:items-start"
           >
-            <a href='/auth/signup' class='w-full sm:w-auto'>
+            <a href="/auth/signup" class="w-full sm:w-auto">
               <Button
-                size='lg'
-                className='h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto'
+                size="lg"
+                className="h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto"
               >
-                Get Started <ChevronRight className='ml-2 h-4 w-4' />
+                Get Started <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
-            <a href='/showcase' class='w-full sm:w-auto'>
+            <a href="/showcase" class="w-full sm:w-auto">
               <Button
-                variant='outline'
-                size='lg'
-                className='h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto bg-background/50 backdrop-blur-sm'
+                variant="outline"
+                size="lg"
+                className="h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto bg-background/50 backdrop-blur-sm"
               >
                 Browse Projects
               </Button>
@@ -68,43 +85,39 @@ import { Separator } from '@/components/ui/separator';
         </div>
 
         <!-- Right Column: Technical Blueprint Mockup -->
-        <div class='flex-1 w-full hidden lg:block relative z-10 mt-10 lg:mt-0'>
+        <div class="flex-1 w-full hidden lg:block relative z-10 mt-10 lg:mt-0">
           <div
-            class='relative w-full max-w-xl mx-auto transition-transform duration-500 hover:-translate-y-2'
+            class="relative w-full max-w-xl mx-auto transition-transform duration-500 hover:-translate-y-2"
           >
             <!-- Brutalist Shadow Offset -->
             <div
-              class='absolute inset-0 translate-x-4 translate-y-4 bg-primary border-2 border-foreground z-[-1] rounded-sm hidden sm:block'
+              class="absolute inset-0 translate-x-4 translate-y-4 bg-primary border-2 border-foreground z-[-1] rounded-sm hidden sm:block"
             >
             </div>
 
             <!-- Main Technical Container -->
             <div
-              class='relative bg-background border-2 border-foreground rounded-sm overflow-hidden flex flex-col h-full shadow-2xl'
+              class="relative bg-background border-2 border-foreground rounded-sm overflow-hidden flex flex-col h-full shadow-2xl"
             >
               <!-- Technical Header -->
               <div
-                class='flex items-center justify-between px-4 py-3 border-b-2 border-foreground bg-muted/40'
+                class="flex items-center justify-between px-4 py-3 border-b-2 border-foreground bg-muted/40"
               >
-                <div class='flex items-center gap-4'>
+                <div class="flex items-center gap-4">
                   <span
-                    class='text-xs font-mono uppercase tracking-widest text-foreground font-bold flex items-center gap-2'
+                    class="text-xs font-mono uppercase tracking-widest text-foreground font-bold flex items-center gap-2"
                   >
-                    <span class='w-2 h-2 bg-primary'></span>
+                    <span class="w-2 h-2 bg-primary"></span>
                     Live Preview
                   </span>
-                  <!-- <div class="hidden sm:block h-4 w-px bg-foreground/30"></div> -->
-                  <!-- <span
-                    class="hidden sm:block text-[10px] font-mono text-muted-foreground uppercase bg-foreground/5 px-2 py-0.5 border border-foreground/20 rounded-sm"
-                    >Live Environment</span> -->
                 </div>
-                <div class='flex gap-1.5'>
+                <div class="flex gap-1.5">
                   <div
-                    class='w-3 h-3 bg-background border border-foreground rounded-sm'
+                    class="w-3 h-3 bg-background border border-foreground rounded-sm"
                   >
                   </div>
                   <div
-                    class='w-3 h-3 bg-foreground border border-foreground rounded-sm'
+                    class="w-3 h-3 bg-foreground border border-foreground rounded-sm"
                   >
                   </div>
                 </div>
@@ -112,19 +125,19 @@ import { Separator } from '@/components/ui/separator';
 
               <!-- Content Grid Layout -->
               <div
-                class='flex flex-col md:flex-row h-auto min-h-95 divide-y-2 md:divide-y-0 md:divide-x-2 divide-foreground'
+                class="flex flex-col md:flex-row h-auto min-h-95 divide-y-2 md:divide-y-0 md:divide-x-2 divide-foreground"
               >
                 <!-- Left: Markdown Source -->
                 <div
-                  class='flex-1 bg-muted/10 p-0 flex flex-col relative group'
+                  class="flex-1 bg-muted/10 p-0 flex flex-col relative group"
                 >
                   <div
-                    class='absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-mono font-bold px-2 py-1 border-b-2 border-l-2 border-foreground'
+                    class="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-mono font-bold px-2 py-1 border-b-2 border-l-2 border-foreground"
                   >
                     src/demo.md
                   </div>
                   <div
-                    class='w-full h-full p-6 pt-10 text-xs sm:text-sm font-mono leading-relaxed text-foreground/90 overflow-hidden'
+                    class="w-full h-full p-6 pt-10 text-xs sm:text-sm font-mono leading-relaxed text-foreground/90 overflow-hidden"
                   >
                     <pre><code><span class="text-muted-foreground"># Button</span>
 
@@ -141,39 +154,39 @@ import &#123; Button &#125; from "showcrate";
 
                 <!-- Right: Rendered Output -->
                 <div
-                  class='flex-1 bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)] bg-size-[16px_16px] relative flex flex-col'
+                  class="flex-1 bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)] bg-size-[16px_16px] relative flex flex-col"
                 >
                   <div
-                    class='absolute top-0 left-0 bg-foreground text-background text-[10px] font-mono font-bold px-2 py-1 uppercase border-b-2 border-r-2 border-foreground'
+                    class="absolute top-0 left-0 bg-foreground text-background text-[10px] font-mono font-bold px-2 py-1 uppercase border-b-2 border-r-2 border-foreground"
                   >
                     Output
                   </div>
 
-                  <div class='flex-1 flex flex-col p-6 pt-10 gap-4 text-left'>
+                  <div class="flex-1 flex flex-col p-6 pt-10 gap-4 text-left">
                     <h1
-                      class='text-2xl font-bold tracking-tight text-foreground border-b-2 border-foreground/10 pb-2'
+                      class="text-2xl font-bold tracking-tight text-foreground border-b-2 border-foreground/10 pb-2"
                     >
                       Button
                     </h1>
 
-                    <p class='text-sm text-foreground/80 font-medium'>
+                    <p class="text-sm text-foreground/80 font-medium">
                       Try it out.
                     </p>
 
                     <!-- Brutalist Button Demo Container -->
                     <div
-                      class='mt-2 p-8 border-2 border-dashed border-foreground/30 bg-muted/20 rounded-sm flex items-center justify-center'
+                      class="mt-2 p-8 border-2 border-dashed border-foreground/30 bg-muted/20 rounded-sm flex items-center justify-center"
                     >
                       <!-- Brutalist Button Demo -->
                       <button
-                        class='relative group/btn cursor-pointer outline-none w-full max-w-50'
+                        class="relative group/btn cursor-pointer outline-none w-full max-w-50"
                       >
                         <div
-                          class='absolute inset-0 translate-x-1.5 translate-y-1.5 bg-foreground transition-transform group-active/btn:translate-x-0 group-active/btn:translate-y-0 rounded-sm'
+                          class="absolute inset-0 translate-x-1.5 translate-y-1.5 bg-foreground transition-transform group-active/btn:translate-x-0 group-active/btn:translate-y-0 rounded-sm"
                         >
                         </div>
                         <div
-                          class='relative px-6 py-4 bg-primary border-2 border-background text-primary-foreground font-mono font-bold text-sm tracking-wider uppercase rounded-sm transition-transform group-active/btn:translate-x-1.5 group-active/btn:translate-y-1.5 flex justify-center'
+                          class="relative px-6 py-4 bg-primary border-2 border-background text-primary-foreground font-mono font-bold text-sm tracking-wider uppercase rounded-sm transition-transform group-active/btn:translate-x-1.5 group-active/btn:translate-y-1.5 flex justify-center"
                         >
                           Interact
                         </div>
@@ -185,31 +198,19 @@ import &#123; Button &#125; from "showcrate";
 
               <!-- Status Bar -->
               <div
-                class='flex items-center justify-between px-4 py-2 border-t-2 border-foreground bg-muted/40 text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground'
+                class="flex items-center justify-between px-4 py-2 border-t-2 border-foreground bg-muted/40 text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground"
               >
-                <div class='flex items-center gap-2 font-bold text-foreground'>
+                <div class="flex items-center gap-2 font-bold text-foreground">
                   <span
-                    class='w-2.5 h-2.5 bg-green-500 animate-pulse border border-green-700'
+                    class="w-2.5 h-2.5 bg-green-500 animate-pulse border border-green-700"
                   ></span>
                   Ready
                 </div>
-                <!-- <div class="hidden sm:block">Server: WebContainer</div>
-                <div>Port: 3000</div> -->
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Decorative blurry glowing orbs -->
-      <!-- <div
-        class='absolute top-1/4 left-1/4 w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-96 lg:h-96 bg-primary/30 rounded-full blur-[100px] -z-10 animate-pulse mix-blend-screen'
-      >
-      </div>
-      <div
-        class='absolute bottom-1/4 right-1/4 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-lg lg:h-128 bg-primary/20 rounded-full blur-[120px] -z-10 mix-blend-screen'
-      >
-      </div> -->
     </section>
 
     <Separator />
@@ -218,7 +219,7 @@ import &#123; Button &#125; from "showcrate";
     <!-- 2. PROBLEM SECTION                         -->
     <!-- "Most documentation feels like a graveyard"-->
     <!-- ========================================== -->
-    <div id='problem-section'></div>
+    <div id="problem-section"></div>
 
     <Separator />
 
@@ -226,7 +227,7 @@ import &#123; Button &#125; from "showcrate";
     <!-- 3. SOLUTION SECTION                        -->
     <!-- "Bring your code to life" features         -->
     <!-- ========================================== -->
-    <div id='solution-section'></div>
+    <div id="solution-section"></div>
 
     <Separator />
 
@@ -235,12 +236,11 @@ import &#123; Button &#125; from "showcrate";
     <!-- Live typing and rendering demonstration    -->
     <!-- ========================================== -->
     <section
-      id='editor-mockup-container'
-      class='relative z-10 w-full min-h-screen bg-background flex flex-col items-center justify-center py-16'
+      id="editor-mockup-container"
+      class="relative z-10 w-full min-h-2/3 bg-background flex flex-col items-center justify-center py-16"
     >
-      <!-- Wrap it here so Astro/GSAP owns this DOM node, not React -->
-      <div class='editor-window w-full'>
-        <InteractiveEditor client:only='react' />
+      <div class="editor-window w-full opacity-0">
+        <InteractiveEditor client:only="react" />
       </div>
     </section>
 
@@ -251,65 +251,65 @@ import &#123; Button &#125; from "showcrate";
     <!-- Secondary features (MDX, SSG, etc.)        -->
     <!-- ========================================== -->
     <section
-      id='features-grid'
-      class='relative py-24 sm:py-32 bg-background overflow-hidden border-t border-border/50'
+      id="features-grid"
+      class="relative py-24 sm:py-32 bg-background border-t border-border/50"
     >
       <div
-        class='container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'
+        class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl"
       >
-        <div class='text-center max-w-3xl mx-auto mb-16 sm:mb-24'>
+        <div class="text-center max-w-3xl mx-auto mb-16 sm:mb-24">
           <h2
-            class='type-animate text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-6 text-foreground'
+            class="type-animate text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-6 text-foreground"
           >
             Built for the modern web
           </h2>
-          <p class='type-animate text-lg sm:text-xl text-muted-foreground'>
+          <p class="type-animate text-lg sm:text-xl text-muted-foreground">
             Everything you need to build interactive documentation that your
             users will actually love reading.
           </p>
         </div>
 
         <div
-          class='grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative z-20'
+          class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative z-20"
         >
           <!-- Feature 1 -->
           <div
-            class='feature-card-fade opacity-0 translate-y-12 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-primary/50 transition-colors duration-500'
+            class="feature-card-fade opacity-0 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-primary/50 transition-colors duration-500"
           >
             <!-- Premium top glow -->
             <div
-              class='absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-primary/30 to-transparent'
+              class="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-primary/30 to-transparent"
             >
             </div>
             <div
-              class='absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'
+              class="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             >
             </div>
 
-            <div class='p-8 sm:p-10 h-full flex flex-col relative z-10'>
+            <div class="p-8 sm:p-10 h-full flex flex-col relative z-10">
               <div
-                class='w-14 h-14 rounded-2xl bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-8 border border-primary/20 shadow-[0_0_30px_rgba(var(--color-primary),0.2)] group-hover:shadow-[0_0_40px_rgba(var(--color-primary),0.4)] transition-shadow duration-500'
+                class="w-14 h-14 rounded-2xl bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-8 border border-primary/20 shadow-[0_0_30px_rgba(var(--color-primary),0.2)] group-hover:shadow-[0_0_40px_rgba(var(--color-primary),0.4)] transition-shadow duration-500"
               >
                 <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  width='24'
-                  height='24'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  stroke-width='2.5'
-                  stroke-linecap='round'
-                  stroke-linejoin='round'
-                  class='text-primary'
-                  ><path d='m8 3 4 8 5-5 5 15H2L8 3z'></path></svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-primary"
+                  ><path d="m8 3 4 8 5-5 5 15H2L8 3z"></path></svg
                 >
               </div>
               <h3
-                class='text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight'
+                class="text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight"
               >
                 Markdown to MDX
               </h3>
-              <p class='text-muted-foreground leading-relaxed flex-1'>
+              <p class="text-muted-foreground leading-relaxed flex-1">
                 Write your documentation in standard Markdown. Showcrate
                 effortlessly compiles it into interactive MDX, unlocking live
                 components directly within your text.
@@ -319,44 +319,44 @@ import &#123; Button &#125; from "showcrate";
 
           <!-- Feature 2 -->
           <div
-            class='feature-card-fade opacity-0 translate-y-12 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-emerald-500/50 transition-colors duration-500'
+            class="feature-card-fade opacity-0 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-emerald-500/50 transition-colors duration-500"
           >
             <!-- Premium top glow -->
             <div
-              class='absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-emerald-500/30 to-transparent'
+              class="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-emerald-500/30 to-transparent"
             >
             </div>
             <div
-              class='absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'
+              class="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             >
             </div>
 
-            <div class='p-8 sm:p-10 h-full flex flex-col relative z-10'>
+            <div class="p-8 sm:p-10 h-full flex flex-col relative z-10">
               <div
-                class='w-14 h-14 rounded-2xl bg-linear-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-8 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] transition-shadow duration-500'
+                class="w-14 h-14 rounded-2xl bg-linear-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-8 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] transition-shadow duration-500"
               >
                 <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  width='24'
-                  height='24'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  stroke-width='2.5'
-                  stroke-linecap='round'
-                  stroke-linejoin='round'
-                  class='text-emerald-500'
-                  ><path d='M12 2v20'></path><path
-                    d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-emerald-500"
+                  ><path d="M12 2v20"></path><path
+                    d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
                   ></path></svg
                 >
               </div>
               <h3
-                class='text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight'
+                class="text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight"
               >
                 Built-in Code Editor
               </h3>
-              <p class='text-muted-foreground leading-relaxed flex-1'>
+              <p class="text-muted-foreground leading-relaxed flex-1">
                 Give your users a fully featured code editor right in the
                 browser. They can tinker, break, and fix your examples in a
                 safe, live environment.
@@ -366,43 +366,43 @@ import &#123; Button &#125; from "showcrate";
 
           <!-- Feature 3 -->
           <div
-            class='feature-card-fade opacity-0 translate-y-12 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-indigo-500/50 transition-colors duration-500'
+            class="feature-card-fade opacity-0 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-indigo-500/50 transition-colors duration-500"
           >
             <!-- Premium top glow -->
             <div
-              class='absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-indigo-500/30 to-transparent'
+              class="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-indigo-500/30 to-transparent"
             >
             </div>
             <div
-              class='absolute inset-0 bg-linear-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'
+              class="absolute inset-0 bg-linear-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             >
             </div>
 
-            <div class='p-8 sm:p-10 h-full flex flex-col relative z-10'>
+            <div class="p-8 sm:p-10 h-full flex flex-col relative z-10">
               <div
-                class='w-14 h-14 rounded-2xl bg-linear-to-br from-indigo-500/20 to-indigo-500/5 flex items-center justify-center mb-8 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.2)] group-hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] transition-shadow duration-500'
+                class="w-14 h-14 rounded-2xl bg-linear-to-br from-indigo-500/20 to-indigo-500/5 flex items-center justify-center mb-8 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.2)] group-hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] transition-shadow duration-500"
               >
                 <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  width='24'
-                  height='24'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  stroke-width='2.5'
-                  stroke-linecap='round'
-                  stroke-linejoin='round'
-                  class='text-indigo-500'
-                  ><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-indigo-500"
+                  ><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
                   ></polygon></svg
                 >
               </div>
               <h3
-                class='text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight'
+                class="text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight"
               >
                 Lightning Fast SSG
               </h3>
-              <p class='text-muted-foreground leading-relaxed flex-1'>
+              <p class="text-muted-foreground leading-relaxed flex-1">
                 Powered by Astro, Showcrate generates incredibly fast static
                 sites. Your interactive documentation loads instantly and is
                 perfectly optimized for SEO.
@@ -420,84 +420,52 @@ import &#123; Button &#125; from "showcrate";
     <!-- Final push to sign up or read docs         -->
     <!-- ========================================== -->
     <section
-      id='cta-section'
-      class='relative py-24 sm:py-32 md:py-40 lg:py-48 overflow-hidden border-t border-border/50'
+      id="cta-section"
+      class="relative py-24 sm:py-32 md:py-40 lg:py-48 overflow-hidden border-t border-border/50"
     >
       <!-- Background Glows -->
       <div
-        class='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-100 bg-primary/20 blur-[120px] rounded-full pointer-events-none'
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-100 bg-primary/20 blur-[120px] rounded-full pointer-events-none"
       >
       </div>
 
       <!-- Subtle Grid -->
       <div
-        class='absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]'
+        class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"
       >
       </div>
 
       <div
-        class='container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-4xl flex flex-col items-center'
+        class="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-4xl flex flex-col items-center"
       >
-        <!-- Social Proof Badge -->
-        <!-- <div
-          class="cta-badge-anim opacity-0 translate-y-8 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-card/80 border border-border/50 backdrop-blur-md mb-8 shadow-sm overflow-hidden min-w-65 justify-start"
-        >
-          <div class="flex -space-x-2 shrink-0">
-            <div
-              class="badge-avatar opacity-0 translate-x-12 w-7 h-7 rounded-full bg-linear-to-br from-blue-400 to-indigo-500 border-2 border-background z-40 relative"
-            >
-            </div>
-            <div
-              class="badge-avatar opacity-0 translate-x-12 w-7 h-7 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 border-2 border-background z-30 relative"
-            >
-            </div>
-            <div
-              class="badge-avatar opacity-0 translate-x-12 w-7 h-7 rounded-full bg-linear-to-br from-amber-400 to-orange-500 border-2 border-background z-20 relative"
-            >
-            </div>
-            <div
-              class="badge-avatar opacity-0 translate-x-12 w-7 h-7 rounded-full bg-linear-to-br from-purple-400 to-pink-500 border-2 border-background z-10 relative flex items-center justify-center text-[10px] font-bold text-white"
-            >
-              +
-            </div>
-          </div>
-          <div
-            class="badge-typing w-0 overflow-hidden border-r-2 border-primary whitespace-nowrap flex items-center"
-          >
-            <span class="text-xs font-semibold text-muted-foreground pr-1"
-              >Joined by 1,000+ developers</span
-            >
-          </div>
-        </div> -->
-
         <h2
-          class='cta-fade-in opacity-0 translate-y-8 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 tracking-tight text-balance'
+          class="cta-fade-in opacity-0 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 tracking-tight text-balance"
         >
           Ready to rewrite the rules?
         </h2>
         <p
-          class='cta-fade-in opacity-0 translate-y-8 text-lg sm:text-xl md:text-2xl text-muted-foreground mb-10 sm:mb-12 max-w-2xl text-balance'
+          class="cta-fade-in opacity-0 text-lg sm:text-xl md:text-2xl text-muted-foreground mb-10 sm:mb-12 max-w-2xl text-balance"
         >
           Stop writing static documentation that goes out of date. Build live,
           interactive learning experiences in minutes.
         </p>
 
         <div
-          class='cta-fade-in opacity-0 translate-y-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto'
+          class="cta-fade-in opacity-0 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto"
         >
-          <a href='/auth/signup' class='w-full sm:w-auto'>
+          <a href="/auth/signup" class="w-full sm:w-auto">
             <Button
-              size='lg'
-              className='w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 text-base sm:text-lg font-bold shadow-xl shadow-primary/25 hover:scale-105 hover:shadow-primary/40 transition-all duration-300'
+              size="lg"
+              className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 text-base sm:text-lg font-bold shadow-xl shadow-primary/25 hover:scale-105 hover:shadow-primary/40 transition-all duration-300"
             >
               Start for free
             </Button>
           </a>
-          <a href='/docs' class='w-full sm:w-auto'>
+          <a href="/docs" class="w-full sm:w-auto">
             <Button
-              variant='outline'
-              size='lg'
-              className='w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-bold border-2 hover:bg-muted transition-colors duration-300'
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-bold border-2 hover:bg-muted transition-colors duration-300"
             >
               Read the docs
             </Button>
@@ -507,214 +475,119 @@ import &#123; Button &#125; from "showcrate";
     </section>
   </div>
 </HomeLayout>
+  )
+}
 
 <script>
-  /**
-   * ==========================================
-   * 1. IMPORTS & SETUP
-   * ==========================================
-   */
-  import gsap from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { animate, scroll, inView, stagger } from "framer-motion";
 
-  gsap.registerPlugin(ScrollTrigger);
+  if (document.querySelector("#hero-section")) {
+    const isMobile = window.innerWidth < 768;
 
-  // Sync GSAP with Lenis for perfectly smooth scrubbing
-  if (typeof window !== 'undefined' && (window as any).lenis) {
-    (window as any).lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add((time) => {
-      (window as any).lenis.raf(time * 1000);
-    });
-    gsap.ticker.lagSmoothing(0);
+    // 1. Parallax Hero Section
+    const heroContainer = document.querySelector("#hero-section .max-w-7xl");
+  if (heroContainer) {
+    scroll(
+      animate(heroContainer, { y: [0, isMobile ? 80 : 150], opacity: [1, 0] }),
+      {
+        target: document.querySelector("#hero-section") as Element,
+        offset: ["start start", "end start"],
+      }
+    );
   }
 
-  let mm = gsap.matchMedia();
+  // 2. Story Section 1: Sequenced Word-by-Word Reveal (Scrubbed)
+  const problemSection = document.querySelector("#problem-section");
+  if (problemSection) {
+    scroll(
+      animate([
+        [".story-word", { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.1) }],
+        [".story-word-sub", { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05), at: "+0.5" }]
+      ]),
+      {
+        target: problemSection,
+        offset: ["start start", "end start"],
+      }
+    );
+  }
 
-  /**
-   * ==========================================
-   * 2. SCROLL ANIMATIONS (GSAP)
-   * ==========================================
-   */
-  mm.add(
-    {
-      isDesktop: '(min-width: 768px)',
-      isMobile: '(max-width: 767px)',
-    },
-    (context) => {
-      let { isMobile } = context.conditions as {
-        isDesktop: boolean;
-        isMobile: boolean;
-      };
+  // 3. Story Section 2: Sequenced Component Fade In (Scrubbed)
+  const solutionSection = document.querySelector("#solution-section");
+  if (solutionSection) {
+    scroll(
+      animate([
+        [".interactive-icon-anim", { opacity: [0, 1], y: [20, 0] }, { duration: 1 }],
+        [".interactive-icon-anim", { x: [20, 0] }, { duration: 1, at: "+0.5" }],
+        [".interactive-text-anim", { opacity: [0, 1], x: [20, 0] }, { duration: 1, at: "<" }],
+        [".solution-fade-in", { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.2), duration: 1, at: "+0.2" }]
+      ]),
+      {
+        target: solutionSection,
+        offset: ["start start", "end start"],
+      }
+    );
+  }
 
-      // 1. Parallax Hero Section
-      gsap.to('#hero-section .container', {
-        y: isMobile ? 80 : 150, // Less parallax on mobile
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '#hero-section',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true,
-        },
-      });
+  // 4. Animation: Scale up and fade in Editor window
+  inView("#editor-mockup-container", () => {
+    animate(".editor-window",
+      { opacity: [0, 1], y: [60, 0], scale: [0.95, 1] },
+      { duration: 1, ease: "easeOut" }
+    );
+  }, { amount: isMobile ? 0.2 : 0.4 });
 
-      // 2. Story Section 1: Sequenced Word-by-Word Reveal
-      const tl1 = gsap.timeline({
-        scrollTrigger: {
-          trigger: '#problem-section',
-          start: 'top top',
-          end: '+=' + window.innerHeight * (isMobile ? 1.5 : 2), // Shorter scroll distance on mobile
-          scrub: 1,
-        },
-      });
+  // 5. Split text into spans for typing animation
+  document.querySelectorAll(".type-animate").forEach((el) => {
+    const text = (el as HTMLElement).innerText;
+    el.innerHTML = "";
+    (el as HTMLElement).style.whiteSpace = "pre-wrap";
+    text.split("").forEach((char) => {
+      const span = document.createElement("span");
+      span.textContent = char;
+      span.style.opacity = "0";
+      el.appendChild(span);
+    });
+  });
 
-      tl1
-        .to('.story-word', {
-          opacity: 1,
-          y: 0,
-          stagger: 0.1,
-          ease: 'power2.out',
-        })
-        .to(
-          '.story-word-sub',
-          { opacity: 1, y: 0, stagger: 0.05, ease: 'power2.out' },
-          '+=1',
-        );
+  // Features Header Typing Animation
+  inView("#features-grid", () => {
+    animate(".type-animate span", { opacity: [0, 1] }, { delay: stagger(0.03) });
+  }, { amount: 0.1 });
 
-      // Story Section 2: Sequenced Component Fade In
-      const tl2 = gsap.timeline({
-        scrollTrigger: {
-          trigger: '#solution-section',
-          start: 'top top',
-          end: '+=' + window.innerHeight * (isMobile ? 1.5 : 2.5), // Shorter scroll distance on mobile
-          scrub: 1,
-        },
-      });
+  // Slower Feature Cards
+  inView("#features-grid", () => {
+    animate(".feature-card-fade",
+      { opacity: [0, 1], y: [40, 0], scale: [0.95, 1] },
+      { delay: stagger(0.3), duration: 1.5, ease: "backOut" }
+    );
+  }, { amount: 0.15 });
 
-      tl2
-        .to('.interactive-icon-anim', { opacity: 1, y: 0, duration: 1 })
-        .to('.interactive-icon-anim', { x: 0, duration: 1 }, '+=0.5')
-        .to('.interactive-text-anim', { opacity: 1, x: 0, duration: 1 }, '<')
-        .to(
-          '.solution-fade-in',
-          {
-            opacity: 1,
-            y: 0,
-            stagger: 0.2,
-            ease: 'power2.out',
-            duration: 1,
-          },
-          '+=0.2',
-        );
+  // 6. CTA Section Fade In (Scrubbing individually)
+  document.querySelectorAll(".cta-fade-in").forEach((el) => {
+    scroll(
+      animate(el, { opacity: [0, 1], y: [32, 0] }),
+      {
+        target: el as Element,
+        offset: ["start 100%", isMobile ? "start 50%" : "start 30%"],
+      }
+    );
+  });
 
-      // Animation: Scale up and fade in window
-      gsap.to('.editor-window', {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        ease: 'power3.out',
-        duration: 1,
-        scrollTrigger: {
-          trigger: '#editor-mockup-container',
-          start: isMobile ? 'top 80%' : 'top 60%',
-        },
-      });
-
-      // Split text into spans for typing animation
-      document.querySelectorAll('.type-animate').forEach((el: any) => {
-        const text = el.innerText;
-        el.innerHTML = '';
-        // Enable pre-wrap so normal spaces render but standard wrapping is preserved
-        el.style.whiteSpace = 'pre-wrap';
-        text.split('').forEach((char: string) => {
-          const span = document.createElement('span');
-          span.textContent = char;
-          span.style.opacity = '0';
-          el.appendChild(span);
-        });
-      });
-
-      // Features Header Typing Animation
-      gsap.to('.type-animate span', {
-        opacity: 1,
-        stagger: 0.03, // Type out each letter
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '#features-grid',
-          start: isMobile ? 'top 90%' : 'top 80%',
-        },
-      });
-
-      // Slower Feature Cards
-      gsap.from('.editor-window', {
-        opacity: 0,
-        y: 60,
-        scale: 0.95,
-        ease: 'power3.out',
-        duration: 1.2,
-        scrollTrigger: {
-          trigger: '#editor-mockup-container',
-          start: isMobile ? 'top 85%' : 'top 75%',
-          // markers: true, 
-        },
-      });
-
-      // CTA Section Fade In (Scrubbing individually)
-      gsap.utils.toArray('.cta-fade-in').forEach((el: any) => {
-        gsap.to(el, {
-          opacity: 1,
-          y: 0,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 100%',
-            end: isMobile ? 'top 50%' : 'top 30%',
-            scrub: 1,
-          },
-        });
-      });
-
-      // Social Proof Badge Custom Timeline
-      const badgeTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: '#cta-section',
-          start: 'top 95%',
-          end: isMobile ? 'top 50%' : 'top 35%',
-          scrub: 1,
-        },
-      });
-
-      badgeTl
-        .to('.cta-badge-anim', { opacity: 1, y: 0, duration: 1 })
-        .to(
-          '.badge-avatar',
-          { opacity: 1, x: 0, stagger: 0.2, ease: 'power2.out', duration: 1.5 },
-          '+=0.2',
-        )
-        .to(
-          '.badge-typing',
-          { width: 'auto', ease: 'none', duration: 1.5 },
-          '+=0.2',
-        )
-        .to('.badge-typing', {
-          borderRightColor: 'transparent',
-          duration: 0.2,
-        });
-    },
-  ); // End matchMedia
-
-  /**
-   * ==========================================
-   * 3. INTERACTIVE LIVE EDITOR LOGIC
-   * Relocated into @components/pages/home/InteractiveEditor.tsx
-   * ==========================================
-   */
-
-  /**
-   * ==========================================
-   * 4. MOBILE TABS LOGIC
-   * Relocated into @components/pages/home/InteractiveEditor.tsx
-   * ==========================================
-   */
+  // 7. Social Proof Badge Custom Timeline (If utilized)
+  const ctaSection = document.querySelector("#cta-section");
+  if (ctaSection) {
+    scroll(
+      animate([
+        [".cta-badge-anim", { opacity: [0, 1], y: [32, 0] }, { duration: 1 }],
+        [".badge-avatar", { opacity: [0, 1], x: [48, 0] }, { delay: stagger(0.2), duration: 1.5, at: "+0.2" }],
+        [".badge-typing", { width: ["0px", "100%"] }, { duration: 1.5, ease: "linear", at: "+0.2" }],
+        [".badge-typing", { borderColor: ["var(--color-primary)", "transparent"] }, { duration: 0.2 }]
+      ]),
+      {
+        target: ctaSection,
+        offset: ["start 95%", isMobile ? "start 50%" : "start 35%"],
+      }
+    );
+  }
+  }
 </script>

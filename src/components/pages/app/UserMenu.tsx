@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import {
@@ -8,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/DropdownMenu";
+} from "@/components/ui/dropdown-menu";
 
 interface User {
   username?: string | null;
@@ -23,6 +24,17 @@ interface UserMenuProps {
 export function UserMenu({ user }: UserMenuProps) {
   const displayName = user.username || user.email;
   const initial = displayName.charAt(0).toUpperCase();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // Even if the request fails, redirect to clear client state
+    }
+    window.location.href = '/';
+  }
 
   return (
     <DropdownMenu>
@@ -50,11 +62,14 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuItem render={<a href="/settings" className="w-full cursor-pointer">Settings</a>} />
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-0">
-          <form action="/auth/signout" method="POST" className="w-full">
-            <button type="submit" className="w-full text-left cursor-pointer px-2 py-1.5 rounded-sm">
-              Log out
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full text-left cursor-pointer px-2 py-1.5 rounded-sm disabled:opacity-50"
+          >
+            {loggingOut ? 'Logging out…' : 'Log out'}
+          </button>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

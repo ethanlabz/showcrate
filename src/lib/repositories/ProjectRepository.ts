@@ -71,6 +71,18 @@ export class ProjectRepository {
     return count ?? 0;
   }
 
+  async listByOwner(ownerId: string): Promise<ProjectRow[]> {
+    const { data, error } = await this.db
+      .from('projects')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
   /** Resolve slug collision: append nanoid suffix if slug already taken */
   async resolveUniqueSlug(ownerId: string, baseSlug: string): Promise<string> {
     let slug = baseSlug;

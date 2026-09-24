@@ -8,7 +8,6 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 import { AppHeader } from "../components/pages/app/AppHeader";
 import { MobileBottomNav } from "../components/pages/app/MobileBottomNav";
-import { Sidebar } from "@/components/ui/sidebar"
 
 export interface Props {
   title: string;
@@ -63,7 +62,7 @@ const user = Astro.locals.user;
           class="hidden md:flex flex-1 items-center gap-6 text-sm font-medium"
         >
           <a
-            href="/dashboard"
+            href="/"
             class="text-muted-foreground transition-colors hover:text-foreground"
             >Dashboard</a
           >

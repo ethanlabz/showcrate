@@ -3,7 +3,7 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css";
 
-const STORAGE_KEY = "showcrate-playground-content";
+const STORAGE_KEY = "showcrate-playground-data";
 
 const DEFAULT_CONTENT = [
   {
@@ -59,10 +59,6 @@ export function PlaygroundEditor() {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-foreground">Playground</h1>
           <p className="text-muted-foreground text-sm flex items-center gap-2 font-medium">
-            <span 
-              className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
-              aria-hidden="true" 
-            />
             Changes are saved locally to your browser
           </p>
         </div>

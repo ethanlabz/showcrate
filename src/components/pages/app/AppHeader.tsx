@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { UserMenu } from "./UserMenu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -30,7 +30,7 @@ export function AppHeader({ user }: AppHeaderProps) {
         </a>
         
         <nav className="hidden md:flex flex-1 items-center gap-6 text-sm font-medium">
-          <a href="/dashboard" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</a>
+          <a href="/" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</a>
           <a href="/projects" className="text-muted-foreground transition-colors hover:text-foreground">Projects</a>
         </nav>
       </div>

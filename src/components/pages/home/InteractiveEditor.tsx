@@ -67,7 +67,7 @@ export function InteractiveEditor() {
     return DEFAULT_CONTENT;
   }, []);
 
-  const editor = useCreateBlockNote({ initialContent: initialContent as any });
+  const editor = useCreateBlockNote({ initialContent: initialContent as any, domAttributes: { editor: { spellcheck: "false" } } });
 
   // 2. Prevent hydration mismatches by deferring the BlockNote render
   useEffect(() => {

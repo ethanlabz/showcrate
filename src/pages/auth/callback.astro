@@ -1,0 +1,86 @@
+---
+/**
+ * auth/callback.ts — OAuth callback handler
+ *
+ * After the user authenticates with GitHub/Google, Supabase redirects
+ * here with a `code` query param. We exchange it for a session (which
+ * sets the auth cookies), then provision a username for new OAuth users
+ * if they don't have one yet.
+ */
+import { createServerClient } from '@/lib/supabase/server';
+
+const supabase = createServerClient(Astro.cookies);
+
+const code = Astro.url.searchParams.get('code');
+const next = Astro.url.searchParams.get('next') || '/';
+
+if (!code) {
+  return Astro.redirect('/auth/login?error=missing_code');
+}
+
+// Exchange the code for a session — this sets auth cookies via @supabase/ssr
+const { data: sessionData, error: sessionError } =
+  await supabase.auth.exchangeCodeForSession(code);
+
+if (sessionError || !sessionData?.user) {
+  console.error('[auth/callback] Session exchange failed:', sessionError?.message);
+  return Astro.redirect('/auth/login?error=oauth_failed');
+}
+
+const user = sessionData.user;
+
+// Check if this user already has a profile row in public.users
+const { data: profile } = await supabase
+  .from('users')
+  .select('username')
+  .eq('id', user.id)
+  .single();
+
+if (!profile?.username) {
+  // New OAuth user — provision a username from their identity metadata.
+  // Supabase stores provider data in user_metadata.
+  const meta = user.user_metadata ?? {};
+  const preferredUsername =
+    meta.preferred_username || // GitHub username
+    meta.user_name ||          // fallback
+    (meta.full_name || meta.name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') ||
+    `user-${user.id.slice(0, 8)}`;
+
+  // Make sure the username is unique by appending random suffix if needed
+  let username = preferredUsername.slice(0, 39);
+  const { count } = await supabase
+    .from('users')
+    .select('id', { count: 'exact', head: true })
+    .ilike('username', username);
+
+  if (count && count > 0) {
+    const suffix = Math.random().toString(36).slice(2, 6);
+    username = `${username.slice(0, 34)}-${suffix}`;
+  }
+
+  const displayName =
+    meta.full_name || meta.name || meta.preferred_username || username;
+  const avatarUrl =
+    meta.avatar_url || meta.picture || null;
+
+  // Upsert the user profile (the row may already exist without a username
+  // if a DB trigger created a skeleton row from the auth.users insert)
+  await supabase
+    .from('users')
+    .upsert(
+      {
+        id: user.id,
+        username,
+        display_name: displayName,
+        avatar_url: avatarUrl,
+      },
+      { onConflict: 'id' },
+    );
+}
+
+return Astro.redirect(next);
+---
