@@ -59,53 +59,56 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
   --shadow-glow-accent: 0 0 24px rgba(166, 135, 59, 0.12);
 
+  --popover: #F2EFE8;
+  --popover-foreground: #14161B;
+
   --transition-fast: 120ms ease;
   --transition-base: 200ms ease;
   --transition-slow: 320ms ease;
 }
 
 .dark {
-  --background: #000000;
-  --surface: #09090B;
-  --surface-raised: #18181B;
-  --border: #27272A;
-  --border-strong: #52525B;
+  --background: #0C0A09;
+  --surface: #1C1917;
+  --surface-raised: #292524;
+  --border: #292524;
+  --border-strong: #44403C;
 
-  --accent: #FFFFFF;
-  --accent-hover: #E4E4E7;
-  --accent-active: #D4D4D8;
-  --accent-foreground: #000000;
+  --accent: #F5F5F4;
+  --accent-hover: #E7E5E4;
+  --accent-active: #D6D3D1;
+  --accent-foreground: #1C1917;
 
-  --secondary: #A1A1AA;
-  --secondary-hover: #D4D4D8;
-  --secondary-active: #71717A;
-  --secondary-foreground: #000000;
+  --secondary: #A8A29E;
+  --secondary-hover: #D6D3D1;
+  --secondary-active: #78716C;
+  --secondary-foreground: #1C1917;
 
-  --text: #FFFFFF;
-  --text-secondary: #A1A1AA;
-  --text-muted: #52525B;
-  --text-inverse: #000000;
+  --text: #F5F5F4;
+  --text-secondary: #A8A29E;
+  --text-muted: #57534E;
+  --text-inverse: #1C1917;
 
-  --success: #FAFAFA;
-  --success-bg: #18181B;
-  --warning: #D4D4D8;
-  --warning-bg: #27272A;
-  --error: #F87171;
-  --error-bg: #450A0A;
-  --info: #E4E4E7;
-  --info-bg: #18181B;
+  --success: #F5F5F4;
+  --success-bg: #1C1917;
+  --warning: #D6D3D1;
+  --warning-bg: #292524;
+  --error: #D97757;
+  --error-bg: #292524;
+  --info: #A8A29E;
+  --info-bg: #1C1917;
 
-  --focus-ring: #FFFFFF;
-  --link: #FFFFFF;
-  --link-hover: #D4D4D8;
-  
+  --focus-ring: #F5F5F4;
+  --link: #F5F5F4;
+  --link-hover: #D6D3D1;
+
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-glow-accent: 0 0 24px rgba(201, 169, 106, 0.15);
+  --shadow-glow-accent: 0 0 24px rgba(245, 245, 244, 0.12);
 
-  --popover: #14161B;
-  --popover-foreground: #F2EFE8;
+  --popover: #000000;
+  --popover-foreground: #F5F5F4;
 }
 
 @theme inline {
@@ -153,8 +156,8 @@
   --color-muted-foreground: var(--text-muted);
   --color-card: var(--surface);
   --color-card-foreground: var(--text);
-  --color-popover: var(--surface);
-  --color-popover-foreground: var(--text);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-input: var(--border-strong);
   --color-ring: var(--focus-ring);
 

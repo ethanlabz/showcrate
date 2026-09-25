@@ -7,8 +7,18 @@ import LightRays from '@/components/bg/LightRays';
 
 import { InteractiveEditor } from '@/components/pages/home/InteractiveEditor.tsx';
 import { Separator } from '@/components/ui/separator';
+
+import AppLayout from '@/layouts/AppLayout.astro';
+import Dashboard from '@/components/pages/app/Dashboard.astro';
+
+const viewer = Astro.locals.user ?? Astro.locals.viewer;
 ---
 
+{viewer ? (
+  <AppLayout title=''>
+    <Dashboard viewer={viewer} />
+  </AppLayout>
+) : (
 <HomeLayout title='Welcome'>
   <div class='relative w-full'>
     <!-- ========================================== -->
@@ -345,6 +355,7 @@ import { Separator } from '@/components/ui/separator';
     </section>
   </div>
 </HomeLayout>
+)}
 
 <script>
   import { animate, scroll, inView, stagger } from 'framer-motion';
@@ -504,3 +515,4 @@ import { Separator } from '@/components/ui/separator';
     );
   }
 </script>
+)}

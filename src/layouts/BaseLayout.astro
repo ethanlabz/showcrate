@@ -3,7 +3,7 @@
 import "../styles/global.css";
 
 export interface Props {
-  title: string;
+  title?: string;
   description?: string;
   ogImage?: string;   // resolved absolute or root-relative URL — generation strategy is decided elsewhere
   noIndex?: boolean;
@@ -48,7 +48,9 @@ const resolvedOgImage = ogImage ? new URL(ogImage, Astro.site).toString() : unde
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalURL} />
 
-    <title>{title} · Showcrate</title>
+    <title>{
+      title ? title+' • Showcrate' : 'Showcrate'
+    }</title>
     <meta name="description" content={description} />
     {noIndex && <meta name="robots" content="noindex, nofollow" />}
 
