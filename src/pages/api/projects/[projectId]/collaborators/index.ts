@@ -42,8 +42,8 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies, locals, pa
     locals.user.id,
     invitee.id,
     parsed.data.email,
-    inviterProfile?.display_name ?? locals.user.username,
-    locals.user.username,
+    inviterProfile?.display_name ?? locals.user.username ?? 'Someone',
+    locals.user.username ?? '',
     parsed.data,
   );
 

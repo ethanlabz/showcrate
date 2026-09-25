@@ -55,6 +55,7 @@
     "motion": "^13.2.0",
     "motion-icons-react": "^1.1.0",
     "nanoid": "^6.0.1",
+    "ogl": "^1.0.11",
     "radix-ui": "^1.6.7",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

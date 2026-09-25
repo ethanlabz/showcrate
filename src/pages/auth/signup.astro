@@ -1,29 +1,67 @@
 ---
 import AuthLayout from '@/layouts/AuthLayout.astro';
 import SignupForm from '@/components/pages/auth/SignupForm';
+import SocialUsernameForm from '@/components/pages/auth/SocialUsernameForm';
+import { createServerClient } from '@/lib/supabase/server';
 
-// Redirect logged-in users away
-if (Astro.locals.user) {
-  return Astro.redirect('/');
+const social = Astro.url.searchParams.get('social') === 'true';
+const suggested = Astro.url.searchParams.get('suggested') ?? '';
+const next = Astro.url.searchParams.get('next') ?? '/';
+
+if (social) {
+  // Must have a valid session — user just came back from OAuth callback.
+  // We check the JWT directly (not locals.user) because new OAuth users
+  // have no username yet, which can prevent locals.user from being set.
+  const supabase = createServerClient(Astro.cookies);
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+
+  if (!authUser) {
+    return Astro.redirect('/auth/login');
+  }
+
+  // If they already have a username (e.g. returned here by mistake), move on.
+  const { data: profile } = await supabase
+    .from('users')
+    .select('username')
+    .eq('id', authUser.id)
+    .single();
+
+  if (profile?.username) {
+    return Astro.redirect(next);
+  }
+} else {
+  // Normal email signup — redirect logged-in users with a username away.
+  if (Astro.locals.user?.username) {
+    return Astro.redirect('/');
+  }
 }
 ---
 
-<AuthLayout title="Create account">
+<AuthLayout title={social ? 'Choose a username' : 'Create account'}>
   <div class="flex flex-col gap-6">
     <div class="flex flex-col gap-1">
       <h1 class="text-2xl font-heading font-semibold tracking-tight text-foreground">
-        Create your account
+        {social ? 'One last step' : 'Create your account'}
       </h1>
-      <p class="text-sm text-muted-foreground">Every project deserves a stage.</p>
+      <p class="text-sm text-muted-foreground">
+        {social
+          ? 'Pick a username for your Showcrate profile.'
+          : 'Every project deserves a stage.'}
+      </p>
     </div>
 
-    <SignupForm client:load />
+    {social
+      ? <SocialUsernameForm suggested={suggested} next={next} client:load />
+      : <SignupForm client:load />
+    }
 
-    <p class="text-center text-sm text-muted-foreground">
-      Already have an account?{' '}
-      <a href="/auth/login" class="font-medium text-foreground underline underline-offset-2 hover:opacity-80 transition-opacity">
-        Sign in
-      </a>
-    </p>
+    {!social && (
+      <p class="text-center text-sm text-muted-foreground">
+        Already have an account?{' '}
+        <a href="/auth/login" class="font-medium text-foreground underline underline-offset-2 hover:opacity-80 transition-opacity">
+          Sign in
+        </a>
+      </p>
+    )}
   </div>
 </AuthLayout>

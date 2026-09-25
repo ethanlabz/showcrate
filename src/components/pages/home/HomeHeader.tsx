@@ -8,6 +8,7 @@ const navLinks = [
   { href: '/showcase', label: 'Showcase' },
   { href: '/templates', label: 'Templates' },
   { href: '/about', label: 'About' },
+  { href: '/playground', label: 'Playground' },
 ];
 
 function Logo() {
@@ -60,9 +61,9 @@ export function Header({ currentPath, user }: Props) {
   return (
     <>
       {/* Universal Top Header (Visible everywhere) */}
-      <div className='sticky top-0 z-9999 w-full pointer-events-none transition-all duration-500'>
-        <header className='pointer-events-auto mx-auto w-full max-w-7xl border-b border-border/40 bg-background/95 backdrop-blur-xl supports-backdrop-filter:bg-background/60 transition-all duration-500 rounded-full'>
-          <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 lg:mt-4 flex h-16 items-center justify-between'>
+      <div className='fixed top-0 z-9999 w-full pointer-events-none transition-all duration-500'>
+        <header className='pointer-events-auto mx-auto w-full max-w-screen border-b border-border/40 bg-background/95 backdrop-blur-xl supports-backdrop-filter:bg-background/60 transition-all duration-500'>
+          <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between'>
             <div className='flex items-center gap-6'>
               <Logo />
 
@@ -92,12 +93,12 @@ export function Header({ currentPath, user }: Props) {
             <div className='flex items-center justify-end space-x-2 sm:space-x-4'>
               <ThemeToggle />
               {user ? (
-                <a href='/dashboard'>
+                <a href={user.username ? `/${user.username}` : '/'}>
                   <Button
                     size='sm'
                     className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm rounded-full'
                   >
-                    Dashboard
+                    My Profile
                   </Button>
                 </a>
               ) : (
@@ -106,12 +107,17 @@ export function Header({ currentPath, user }: Props) {
                     href='/auth/login'
                     className='text-sm font-medium transition-colors hover:text-primary hidden sm:inline-block rounded-full'
                   >
-                    Log in
+                    <Button
+                      size='lg'
+                      variant='ghost'
+                    >
+                      Log in
+                    </Button>
                   </a>
                   <a href='/auth/signup'>
                     <Button
                       size='sm'
-                      className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm rounded-full'
+                      className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm'
                     >
                       Sign up
                     </Button>

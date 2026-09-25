@@ -62,9 +62,9 @@ const user = Astro.locals.user;
           class="hidden md:flex flex-1 items-center gap-6 text-sm font-medium"
         >
           <a
-            href="/dashboard"
+            href={user?.username ? `/${user.username}` : "/"}
             class="text-muted-foreground transition-colors hover:text-foreground"
-            >Dashboard</a
+            >Profile</a
           >
           <a
             href="/projects"
@@ -91,7 +91,7 @@ const user = Astro.locals.user;
 
         {
           user ? (
-            <UserMenu user={user} />
+            <UserMenu user={user} client:load />
           ) : (
             <a href="/auth/login" class="text-sm font-medium">
               Log in
@@ -109,6 +109,6 @@ const user = Astro.locals.user;
       <slot />
     </main>
 
-    <MobileBottomNav client:load />
+    <MobileBottomNav username={user?.username ?? ''} client:load />
   </div>
 </BaseLayout>

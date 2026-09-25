@@ -94,6 +94,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
+  // ── Step 2b: Username completion gate ─────────────────────────────────────
+  // New OAuth users have a valid session but no username yet. Force them
+  // through /auth/signup?social=true before they access anything else.
+  if (
+    locals.user &&
+    !locals.user.username &&
+    !pathname.startsWith('/auth/') &&
+    !pathname.startsWith('/api/auth/')
+  ) {
+    return redirect('/auth/signup?social=true', 302);
+  }
+
   // ── Step 3: Route guard ────────────────────────────────────────────────
   const guardResult = checkRouteAccess(pathname, locals.user);
   if (!guardResult.allowed) {

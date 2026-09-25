@@ -6,7 +6,7 @@ import { updateProfileSchema } from '@/lib/validators/user.schema';
 import { UserRepository } from '@/lib/repositories/UserRepository';
 
 export const PATCH: APIRoute = asyncHandler(async ({ request, cookies, locals, params }) => {
-  if (!locals.user) return unauthorized();
+  if (!locals.user || !locals.user.username) return unauthorized();
   if (locals.user.username.toLowerCase() !== (params.username ?? '').toLowerCase()) return forbidden();
 
   const body = await request.json().catch(() => null);

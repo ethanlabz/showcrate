@@ -44,20 +44,46 @@ function loadConfig(): Config {
   // but the server itself will not crash on import.
   const raw = {
     supabase: {
-      url: import.meta.env.SUPABASE_URL ?? (isDev ? 'http://localhost:54321' : undefined),
-      anonKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? (isDev ? 'dev-anon-key' : undefined),
-      serviceRoleKey: import.meta.env.SUPABASE_SERVICE_ROLE_KEY ?? (isDev ? 'dev-service-key' : undefined),
+      url:
+        (typeof process !== 'undefined' ? (process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL) : undefined) ??
+        import.meta.env.PUBLIC_SUPABASE_URL ??
+        import.meta.env.SUPABASE_URL ??
+        (isDev ? 'http://localhost:54321' : undefined),
+      anonKey:
+        (typeof process !== 'undefined' ? (process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY) : undefined) ??
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY ??
+        import.meta.env.SUPABASE_ANON_KEY ??
+        (isDev ? 'dev-anon-key' : undefined),
+      serviceRoleKey:
+        (typeof process !== 'undefined' ? process.env.SUPABASE_SERVICE_ROLE_KEY : undefined) ??
+        import.meta.env.SUPABASE_SERVICE_ROLE_KEY ??
+        (isDev ? 'dev-service-key' : undefined),
     },
     site: {
-      url: import.meta.env.SITE_URL ?? 'http://localhost:4321',
-      nodeEnv: import.meta.env.NODE_ENV ?? 'development',
+      url:
+        (typeof process !== 'undefined' ? (process.env.SITE_URL || process.env.PUBLIC_SITE_URL) : undefined) ??
+        import.meta.env.SITE_URL ??
+        import.meta.env.PUBLIC_SITE_URL ??
+        'http://localhost:4321',
+      nodeEnv:
+        (typeof process !== 'undefined' ? (process.env.NODE_ENV as any) : undefined) ??
+        import.meta.env.NODE_ENV ??
+        'development',
     },
     email: {
-      resendApiKey: import.meta.env.RESEND_API_KEY ?? (isDev ? 'dev-resend-key' : undefined),
-      fromEmail: import.meta.env.RESEND_FROM_EMAIL ?? 'noreply@showcrate.io',
+      resendApiKey:
+        (typeof process !== 'undefined' ? process.env.RESEND_API_KEY : undefined) ??
+        import.meta.env.RESEND_API_KEY ??
+        (isDev ? 'dev-resend-key' : undefined),
+      fromEmail:
+        (typeof process !== 'undefined' ? process.env.RESEND_FROM_EMAIL : undefined) ??
+        import.meta.env.RESEND_FROM_EMAIL ??
+        'noreply@showcrate.tech',
     },
     sentry: {
-      dsn: import.meta.env.SENTRY_DSN,
+      dsn:
+        (typeof process !== 'undefined' ? process.env.SENTRY_DSN : undefined) ??
+        import.meta.env.SENTRY_DSN,
     },
   };
 

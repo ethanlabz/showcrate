@@ -7,7 +7,8 @@ import type { PlatformRole } from './database';
 export interface SessionUser {
   id: string;
   email: string;
-  username: string;
+  /** null for new OAuth users who haven't picked a username yet */
+  username: string | null;
   displayName: string | null;
   avatarUrl: string | null;
   platformRole: PlatformRole;

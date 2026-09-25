@@ -49,7 +49,14 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies }) => {
       return unauthorized('Invalid username/email or password');
     }
 
-    return ok({ userId: data.user.id });
+    // Fetch username so the client can redirect to /{username}
+    const { data: profile } = await db
+      .from('users')
+      .select('username')
+      .eq('id', data.user.id)
+      .single();
+
+    return ok({ userId: data.user.id, username: profile?.username ?? null });
   } catch (err: any) {
     if (err.message?.includes('fetch failed') || err.name === 'TypeError') {
       return unprocessable('Cannot connect to Supabase. Please ensure your .env file has valid SUPABASE_URL credentials.');

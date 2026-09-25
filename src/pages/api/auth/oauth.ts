@@ -25,8 +25,8 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies }) => {
     return unprocessable(`Invalid provider. Must be one of: ${ALLOWED_PROVIDERS.join(', ')}`);
   }
 
-  const next = typeof body.next === 'string' ? body.next : '/dashboard';
-  const siteUrl = config.site?.url ?? 'http://localhost:4321';
+  const next = typeof body.next === 'string' ? body.next : '/';
+  const siteUrl = new URL(request.url).origin || config.site?.url || 'http://localhost:4321';
 
   const db = createServerClient(cookies);
 

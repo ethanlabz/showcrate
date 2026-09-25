@@ -66,7 +66,8 @@ export default function LoginForm() {
       }
 
       const next = new URLSearchParams(window.location.search).get('next');
-      window.location.href = next ?? '/dashboard';
+      // Prefer an explicit ?next redirect, then fall back to /{username}, then /
+      window.location.href = next ?? (json.data.username ? `/${json.data.username}` : '/');
     } catch {
       setServerError('Network error. Please check your connection.');
     } finally {
@@ -82,7 +83,7 @@ export default function LoginForm() {
       const res = await fetch('/api/auth/oauth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, next: next ?? '/dashboard' }),
+        body: JSON.stringify({ provider, next: next ?? '/' }),
       });
       const json = await res.json();
       if (!res.ok) {
