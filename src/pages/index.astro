@@ -20,7 +20,7 @@ const viewer = Astro.locals.user ?? Astro.locals.viewer;
 
 {viewer ? (
   <AppLayout title=''>
-    <Dashboard1 viewer={viewer} />
+    <Dashboard viewer={viewer} />
   </AppLayout>
 ) : (
 <HomeLayout title='Welcome'>

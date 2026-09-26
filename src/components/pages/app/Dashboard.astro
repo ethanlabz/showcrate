@@ -23,9 +23,11 @@
  * Project_Overview.md's schema — adjust `.select()` strings to your actual
  * generated types.
  */
-import { createServerClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Plus, FolderKanban, Search, Bell } from "lucide-react";
+import { createServerClient } from '@/lib/supabase/server';
+import { Button } from '@/components/ui/button';
+import { Plus, FolderKanban, Search, Bell, BookMarked } from 'lucide-react';
+
+import { LeftRail } from '@/components/pages/app/LeftRail';
 
 interface Props {
   viewer: {
@@ -46,7 +48,7 @@ const supabase = createServerClient(Astro.cookies);
 // Project_Overview.md) — this query relies on that policy, it does not
 // replace it.
 const { data: projects, error: projectsError } = await supabase
-  .from("projects")
+  .from('projects')
   .select(
     `
     id,
@@ -56,14 +58,14 @@ const { data: projects, error: projectsError } = await supabase
     visibility,
     updated_at,
     owner:owner_id ( username )
-    `
+    `,
   )
-  .order("updated_at", { ascending: false })
+  .order('updated_at', { ascending: false })
   .limit(8);
 
 // --- Activity feed: latest page saves across projects viewer can see ---
 const { data: activity, error: activityError } = await supabase
-  .from("page_versions")
+  .from('page_versions')
   .select(
     `
     id,
@@ -77,178 +79,35 @@ const { data: activity, error: activityError } = await supabase
         owner:owner_id ( username )
       )
     )
-    `
+    `,
   )
-  .order("created_at", { ascending: false })
+  .order('created_at', { ascending: false })
   .limit(12);
 
-if (projectsError) console.error("[Dashboard] projects query failed:", projectsError);
-if (activityError) console.error("[Dashboard] activity query failed:", activityError);
+if (projectsError)
+  console.error('[Dashboard] projects query failed:', projectsError);
+if (activityError)
+  console.error('[Dashboard] activity query failed:', activityError);
 ---
 
 <div
-  class="w-full min-h-screen bg-background text-foreground grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-6 px-4 sm:px-6 lg:px-8 py-8 max-w-screen mx-auto"
+  class='w-full min-h-screen bg-background text-foreground grid grid-cols-1 lg:grid-cols-[312px_1fr] max-w-screen mx-auto'
 >
-  <!-- ============================== -->
-  <!-- LEFT RAIL: Top projects        -->
-  <!-- ============================== -->
-  <aside class="lg:sticky lg:top-8 lg:self-start border-l-2">
-  
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-sm font-semibold text-muted-foreground">
-        Top projects
-      </h2>
-      <a
-        href="/new"
-        class="text-xs font-medium text-primary hover:underline"
-      >
-        New
-      </a>
+  <!-- left rail -->
+  <LeftRail client:load projects={projects || []} viewer={viewer} />
+
+  <!-- center rail -->
+  <div class='grid grid-cols-1 lg:grid-cols-[1fr_312px] max-w-auto mx-auto'>
+    <!-- center rail -->
+    <main class="min-w-0">
+
+    </main>
+
+    <!-- right rail -->
+    <div>
+
     </div>
-
-    <div class="relative mb-3">
-      <Search
-        className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground"
-      />
-      <input
-        type="text"
-        placeholder="Find a project..."
-        class="w-full pl-8 pr-3 py-1.5 text-sm rounded-md border border-border bg-muted/30 focus:outline-none focus:ring-1 focus:ring-primary"
-        data-project-filter
-      />
-    </div>
-
-    <ul class="space-y-0.5" data-project-list>
-      {projects && projects.length > 0 ? (
-        projects.map((p: { owner: { username: unknown; }; slug: unknown; }) => (
-          <li>
-            <a
-              href={`/${p.owner.username}/${p.slug}`}
-              class="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted/40 truncate"
-              data-project-name={`${p.owner.username}/${p.slug}`.toLowerCase()}
-            >
-              <FolderKanban className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-              <span class="truncate">
-                {p.owner.username}/{p.slug}
-              </span>
-            </a>
-          </li>
-        ))
-      ) : (
-        <li class="px-2 py-1.5 text-sm text-muted-foreground">
-          No projects yet.
-        </li>
-      )}
-    </ul>
-
-    <a
-      href="/settings/profile"
-      class="mt-3 inline-block text-xs text-muted-foreground hover:underline"
-    >
-      Show all →
-    </a>
-  </aside>
-
-  <!-- ============================== -->
-  <!-- CENTER: Quick actions + Feed   -->
-  <!-- ============================== -->
-  <main class="min-w-0 border-l-2 border-r-2 border-border">
-    <div class="flex flex-wrap items-center gap-3 mb-8">
-      <a href="/new">
-        <Button size="sm">
-          <Plus className="w-4 h-4 mr-1.5" />
-          New project
-        </Button>
-      </a>
-      <a href="/templates">
-        <Button variant="outline" size="sm">Browse templates</Button>
-      </a>
-      <a href="/notifications">
-        <Button variant="outline" size="sm">
-          <Bell className="w-4 h-4 mr-1.5" />
-          Notifications
-        </Button>
-      </a>
-    </div>
-
-    <h3 class="text-sm font-semibold text-muted-foreground mb-3">
-      Recent activity
-    </h3>
-
-    <div class="space-y-3">
-      {activity && activity.length > 0 ? (
-        activity.map((a: { saved_by: { avatar_url: string | null | undefined; display_name: any; username: any; }; created_at: string | number | Date; page: { project: { owner: { username: unknown; }; slug: unknown; }; slug: any; }; title: unknown; }) => (
-          <article class="border border-border rounded-xl p-4 bg-card/40">
-            <div class="flex items-center gap-2 text-sm mb-2">
-              {a.saved_by.avatar_url ? (
-                <img
-                  src={a.saved_by.avatar_url}
-                  class="w-6 h-6 rounded-full"
-                  alt={a.saved_by.display_name ?? a.saved_by.username}
-                />
-              ) : (
-                <div class="w-6 h-6 rounded-full bg-muted" />
-              )}
-              <span class="font-medium">
-                {a.saved_by.display_name ?? a.saved_by.username}
-              </span>
-              <span class="text-muted-foreground">updated a page</span>
-              <span class="text-muted-foreground text-xs ml-auto">
-                {new Date(a.created_at).toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-            <a
-              href={`/${a.page.project.owner.username}/${a.page.project.slug}/docs/${a.page.slug}`}
-              class="font-semibold hover:underline"
-            >
-              {a.title}
-            </a>
-            <p class="text-xs text-muted-foreground mt-0.5">
-              {a.page.project.owner.username}/{a.page.project.slug}
-            </p>
-          </article>
-        ))
-      ) : (
-        <div class="border border-dashed border-border rounded-xl p-8 text-center">
-          <p class="text-sm text-muted-foreground mb-3">
-            No recent activity yet.
-          </p>
-          <a href="/new" class="text-sm text-primary hover:underline">
-            Create your first project →
-          </a>
-        </div>
-      )}
-    </div>
-  </main>
-
-  <!-- ============================== -->
-  <!-- RIGHT RAIL                     -->
-  <!-- ============================== -->
-  <aside class="lg:sticky lg:top-8 lg:self-start">
-    <div class="border border-border rounded-xl p-4 bg-card/40">
-      <h2 class="text-sm font-semibold mb-3">Get started</h2>
-      <ul class="space-y-2 text-sm">
-        <li>
-          <a href="/templates" class="hover:underline">
-            Start from a template
-          </a>
-        </li>
-        <li>
-          <a href="/help" class="hover:underline">
-            Read the help center
-          </a>
-        </li>
-        <li>
-          <a href="/settings/collaborators" class="hover:underline">
-            Invite a collaborator
-          </a>
-        </li>
-      </ul>
-    </div>
-  </aside>
+  </div>
 </div>
 
 <script>
@@ -256,18 +115,17 @@ if (activityError) console.error("[Dashboard] activity query failed:", activityE
   // route or API call, avoids inventing a global /search endpoint that
   // isn't in the sitemap.
   const input = document.querySelector<HTMLInputElement>(
-    "[data-project-filter]"
+    '[data-project-filter]',
   );
-  const items =
-    document.querySelectorAll<HTMLElement>("[data-project-name]");
+  const items = document.querySelectorAll<HTMLElement>('[data-project-name]');
 
-  input?.addEventListener("input", () => {
+  input?.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase();
     items.forEach((el) => {
-      const name = el.dataset.projectName ?? "";
-      const li = el.closest("li");
+      const name = el.dataset.projectName ?? '';
+      const li = el.closest('li');
       if (!li) return;
-      li.style.display = name.includes(q) ? "" : "none";
+      li.style.display = name.includes(q) ? '' : 'none';
     });
   });
 </script>
