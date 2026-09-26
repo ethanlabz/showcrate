@@ -73,7 +73,7 @@ function MenuPanel({
   return (
     <MenuPortal>
       <MenuPositionerPrimitive
-        className="z-50"
+        className='z-50'
         sideOffset={sideOffset}
         {...props}
       >
@@ -86,7 +86,7 @@ function MenuPanel({
             className,
           )}
         >
-          <MenuHighlightPrimitive className="absolute inset-0 bg-accent z-0 rounded-sm">
+          <MenuHighlightPrimitive className='absolute inset-0 bg-accent z-0 rounded-sm'>
             {children}
           </MenuHighlightPrimitive>
         </MenuPopupPrimitive>
@@ -167,18 +167,18 @@ function MenuCheckboxItem({
       <MenuCheckboxItemPrimitive
         disabled={disabled}
         className={cn(
-          "focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+          "focus:text-accent relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
           className,
         )}
         checked={checked}
         {...props}
       >
-        <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
+        <span className='pointer-events-none absolute left-2 flex size-3.5 items-center justify-center'>
           <MenuCheckboxItemIndicatorPrimitive
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <CheckIcon className="size-4" />
+            <CheckIcon className='size-4' />
           </MenuCheckboxItemIndicatorPrimitive>
         </span>
         {children}
@@ -206,14 +206,14 @@ function MenuRadioItem({
       <MenuRadioItemPrimitive
         disabled={disabled}
         className={cn(
-          "focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+          "focus:text-accent relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
           className,
         )}
         {...props}
       >
-        <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
-          <MenuRadioItemIndicatorPrimitive layoutId="dropdown-menu-item-indicator-radio">
-            <CircleIcon className="size-2 fill-current" />
+        <span className='pointer-events-none absolute left-2 flex size-3.5 items-center justify-center'>
+          <MenuRadioItemIndicatorPrimitive layoutId='dropdown-menu-item-indicator-radio'>
+            <CircleIcon className='size-2 fill-current' />
           </MenuRadioItemIndicatorPrimitive>
         </span>
         {children}
@@ -277,14 +277,14 @@ function MenuSubmenuTrigger({
         disabled={disabled}
         data-inset={inset}
         className={cn(
-          'focus:text-accent-foreground data-[state=open]:text-accent-foreground flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[inset]:pl-8',
+          'focus:text-accent data-[state=open]:text-accent flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[inset]:pl-8',
           'aria-[expanded=true]:[&_[data-slot=chevron]]:rotate-90 [&_[data-slot=chevron]]:transition-transform [&_[data-slot=chevron]]:duration-300 [&_[data-slot=chevron]]:ease-in-out',
           className,
         )}
         {...props}
       >
         {children}
-        <ChevronRightIcon data-slot="chevron" className="ml-auto size-4" />
+        <ChevronRightIcon data-slot='chevron' className='ml-auto size-4' />
       </MenuSubmenuTriggerPrimitive>
     </MenuHighlightItemPrimitive>
   );
@@ -305,7 +305,7 @@ function MenuSubmenuPanel({
   return (
     <MenuPortal>
       <MenuPositionerPrimitive
-        className="z-50"
+        className='z-50'
         sideOffset={sideOffset}
         {...props}
       >

@@ -3,20 +3,24 @@ import HomeLayout from '@/layouts/HomeLayout.astro';
 import 'lenis/dist/lenis.css';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
-import LightRays from '@/components/bg/LightRays';
 
 import { InteractiveEditor } from '@/components/pages/home/InteractiveEditor.tsx';
 import { Separator } from '@/components/ui/separator';
 
 import AppLayout from '@/layouts/AppLayout.astro';
 import Dashboard from '@/components/pages/app/Dashboard.astro';
+import Dashboard1 from '@/components/pages/app/Dashboard1.astro';
+
+// background
+import LightRays from '@/components/bg/LightRays';
+import SideRays from '@/components/bg/SideRays';
 
 const viewer = Astro.locals.user ?? Astro.locals.viewer;
 ---
 
 {viewer ? (
   <AppLayout title=''>
-    <Dashboard viewer={viewer} />
+    <Dashboard1 viewer={viewer} />
   </AppLayout>
 ) : (
 <HomeLayout title='Welcome'>
@@ -31,7 +35,7 @@ const viewer = Astro.locals.user ?? Astro.locals.viewer;
     >
       <!-- Background Light Rays -->
       <div class='absolute inset-0 pointer-events-none z-0 overflow-hidden'>
-        <LightRays
+        {/* <LightRays
           client:load
           raysOrigin='top-center'
           raysColor='#ffffff'
@@ -46,6 +50,20 @@ const viewer = Astro.locals.user ?? Astro.locals.viewer;
           noiseAmount={0.02}
           distortion={0.03}
           className='w-full h-full'
+        /> */}
+        <SideRays
+          client:load
+          speed={2.5}
+          rayColor1="#EAB308"
+          rayColor2="#96c8ff"
+          intensity={2}
+          spread={2}
+          origin="top-right"
+          tilt={0}
+          saturation={1.5}
+          blend={0.75}
+          falloff={1.6}
+          opacity={1}
         />
       </div>
 
@@ -187,12 +205,10 @@ const viewer = Astro.locals.user ?? Astro.locals.viewer;
               <h3
                 class='text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight'
               >
-                Markdown to MDX
+                Block Editor
               </h3>
               <p class='text-muted-foreground leading-relaxed flex-1'>
-                Write your documentation in standard Markdown. Showcrate
-                effortlessly compiles it into interactive MDX, unlocking live
-                components directly within your text.
+                Write your documentation directly in a Block editor. Showcrate saves it in realtime, so you don't have to.
               </p>
             </div>
           </div>
@@ -515,4 +531,4 @@ const viewer = Astro.locals.user ?? Astro.locals.viewer;
     );
   }
 </script>
-)}
+}

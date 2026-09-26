@@ -87,12 +87,13 @@ if (activityError) console.error("[Dashboard] activity query failed:", activityE
 ---
 
 <div
-  class="w-full min-h-screen bg-background text-foreground grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-6 px-4 sm:px-6 lg:px-8 py-8 max-w-[1500px] mx-auto"
+  class="w-full min-h-screen bg-background text-foreground grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-6 px-4 sm:px-6 lg:px-8 py-8 max-w-screen mx-auto"
 >
   <!-- ============================== -->
   <!-- LEFT RAIL: Top projects        -->
   <!-- ============================== -->
-  <aside class="lg:sticky lg:top-8 lg:self-start">
+  <aside class="lg:sticky lg:top-8 lg:self-start border-l-2">
+  
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-sm font-semibold text-muted-foreground">
         Top projects
@@ -151,7 +152,7 @@ if (activityError) console.error("[Dashboard] activity query failed:", activityE
   <!-- ============================== -->
   <!-- CENTER: Quick actions + Feed   -->
   <!-- ============================== -->
-  <main class="min-w-0">
+  <main class="min-w-0 border-l-2 border-r-2 border-border">
     <div class="flex flex-wrap items-center gap-3 mb-8">
       <a href="/new">
         <Button size="sm">

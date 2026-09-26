@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-import { User } from 'lucide-react';
+import { Brush, ChevronRight, LogOut, LucideBookMarked, Settings2, User } from 'lucide-react';
 
 import {
   Menu,
@@ -14,16 +14,6 @@ import {
   MenuItem,
   MenuSeparator,
 } from '@/components/animate-ui/components/base/menu';
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 interface User {
   username?: string | null;
@@ -56,8 +46,8 @@ export function UserMenu({ user }: UserMenuProps) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <Menu>
+      <MenuTrigger
         render={
           <Button
             variant='ghost'
@@ -76,82 +66,76 @@ export function UserMenu({ user }: UserMenuProps) {
           </Button>
         }
       />
-
-      <DropdownMenuContent className='w-56' align='end'>
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>
-            <div className='flex flex-col space-y-1'>
-              <p className='text-sm font-medium leading-none'>
-                {user.username}
-              </p>
-              <p className='text-xs leading-none text-muted-foreground'>
-                {user.email}
-              </p>
+      <MenuPanel className='w-56' align='end'>
+        <MenuGroup>
+          <MenuGroupLabel className='font-normal'>
+            <div className='flex gap-3'>
+              <Avatar className='h-7 w-7'>
+                <AvatarImage
+                  src={
+                    user.avatarUrl ||
+                    `https://api.dicebear.com/10.x/waves/svg?seed=${displayName}`
+                  }
+                  alt={displayName}
+                />
+                <AvatarFallback>{initial}</AvatarFallback>
+              </Avatar>
+              <div className='flex flex-col space-y-1'>
+                <p className='text-sm font-medium leading-none'>
+                  {user.username}
+                </p>
+                <p className='text-xs leading-none text-muted-foreground'>
+                  {user.email}
+                </p>
+              </div>
             </div>
-          </DropdownMenuLabel>
-          <DropdownMenuItem>
-            <a href={`/${user.username ?? ''}`} className='flex gap-2'>
-              <User />
-              Profile
+          </MenuGroupLabel>
+        </MenuGroup>
+        <MenuSeparator />
+        <MenuItem>
+          <a
+            href={`/${user.username}`}
+            className='cursor-pointer flex gap-2 items-center'
+          >
+            <User />
+            Profile
+          </a>
+        </MenuItem>
+        <MenuItem>
+          <a
+            href={`/${user.username}?tab=projects`}
+            className='cursor-pointer flex gap-2 items-center'
+          >
+            <LucideBookMarked />
+            Projects
+          </a>
+        </MenuItem>
+        <MenuSeparator />
+        <MenuGroup>
+          <MenuItem>
+            <a href='/settings/profile' className='cursor-pointer flex gap-2 items-center'>
+            <Settings2 />
+              Settings
             </a>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-
-    // <Menu>
-    //   <MenuTrigger
-    //     render={
-    //       <Button
-    //         variant='ghost'
-    //         className='relative h-8 w-8 rounded-full border border-border p-0'
-    //       >
-    //         <Avatar className='h-7 w-7'>
-    //           <AvatarImage
-    //             src={
-    //               user.avatarUrl ||
-    //               `https://api.dicebear.com/10.x/waves/svg?seed=${displayName}`
-    //             }
-    //             alt={displayName}
-    //           />
-    //           <AvatarFallback>{initial}</AvatarFallback>
-    //         </Avatar>
-    //       </Button>
-    //     }
-    //   />
-    //   <MenuPanel className='w-56' align='end'>
-    //     <MenuGroup>
-    //       <MenuGroupLabel className='font-normal'>
-    //         <div className='flex flex-col space-y-1'>
-    //           <p className='text-sm font-medium leading-none'>
-    //             {user.username}
-    //           </p>
-    //           <p className='text-xs leading-none text-muted-foreground'>
-    //             {user.email}
-    //           </p>
-    //         </div>
-    //       </MenuGroupLabel>
-    //       <MenuItem>
-    //         <a href={`/${user.username}`} className='cursor-pointer flex gap-2'>
-    //           Profile
-    //         </a>
-    //       </MenuItem>
-    //     </MenuGroup>
-    //     <MenuSeparator />
-    //     <MenuItem>
-    //       <a href='/settings' className='cursor-pointer' />
-    //       Settings
-    //     </MenuItem>
-    //     <MenuSeparator />
-    //     <MenuItem
-    //       variant='destructive'
-    //       className='cursor-pointer'
-    //       disabled={loggingOut}
-    //       onClick={handleLogout}
-    //     >
-    //       {loggingOut ? 'Logging out...' : 'Log out'}
-    //     </MenuItem>
-    //   </MenuPanel>
-    // </Menu>
+          </MenuItem>
+          <MenuItem>
+            <a href='/settings/appearance' className='cursor-pointer flex gap-2 items-center'>
+            <Brush />
+              Appearance
+            </a>
+          </MenuItem>
+        </MenuGroup>
+        <MenuSeparator />
+        <MenuItem
+          variant='destructive'
+          className='cursor-pointer flex gap-2 items-center'
+          disabled={loggingOut}
+          onClick={handleLogout}
+        >
+          <LogOut />
+          Log out
+        </MenuItem>
+      </MenuPanel>
+    </Menu>
   );
 }
