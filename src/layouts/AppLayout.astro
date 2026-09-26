@@ -1,0 +1,40 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { UserMenu } from "../components/pages/app/UserMenu";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+import { AppHeader } from "../components/pages/app/AppHeader";
+import { MobileBottomNav } from "../components/pages/app/MobileBottomNav";
+
+export interface Props {
+  title: string;
+  description?: string;
+  noIndex?: boolean;
+}
+
+const { title, description, noIndex = true } = Astro.props;
+const user = Astro.locals.user;
+
+if (user && !user.username) {
+  return Astro.redirect('/auth/signup?social=true');
+}
+---
+
+<BaseLayout title={title} description={description} noIndex={noIndex}>
+  <div class="flex min-h-screen w-full flex-col bg-muted/40 pb-16 md:pb-0">
+    <AppHeader user={user} client:load />
+
+    <div id="sidebar">
+
+    </div>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <MobileBottomNav username={user?.username ?? ''} client:load />
+  </div>
+</BaseLayout>

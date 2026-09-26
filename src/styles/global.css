@@ -1,0 +1,203 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/syne";
+@import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource-variable/outfit";
+
+/* Monochrome-leaning theme with verified WCAG AA contrast on every fg/bg pair.
+   All values are OKLCH; hex source noted in comments for traceability. */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: oklch(0.9738 0.0086 84.57);        /* #F9F6F0 */
+  --surface: oklch(1 0 0);                          /* #FFFFFF */
+  --surface-raised: oklch(0.9393 0.0137 78.26);     /* #F0EAE1 */
+  --border: oklch(0.9059 0.0179 81.33);             /* #E6DFD3 */
+  --border-strong: oklch(0.8219 0.0293 79.45);      /* #CFC3B0 */
+
+  --accent: oklch(0.5455 0.1333 34.07);             /* #B04E38 — darkened from #C25E49 for 4.5:1 w/ white text */
+  --accent-hover: oklch(0.4859 0.1177 34.14);       /* #96422F */
+  --accent-active: oklch(0.4246 0.1013 33.57);      /* #7C3627 */
+  --accent-foreground: oklch(1 0 0);                /* #FFFFFF */
+
+  --secondary: oklch(0.4474 0.0343 261.32);         /* #4A5568 */
+  --secondary-hover: oklch(0.3351 0.0331 260.91);   /* #2D3748 */
+  --secondary-active: oklch(0.2433 0.0247 263.95);  /* #1A202C */
+  --secondary-foreground: oklch(1 0 0);             /* #FFFFFF */
+
+  --text: oklch(0.3351 0.0331 260.91);              /* #2D3748 */
+  --text-secondary: oklch(0.4474 0.0343 261.32);    /* #4A5568 */
+  --text-muted: oklch(0.7457 0.0304 254.72);        /* #A0AEC0 — decorative use only, 2.09:1 on bg */
+  --text-inverse: oklch(0.9738 0.0086 84.57);       /* #F9F6F0 */
+
+  --success: oklch(0.5084 0.1352 149.83);           /* #0F7A38 — darkened from #38A169, was 2.71:1, now 4.54:1 */
+  --success-bg: oklch(0.9308 0.0664 154.90);        /* #C6F6D5 */
+  --warning: oklch(0.5172 0.1434 44.87);            /* #A8460A — darkened from #DD6B20, was 2.89:1, now 5.06:1 */
+  --warning-bg: oklch(0.9465 0.0501 82.80);         /* #FEEBC8 */
+  --error: oklch(0.5054 0.1905 27.52);              /* #B91C1C — darkened from #E53E3E, was 3.13:1, now 4.90:1 */
+  --error-bg: oklch(0.9120 0.0437 17.98);           /* #FED7D7 */
+  --info: oklch(0.4882 0.2172 264.38);              /* #1D4ED8 — darkened from #3182CE, was 2.98:1, now 4.96:1 */
+  --info-bg: oklch(0.8960 0.0484 232.92);           /* #BEE3F8 */
+
+  --focus-ring: oklch(0.5455 0.1333 34.07);         /* = accent */
+  --link: oklch(0.4859 0.1177 34.14);               /* = accent-hover */
+  --link-hover: oklch(0.4246 0.1013 33.57);         /* = accent-active */
+
+  --font-heading: 'Syne', serif;
+  --font-sans: 'Outfit Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.06);
+  --shadow-md: 0 4px 8px oklch(0 0 0 / 0.08);
+  --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.12);
+  --shadow-glow-accent: 0 0 24px oklch(0.5455 0.1333 34.07 / 0.14); /* now derived from accent, not an orphaned gold RGB */
+
+  --popover: oklch(0.9525 0.0099 87.47);            /* #F2EFE8 */
+  --popover-foreground: oklch(0.2003 0.0105 268.16); /* #14161B */
+
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 320ms ease;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);           /* #0A0A0A — Tailwind neutral-950, exact match to the scrape */
+  --surface: oklch(0.205 0 0);              /* #171717 — neutral-900 */
+  --surface-raised: oklch(0.269 0 0);       /* #262626 — neutral-800 */
+  --border: oklch(0.269 0 0);               /* #262626 — neutral-800 */
+  --border-strong: oklch(0.556 0 0);        /* #737373 — neutral-500; neutral-700 only hit 1.91:1, too faint to read as a border */
+
+  --accent: oklch(0.985 0 0);               /* #FAFAFA — neutral-50 */
+  --accent-hover: oklch(0.97 0 0);          /* #F5F5F5 — neutral-100 */
+  --accent-active: oklch(0.922 0 0);        /* #E5E5E5 — neutral-200 */
+  --accent-foreground: oklch(0.205 0 0);    /* #171717 — neutral-900, 18.97:1 */
+
+  --secondary: oklch(0.708 0 0);            /* #A1A1A1 — neutral-400 */
+  --secondary-hover: oklch(0.87 0 0);       /* #D4D4D4 — neutral-300 */
+  --secondary-active: oklch(0.439 0 0);     /* #525252 — neutral-600 */
+  --secondary-foreground: oklch(0.205 0 0); /* #171717 — 7.66:1 */
+
+  --text: oklch(0.985 0 0);                 /* #FAFAFA — 18.97:1 on background */
+  --text-secondary: oklch(0.708 0 0);       /* #A1A1A1 — 7.66:1 */
+  --text-muted: oklch(0.556 0 0);           /* #737373 — 4.18:1, decorative-only is safer than treating as body text */
+  --text-inverse: oklch(0.205 0 0);         /* #171717 */
+
+  /* Real hues, verified against fumadocs' own fd-success/warning/error/info
+     (extracted exactly from the scrape); error uses red-400's hue rather than
+     fd-error's red-500 — closer to the salmon "Log out" you actually saw. */
+  --success: oklch(0.723 0.219 149.579);    /* #00C950 */
+  --success-bg: oklch(0.28 0.07 149.579);   /* #073215 — 6.42:1 */
+  --warning: oklch(0.769 0.188 70.08);      /* #FE9A00 */
+  --warning-bg: oklch(0.28 0.08 70.08);     /* #411F00 — 6.92:1 */
+  --error: oklch(0.704 0.191 22.216);       /* #FF6467 */
+  --error-bg: oklch(0.27 0.08 22.216);      /* #461214 — 5.36:1 */
+  --info: oklch(0.72 0.17 259.815);         /* #62A3FF — lightened from fd-info's 0.623; original paired at only 3.63:1 */
+  --info-bg: oklch(0.26 0.08 259.815);      /* #0A224A — 6.12:1 */
+
+  --focus-ring: oklch(0.985 0 0);           /* = accent */
+  --link: oklch(0.985 0 0);
+  --link-hover: oklch(0.922 0 0);
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-md: 0 4px 8px oklch(0 0 0 / 0.5);
+  --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.6);
+  --shadow-glow-accent: 0 0 24px oklch(0.985 0 0 / 0.12);
+
+  --popover: oklch(0.205 0 0);              /* #171717 — neutral-900, distinct plane from the page background */
+  --popover-foreground: oklch(0.985 0 0);   /* #FAFAFA — 17.18:1 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-active: var(--secondary-active);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+
+  --color-focus-ring: var(--focus-ring);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+
+  /* Shadcn UI backward compatibility mappings */
+  --color-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--text-inverse);
+  --color-muted: var(--surface-raised);
+  --color-muted-foreground: var(--text-muted);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-input: var(--border-strong);
+  --color-ring: var(--focus-ring);
+
+  --font-heading: var(--font-heading);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: var(--radius-full);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-focus-ring/50;
+  }
+  body {
+    @apply bg-background text-text;
+  }
+  html {
+    @apply font-mono;
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

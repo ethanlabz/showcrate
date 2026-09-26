@@ -1,0 +1,10 @@
+---
+import HomeLayout from "@/layouts/HomeLayout.astro";
+import { PlaygroundEditor } from "@/components/pages/playground/PlaygroundEditor.tsx";
+---
+
+<HomeLayout title="Playground | Showcrate" noIndex={true}>
+  <div class="min-h-[calc(100vh-8rem)] w-full flex flex-col pt-8 pb-12">
+    <PlaygroundEditor client:only="react" />
+  </div>
+</HomeLayout>

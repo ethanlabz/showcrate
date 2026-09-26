@@ -1,0 +1,131 @@
+---
+/**
+ * Dashboard.astro
+ *
+ * Authenticated root-route view (mounted by index.astro when
+ * Astro.locals.viewer is set). Layout is deliberately modeled on GitHub's
+ * dashboard skeleton — left rail of top projects, center quick-actions +
+ * activity feed, right rail panel — because that skeleton is genuinely
+ * good UX and the request asked for it.
+ *
+ * What is intentionally NOT cloned, and why:
+ *   - "Ask anything / Copilot" box       → no AI doc assistant in v1 scope
+ *   - Debug / Agent / Create issue row   → no issues, no agents in schema
+ *   - Git ▾ / Pull requests ▾ dropdowns  → no git integration, no PRs
+ *   - Release feed + emoji reactions     → no releases entity, no reactions
+ *   - Org switcher                       → no organisations in v1 scope
+ * Recreating these as static decoration would ship dead buttons and
+ * misrepresent the product — see Legal.md item 7 (ToS must match actual
+ * functionality) and item 9 (moderation/report affordances must be real).
+ *
+ * Data model used instead: projects, project_collaborators, page_versions.
+ * Query shapes below assume Supabase table/column names from
+ * Project_Overview.md's schema — adjust `.select()` strings to your actual
+ * generated types.
+ */
+import { createServerClient } from '@/lib/supabase/server';
+import { Button } from '@/components/ui/button';
+import { Plus, FolderKanban, Search, Bell, BookMarked } from 'lucide-react';
+
+import { LeftRail } from '@/components/pages/app/LeftRail';
+
+interface Props {
+  viewer: {
+    id: string;
+    username: string | null;
+    display_name?: string | null;
+    displayName?: string | null;
+    avatar_url?: string | null;
+    avatarUrl?: string | null;
+  };
+}
+
+const { viewer } = Astro.props;
+const supabase = createServerClient(Astro.cookies);
+
+// --- Top projects: owned + collaborator-visible, most recently updated ---
+// NOTE: RLS already restricts this to what `viewer` can see (rule 1/2 in
+// Project_Overview.md) — this query relies on that policy, it does not
+// replace it.
+const { data: projects, error: projectsError } = await supabase
+  .from('projects')
+  .select(
+    `
+    id,
+    slug,
+    name,
+    tagline,
+    visibility,
+    updated_at,
+    owner:owner_id ( username )
+    `,
+  )
+  .order('updated_at', { ascending: false })
+  .limit(8);
+
+// --- Activity feed: latest page saves across projects viewer can see ---
+const { data: activity, error: activityError } = await supabase
+  .from('page_versions')
+  .select(
+    `
+    id,
+    title,
+    created_at,
+    saved_by:saved_by ( username, display_name, avatar_url ),
+    page:page_id (
+      slug,
+      project:project_id (
+        slug,
+        owner:owner_id ( username )
+      )
+    )
+    `,
+  )
+  .order('created_at', { ascending: false })
+  .limit(12);
+
+if (projectsError)
+  console.error('[Dashboard] projects query failed:', projectsError);
+if (activityError)
+  console.error('[Dashboard] activity query failed:', activityError);
+---
+
+<div
+  class='w-full min-h-screen bg-background text-foreground grid grid-cols-1 lg:grid-cols-[312px_1fr] max-w-screen mx-auto'
+>
+  <!-- left rail -->
+  <LeftRail client:load projects={projects || []} viewer={viewer} />
+
+  <!-- center rail -->
+  <div class='grid grid-cols-1 lg:grid-cols-[1fr_312px] max-w-auto mx-auto'>
+    <!-- center rail -->
+    <main class="min-w-0">
+
+    </main>
+
+    <!-- right rail -->
+    <div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Client-side filter over the already-rendered project list — no new
+  // route or API call, avoids inventing a global /search endpoint that
+  // isn't in the sitemap.
+  const input = document.querySelector<HTMLInputElement>(
+    '[data-project-filter]',
+  );
+  const items = document.querySelectorAll<HTMLElement>('[data-project-name]');
+
+  input?.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    items.forEach((el) => {
+      const name = el.dataset.projectName ?? '';
+      const li = el.closest('li');
+      if (!li) return;
+      li.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+</script>

@@ -1,0 +1,132 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource-variable/outfit";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:is(.dark *));
+
+:root {
+    --background: #FFFFFF;
+    --foreground: #09090B;
+    --card: #FFFFFF;
+    --card-foreground: #09090B;
+    --popover: #FFFFFF;
+    --popover-foreground: #09090B;
+    --primary: #5F4A8B; /* Brand Purple */
+    --primary-foreground: #FFFFFF;
+    --secondary: #F4F4F5;
+    --secondary-foreground: #18181B;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
+    --accent: #F4F4F5;
+    --accent-foreground: #18181B;
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: #E4E4E7;
+    --input: #E4E4E7;
+    --ring: #5F4A8B;
+    --sidebar: #FAFAFA;
+    --sidebar-foreground: #09090B;
+    --sidebar-primary: #5F4A8B;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F4F4F5;
+    --sidebar-accent-foreground: #09090B;
+    --sidebar-border: #E4E4E7;
+    --sidebar-ring: #5F4A8B;
+    --radius: 0.625rem;
+    
+    --warning: #F59E0B;
+    --warning-foreground: #FFFFFF;
+    --success: #10B981;
+    --success-foreground: #FFFFFF;
+}
+
+.dark {
+    --background: #09090B;
+    --foreground: #FAFAFA;
+    --card: #09090B;
+    --card-foreground: #FAFAFA;
+    --popover: #09090B;
+    --popover-foreground: #FAFAFA;
+    --primary: #9B82DF; /* Bright Brand Purple */
+    --primary-foreground: #09090B;
+    --secondary: #27272A;
+    --secondary-foreground: #FAFAFA;
+    --muted: #27272A;
+    --muted-foreground: #A1A1AA;
+    --accent: #27272A;
+    --accent-foreground: #FAFAFA;
+    --destructive: #7F1D1D;
+    --destructive-foreground: #FAFAFA;
+    --border: #27272A;
+    --input: #27272A;
+    --ring: #9B82DF;
+    --sidebar: #09090B;
+    --sidebar-foreground: #FAFAFA;
+    --sidebar-primary: #9B82DF;
+    --sidebar-primary-foreground: #09090B;
+    --sidebar-accent: #27272A;
+    --sidebar-accent-foreground: #FAFAFA;
+    --sidebar-border: #27272A;
+    --sidebar-ring: #9B82DF;
+
+    --warning: #F59E0B;
+    --warning-foreground: #121212;
+    --success: #10B981;
+    --success-foreground: #121212;
+}
+
+@theme inline {
+    --font-mono: 'JetBrains Mono Variable', monospace;
+    --font-heading: 'Outfit Variable', sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-warning: var(--warning);
+    --color-success-foreground: var(--success-foreground);
+    --color-success: var(--success);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-mono;
+    }
+}

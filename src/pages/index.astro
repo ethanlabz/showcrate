@@ -1,0 +1,538 @@
+---
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import 'lenis/dist/lenis.css';
+import { Button } from '@/components/ui/button';
+import { ChevronRight } from 'lucide-react';
+
+import { InteractiveEditor } from '@/components/pages/home/InteractiveEditor.tsx';
+import { Separator } from '@/components/ui/separator';
+
+import AppLayout from '@/layouts/AppLayout.astro';
+import Dashboard from '@/components/pages/app/Dashboard.astro';
+import Dashboard1 from '@/components/pages/app/Dashboard1.astro';
+
+// background
+import LightRays from '@/components/bg/LightRays';
+import SideRays from '@/components/bg/SideRays';
+
+const viewer = Astro.locals.user ?? Astro.locals.viewer;
+
+if (viewer && !viewer.username) {
+  return Astro.redirect('/auth/signup?social=true');
+}
+---
+
+{viewer ? (
+  <AppLayout title=''>
+    <Dashboard viewer={viewer} />
+  </AppLayout>
+) : (
+<HomeLayout title='Welcome'>
+  <div class='relative w-full'>
+    <!-- ========================================== -->
+    <!-- 1. HERO SECTION                            -->
+    <!-- Headline, CTA buttons, and preview mockup  -->
+    <!-- ========================================== -->
+    <section
+      id='hero-section'
+      class='relative lg:min-h-screen min-h-[70vh] flex flex-col pt-4 sm:pt-20 md:pt-20 lg:pt-20 pb-32 sm:pb-20 md:pb-24 lg:pb-32 justify-center overflow-hidden'
+    >
+      <!-- Background Light Rays -->
+      <div class='absolute inset-0 pointer-events-none z-0 overflow-hidden'>
+        {/* <LightRays
+          client:load
+          raysOrigin='top-center'
+          raysColor='#ffffff'
+          raysSpeed={0.8}
+          lightSpread={1.2}
+          rayLength={2.0}
+          pulsating={false}
+          fadeDistance={1.0}
+          saturation={1.0}
+          followMouse={true}
+          mouseInfluence={0.12}
+          noiseAmount={0.02}
+          distortion={0.03}
+          className='w-full h-full'
+        /> */}
+        <SideRays
+          client:load
+          speed={2.5}
+          rayColor1="#EAB308"
+          rayColor2="#96c8ff"
+          intensity={2}
+          spread={2}
+          origin="top-right"
+          tilt={0}
+          saturation={1.5}
+          blend={0.75}
+          falloff={1.6}
+          opacity={1}
+        />
+      </div>
+
+      <div
+        class='w-full max-w-7xl relative z-10 mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12'
+      >
+        <div class='flex-1 text-center flex flex-col items-center w-full z-20'>
+          <h1
+            class='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter max-w-5xl mb-3 sm:mb-6 bg-clip-text text-transparent bg-linear-to-b from-foreground to-foreground/50 leading-20'
+          >
+            Every project deserves a Stage
+          </h1>
+
+          <p
+            class='text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mb-6 sm:mb-10 md:mb-12 leading-relaxed'
+          >
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Eligendi
+            quis nobis veritatis repellendus sit minus necessitatibus adipisci
+            explicabo consequatur fugiat, inventore obcaecati eos sint
+            provident, facilis magnam. Consectetur, non necessitatibus.
+          </p>
+
+          <div
+            class='flex flex-col sm:flex-row gap-3 sm:gap-6 w-full sm:w-auto items-center lg:items-start'
+          >
+            <a href='/auth/signup' class='w-full sm:w-auto'>
+              <Button
+                size='lg'
+                className='h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto'
+              >
+                Get Started <ChevronRight className='ml-2 h-4 w-4' />
+              </Button>
+            </a>
+            <a href='/showcase' class='w-full sm:w-auto'>
+              <Button
+                variant='outline'
+                size='lg'
+                className='h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto bg-background/50 backdrop-blur-sm'
+              >
+                Browse Projects
+              </Button>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Separator />
+
+    <!-- ========================================== -->
+    <!-- 2. PROBLEM SECTION                         -->
+    <!-- "Most documentation feels like a graveyard"-->
+    <!-- ========================================== -->
+    <div id='problem-section'></div>
+
+    <Separator />
+
+    <!-- ========================================== -->
+    <!-- 3. SOLUTION SECTION                        -->
+    <!-- "Bring your code to life" features         -->
+    <!-- ========================================== -->
+    <div id='solution-section'></div>
+
+    <Separator />
+
+    <!-- ========================================== -->
+    <!-- 4. INTERACTIVE EDITOR MOCKUP               -->
+    <!-- Live typing and rendering demonstration    -->
+    <!-- ========================================== -->
+    <section
+      id='editor-mockup-container'
+      class='relative z-10 w-full min-h-[70vh] bg-background flex flex-col items-center justify-center py-16'
+    >
+      <div class='editor-window w-full opacity-0'>
+        <InteractiveEditor client:only='react' />
+      </div>
+    </section>
+
+    <Separator />
+
+    <!-- ========================================== -->
+    <!-- 5. FEATURES GRID SECTION                   -->
+    <!-- Secondary features (MDX, SSG, etc.)        -->
+    <!-- ========================================== -->
+    <section
+      id='features-grid'
+      class='relative py-24 sm:py-32 bg-background border-t border-border/50'
+    >
+      <div
+        class='container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'
+      >
+        <div class='text-center max-w-3xl mx-auto mb-16 sm:mb-24'>
+          <h2
+            class='type-animate text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-6 text-foreground'
+          >
+            Built for the modern web
+          </h2>
+          <p class='type-animate text-lg sm:text-xl text-muted-foreground'>
+            Everything you need to build interactive documentation that your
+            users will actually love reading.
+          </p>
+        </div>
+
+        <div
+          class='grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative z-20'
+        >
+          <!-- Feature 1 -->
+          <div
+            class='feature-card-fade opacity-0 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-primary/50 transition-colors duration-500'
+          >
+            <!-- Premium top glow -->
+            <div
+              class='absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-primary/30 to-transparent'
+            >
+            </div>
+            <div
+              class='absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'
+            >
+            </div>
+
+            <div class='p-8 sm:p-10 h-full flex flex-col relative z-10'>
+              <div
+                class='w-14 h-14 rounded-2xl bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-8 border border-primary/20 shadow-[0_0_30px_rgba(var(--color-primary),0.2)] group-hover:shadow-[0_0_40px_rgba(var(--color-primary),0.4)] transition-shadow duration-500'
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  stroke-width='2.5'
+                  stroke-linecap='round'
+                  stroke-linejoin='round'
+                  class='text-primary'
+                  ><path d='m8 3 4 8 5-5 5 15H2L8 3z'></path></svg
+                >
+              </div>
+              <h3
+                class='text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight'
+              >
+                Block Editor
+              </h3>
+              <p class='text-muted-foreground leading-relaxed flex-1'>
+                Write your documentation directly in a Block editor. Showcrate saves it in realtime, so you don't have to.
+              </p>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div
+            class='feature-card-fade opacity-0 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-emerald-500/50 transition-colors duration-500'
+          >
+            <!-- Premium top glow -->
+            <div
+              class='absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-emerald-500/30 to-transparent'
+            >
+            </div>
+            <div
+              class='absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'
+            >
+            </div>
+
+            <div class='p-8 sm:p-10 h-full flex flex-col relative z-10'>
+              <div
+                class='w-14 h-14 rounded-2xl bg-linear-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-8 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] transition-shadow duration-500'
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  stroke-width='2.5'
+                  stroke-linecap='round'
+                  stroke-linejoin='round'
+                  class='text-emerald-500'
+                  ><path d='M12 2v20'></path><path
+                    d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
+                  ></path></svg
+                >
+              </div>
+              <h3
+                class='text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight'
+              >
+                Built-in Code Editor
+              </h3>
+              <p class='text-muted-foreground leading-relaxed flex-1'>
+                Give your users a fully featured code editor right in the
+                browser. They can tinker, break, and fix your examples in a
+                safe, live environment.
+              </p>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div
+            class='feature-card-fade opacity-0 relative group rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-indigo-500/50 transition-colors duration-500'
+          >
+            <!-- Premium top glow -->
+            <div
+              class='absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-indigo-500/30 to-transparent'
+            >
+            </div>
+            <div
+              class='absolute inset-0 bg-linear-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'
+            >
+            </div>
+
+            <div class='p-8 sm:p-10 h-full flex flex-col relative z-10'>
+              <div
+                class='w-14 h-14 rounded-2xl bg-linear-to-br from-indigo-500/20 to-indigo-500/5 flex items-center justify-center mb-8 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.2)] group-hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] transition-shadow duration-500'
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  stroke-width='2.5'
+                  stroke-linecap='round'
+                  stroke-linejoin='round'
+                  class='text-indigo-500'
+                  ><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'
+                  ></polygon></svg
+                >
+              </div>
+              <h3
+                class='text-xl sm:text-2xl font-bold mb-4 text-foreground tracking-tight'
+              >
+                Lightning Fast SSG
+              </h3>
+              <p class='text-muted-foreground leading-relaxed flex-1'>
+                Powered by Astro, Showcrate generates incredibly fast static
+                sites. Your interactive documentation loads instantly and is
+                perfectly optimized for SEO.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Separator />
+
+    <!-- ========================================== -->
+    <!-- 6. CALL TO ACTION (CTA) SECTION            -->
+    <!-- Final push to sign up or read docs         -->
+    <!-- ========================================== -->
+    <section
+      id='cta-section'
+      class='relative py-24 sm:py-32 md:py-40 lg:py-48 overflow-hidden border-t border-border/50'
+    >
+      <!-- Background Glows -->
+      <div
+        class='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-100 bg-primary/20 blur-[120px] rounded-full pointer-events-none'
+      >
+      </div>
+
+      <!-- Subtle Grid -->
+      <div
+        class='absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]'
+      >
+      </div>
+
+      <div
+        class='container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-4xl flex flex-col items-center'
+      >
+        <h2
+          class='cta-fade-in opacity-0 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 tracking-tight text-balance'
+        >
+          Ready to rewrite the rules?
+        </h2>
+        <p
+          class='cta-fade-in opacity-0 text-lg sm:text-xl md:text-2xl text-muted-foreground mb-10 sm:mb-12 max-w-2xl text-balance'
+        >
+          Stop writing static documentation that goes out of date. Build live,
+          interactive learning experiences in minutes.
+        </p>
+
+        <div
+          class='cta-fade-in opacity-0 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto'
+        >
+          <a href='/auth/signup' class='w-full sm:w-auto'>
+            <Button
+              size='lg'
+              className='w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 text-base sm:text-lg font-bold shadow-xl shadow-primary/25 hover:scale-105 hover:shadow-primary/40 transition-all duration-300'
+            >
+              Start for free
+            </Button>
+          </a>
+          <a href='/docs' class='w-full sm:w-auto'>
+            <Button
+              variant='outline'
+              size='lg'
+              className='w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-bold border-2 hover:bg-muted transition-colors duration-300'
+            >
+              Read the docs
+            </Button>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</HomeLayout>
+)}
+
+<script>
+  import { animate, scroll, inView, stagger } from 'framer-motion';
+
+  const isMobile = window.innerWidth < 768;
+
+  // 1. Parallax Hero Section
+  const heroContainer = document.querySelector('#hero-section .max-w-7xl');
+  if (heroContainer) {
+    scroll(
+      animate(heroContainer, { y: [0, isMobile ? 80 : 150], opacity: [1, 0] }),
+      {
+        target: document.querySelector('#hero-section') as Element,
+        offset: ['start start', 'end start'],
+      },
+    );
+  }
+
+  // 2. Story Section 1: Sequenced Word-by-Word Reveal (Scrubbed)
+  const problemSection = document.querySelector('#problem-section');
+  if (problemSection) {
+    scroll(
+      animate([
+        [
+          '.story-word',
+          { opacity: [0, 1], y: [20, 0] },
+          { delay: stagger(0.1) },
+        ],
+        [
+          '.story-word-sub',
+          { opacity: [0, 1], y: [20, 0] },
+          { delay: stagger(0.05), at: '+0.5' },
+        ],
+      ]),
+      {
+        target: problemSection,
+        offset: ['start start', 'end start'],
+      },
+    );
+  }
+
+  // 3. Story Section 2: Sequenced Component Fade In (Scrubbed)
+  const solutionSection = document.querySelector('#solution-section');
+  if (solutionSection) {
+    scroll(
+      animate([
+        [
+          '.interactive-icon-anim',
+          { opacity: [0, 1], y: [20, 0] },
+          { duration: 1 },
+        ],
+        ['.interactive-icon-anim', { x: [20, 0] }, { duration: 1, at: '+0.5' }],
+        [
+          '.interactive-text-anim',
+          { opacity: [0, 1], x: [20, 0] },
+          { duration: 1, at: '<' },
+        ],
+        [
+          '.solution-fade-in',
+          { opacity: [0, 1], y: [20, 0] },
+          { delay: stagger(0.2), duration: 1, at: '+0.2' },
+        ],
+      ]),
+      {
+        target: solutionSection,
+        offset: ['start start', 'end start'],
+      },
+    );
+  }
+
+  // 4. Animation: Scale up and fade in Editor window
+  inView(
+    '#editor-mockup-container',
+    () => {
+      animate(
+        '.editor-window',
+        { opacity: [0, 1], y: [60, 0], scale: [0.95, 1] },
+        { duration: 1, ease: 'easeOut' },
+      );
+    },
+    { amount: isMobile ? 0.2 : 0.4 },
+  );
+
+  // 5. Split text into spans for typing animation
+  document.querySelectorAll('.type-animate').forEach((el) => {
+    const text = (el as HTMLElement).innerText;
+    el.innerHTML = '';
+    (el as HTMLElement).style.whiteSpace = 'pre-wrap';
+    text.split('').forEach((char) => {
+      const span = document.createElement('span');
+      span.textContent = char;
+      span.style.opacity = '0';
+      el.appendChild(span);
+    });
+  });
+
+  // Features Header Typing Animation
+  inView(
+    '#features-grid',
+    () => {
+      animate(
+        '.type-animate span',
+        { opacity: [0, 1] },
+        { delay: stagger(0.03) },
+      );
+    },
+    { amount: 0.1 },
+  );
+
+  // Slower Feature Cards
+  inView(
+    '#features-grid',
+    () => {
+      animate(
+        '.feature-card-fade',
+        { opacity: [0, 1], y: [40, 0], scale: [0.95, 1] },
+        { delay: stagger(0.3), duration: 1.5, ease: 'backOut' },
+      );
+    },
+    { amount: 0.15 },
+  );
+
+  // 6. CTA Section Fade In (Scrubbing individually)
+  document.querySelectorAll('.cta-fade-in').forEach((el) => {
+    scroll(animate(el, { opacity: [0, 1], y: [32, 0] }), {
+      target: el as Element,
+      offset: ['start 100%', isMobile ? 'start 50%' : 'start 30%'],
+    });
+  });
+
+  // 7. Social Proof Badge Custom Timeline (If utilized)
+  const ctaSection = document.querySelector('#cta-section');
+  if (ctaSection) {
+    scroll(
+      animate([
+        ['.cta-badge-anim', { opacity: [0, 1], y: [32, 0] }, { duration: 1 }],
+        [
+          '.badge-avatar',
+          { opacity: [0, 1], x: [48, 0] },
+          { delay: stagger(0.2), duration: 1.5, at: '+0.2' },
+        ],
+        [
+          '.badge-typing',
+          { width: ['0px', '100%'] },
+          { duration: 1.5, ease: 'linear', at: '+0.2' },
+        ],
+        [
+          '.badge-typing',
+          { borderColor: ['var(--color-primary)', 'transparent'] },
+          { duration: 0.2 },
+        ],
+      ]),
+      {
+        target: ctaSection,
+        offset: ['start 95%', isMobile ? 'start 50%' : 'start 35%'],
+      },
+    );
+  }
+</script>
+}
