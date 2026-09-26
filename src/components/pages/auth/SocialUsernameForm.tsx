@@ -49,8 +49,9 @@ export default function SocialUsernameForm({ suggested, next }: Props) {
         return;
       }
 
-      // Redirect to their profile page — the canonical post-signup destination
-      window.location.href = `/${json.data.username}`;
+      // Redirect to destination or their profile page
+      const target = next && next !== '/' ? next : `/${json.data.username}`;
+      window.location.href = target;
     } catch {
       setServerError('Network error. Please check your connection.');
     } finally {
@@ -128,6 +129,24 @@ export default function SocialUsernameForm({ suggested, next }: Props) {
       >
         {loading ? 'Setting up your account…' : 'Continue'}
       </button>
+
+      <div className="flex items-center justify-center pt-1">
+        <button
+          type="button"
+          disabled={loading}
+          onClick={async () => {
+            setLoading(true);
+            try {
+              await fetch('/api/auth/logout', { method: 'POST' });
+            } finally {
+              window.location.href = '/auth/login';
+            }
+          }}
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors cursor-pointer"
+        >
+          Sign out and use a different account
+        </button>
+      </div>
     </form>
   );
 }

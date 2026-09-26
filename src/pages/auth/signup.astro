@@ -30,6 +30,11 @@ if (social) {
     return Astro.redirect(next);
   }
 } else {
+  // If user is already authenticated without a username, force them to choose one
+  if (Astro.locals.user && !Astro.locals.user.username) {
+    return Astro.redirect('/auth/signup?social=true');
+  }
+
   // Normal email signup — redirect logged-in users with a username away.
   if (Astro.locals.user?.username) {
     return Astro.redirect('/');

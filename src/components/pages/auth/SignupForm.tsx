@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signupSchema } from '@/lib/validators/auth.schema';
 import type { SignupInput } from '@/lib/validators/auth.schema';
+import { createClient } from '@/lib/supabase/client';
 
 type FieldErrors = Partial<Record<keyof SignupInput, string>>;
 
@@ -62,18 +63,19 @@ export default function SignupForm() {
     setServerError('');
     setOauthLoading(provider);
     try {
-      const res = await fetch('/api/auth/oauth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, next: '/' }),
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/`,
+          ...(provider === 'github' && { scopes: 'read:user user:email' }),
+          ...(provider === 'google' && { scopes: 'openid email profile' }),
+        },
       });
-      const json = await res.json();
-      if (!res.ok) {
-        setServerError(json.error?.message ?? `Failed to start ${provider} sign-up.`);
+      if (error) {
+        setServerError(error.message ?? `Failed to start ${provider} sign-up.`);
         setOauthLoading(null);
-        return;
       }
-      window.location.href = json.data.url;
     } catch {
       setServerError('Network error. Please check your connection.');
       setOauthLoading(null);

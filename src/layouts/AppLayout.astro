@@ -17,6 +17,10 @@ export interface Props {
 
 const { title, description, noIndex = true } = Astro.props;
 const user = Astro.locals.user;
+
+if (user && !user.username) {
+  return Astro.redirect('/auth/signup?social=true');
+}
 ---
 
 <BaseLayout title={title} description={description} noIndex={noIndex}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { loginSchema } from '@/lib/validators/auth.schema';
 import type { LoginInput } from '@/lib/validators/auth.schema';
+import { createClient } from '@/lib/supabase/client';
 
 type FieldErrors = Partial<Record<keyof LoginInput, string>>;
 
@@ -24,10 +25,15 @@ export default function LoginForm() {
 
     // Show OAuth error messages
     const errorCode = params.get('error');
-    if (errorCode === 'oauth_failed') {
+    const errorDesc = params.get('error_description') || params.get('message');
+    if (errorDesc) {
+      setServerError(decodeURIComponent(errorDesc.replace(/\+/g, ' ')));
+    } else if (errorCode === 'oauth_failed') {
       setServerError('Sign-in with your provider failed. Please try again.');
     } else if (errorCode === 'missing_code') {
       setServerError('Invalid callback. Please try signing in again.');
+    } else if (errorCode) {
+      setServerError(`Authentication failed: ${errorCode}`);
     }
   }, []);
 
@@ -80,19 +86,19 @@ export default function LoginForm() {
     setOauthLoading(provider);
     try {
       const next = new URLSearchParams(window.location.search).get('next');
-      const res = await fetch('/api/auth/oauth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, next: next ?? '/' }),
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next ?? '/')}`,
+          ...(provider === 'github' && { scopes: 'read:user user:email' }),
+          ...(provider === 'google' && { scopes: 'openid email profile' }),
+        },
       });
-      const json = await res.json();
-      if (!res.ok) {
-        setServerError(json.error?.message ?? `Failed to start ${provider} sign-in.`);
+      if (error) {
+        setServerError(error.message);
         setOauthLoading(null);
-        return;
       }
-      // Redirect to the provider's authorization page
-      window.location.href = json.data.url;
     } catch {
       setServerError('Network error. Please check your connection.');
       setOauthLoading(null);

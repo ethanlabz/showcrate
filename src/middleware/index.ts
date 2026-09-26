@@ -80,30 +80,75 @@ export const onRequest = defineMiddleware(async (context, next) => {
       .eq('id', authUser.id)
       .single();
 
-    if (profile) {
-      const sessionUser: SessionUser = {
-        id: authUser.id,
-        email: authUser.email ?? '',
-        username: profile.username,
-        displayName: profile.display_name,
-        avatarUrl: profile.avatar_url,
-        platformRole: profile.platform_role,
-      };
-      locals.user = sessionUser;
-      locals.viewer = sessionUser; // keep both names in sync
-    }
+    const sessionUser: SessionUser = {
+      id: authUser.id,
+      email: authUser.email ?? '',
+      username: profile?.username ?? null,
+      displayName: profile?.display_name ?? null,
+      avatarUrl: profile?.avatar_url ?? null,
+      platformRole: profile?.platform_role ?? 'user',
+    };
+    locals.user = sessionUser;
+    locals.viewer = sessionUser; // keep both names in sync
   }
 
-  // ── Step 2b: Username completion gate ─────────────────────────────────────
-  // New OAuth users have a valid session but no username yet. Force them
-  // through /auth/signup?social=true before they access anything else.
-  if (
-    locals.user &&
-    !locals.user.username &&
-    !pathname.startsWith('/auth/') &&
-    !pathname.startsWith('/api/auth/')
-  ) {
-    return redirect('/auth/signup?social=true', 302);
+  // ── Step 2b: Strict username completion gate ──────────────────────────────
+  // If an authenticated user has NO username, they MUST NOT proceed anywhere
+  // in the application until they set one up (or log out).
+  if (locals.user && !locals.user.username) {
+    // 1. Allow the onboarding page: /auth/signup?social=true
+    const isSocialSignupPage =
+      pathname === '/auth/signup' && url.searchParams.get('social') === 'true';
+
+    // 2. Allow OAuth callback to complete initial exchange
+    const isAuthCallback = pathname === '/auth/callback';
+
+    // 3. Allow setting the username API
+    const isSetUsernameApi = pathname === '/api/auth/set-username';
+
+    // 4. Allow logging out (both page and API) so the user is never trapped
+    const isLogout =
+      pathname === '/api/auth/logout' ||
+      pathname === '/auth/logout';
+
+    // 5. Allow static assets and Vite client bundles
+    const isStaticAsset =
+      pathname.startsWith('/_astro/') ||
+      pathname.startsWith('/@') ||
+      pathname.startsWith('/favicon') ||
+      /\.(svg|png|jpg|jpeg|webp|gif|css|js|woff2?|ico)$/i.test(pathname);
+
+    const isAllowed =
+      isSocialSignupPage ||
+      isAuthCallback ||
+      isSetUsernameApi ||
+      isLogout ||
+      isStaticAsset;
+
+    if (!isAllowed) {
+      if (pathname.startsWith('/api/')) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              code: 'USERNAME_REQUIRED',
+              message: 'You must set up a username before performing any actions.',
+            },
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
+      // Preserve next destination if navigating to a specific target page
+      const nextParam =
+        pathname !== '/' && !pathname.startsWith('/auth/')
+          ? `&next=${encodeURIComponent(url.pathname + url.search)}`
+          : '';
+
+      return redirect(`/auth/signup?social=true${nextParam}`, 302);
+    }
   }
 
   // ── Step 3: Route guard ────────────────────────────────────────────────

@@ -26,5 +26,5 @@ export function isDeveloper(user: SessionUser): boolean {
 
 /** Type guard: can the user create new projects? */
 export function canCreateProjects(user: SessionUser): boolean {
-  return !['restricted', 'banned'].includes(user.platformRole);
+  return Boolean(user.username) && !['restricted', 'banned'].includes(user.platformRole);
 }

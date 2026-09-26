@@ -16,6 +16,10 @@ import LightRays from '@/components/bg/LightRays';
 import SideRays from '@/components/bg/SideRays';
 
 const viewer = Astro.locals.user ?? Astro.locals.viewer;
+
+if (viewer && !viewer.username) {
+  return Astro.redirect('/auth/signup?social=true');
+}
 ---
 
 {viewer ? (

@@ -12,14 +12,16 @@ const RESERVED_USERNAMES = new Set([
   'billing', 'account', 'profile', 'appearance', 'danger', 'domain', 'seo',
   'analytics', 'collaborators', 'general', 'visibility', 'following',
   // Reserved developer / brand usernames
-  'dorukaysor', 'avision', 'batteringram', 'showcrate',
+  'avision', 'batteringram', 'showcrate',
 ]);
 
 export const usernameSchema = z
   .string()
   .min(3, 'Username must be at least 3 characters')
   .max(39, 'Username must be at most 39 characters')
-  .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/, 'Username must be lowercase letters, numbers, and hyphens only')
+  .regex(/^[a-z0-9-]+$/, 'Username can only contain lowercase letters, numbers, and hyphens')
+  .refine((v) => !v.startsWith('-'), 'Username cannot start with a hyphen')
+  .refine((v) => !v.endsWith('-'), 'Username cannot end with a hyphen')
   .refine((v) => !v.includes('--'), 'Username cannot contain consecutive hyphens')
   .refine((v) => !RESERVED_USERNAMES.has(v), 'This username is reserved');
 

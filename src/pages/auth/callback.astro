@@ -2,82 +2,200 @@
 /**
  * auth/callback.astro — OAuth callback handler
  *
- * After the user authenticates with GitHub/Google, Supabase redirects
- * here with a `code` query param. We exchange it for a session (which
- * sets the auth cookies).
- *
- * - Returning OAuth user (already has a username) → redirect to `next`.
- * - New OAuth user (no username yet) → upsert a skeleton profile row
- *   (display_name + avatar_url, no username) then redirect to
- *   /auth/signup?social=true so the user can pick their own username.
+ * Handles:
+ * 1. Server-side PKCE code exchange (?code=...)
+ * 2. Provider query errors (?error=...&error_description=...)
+ * 3. Client-side hash token recovery (#access_token=...) / hash error recovery
  */
-import { createServerClient } from '@/lib/supabase/server';
+import { createServerClient, createAdminClient } from '@/lib/supabase/server';
 
 const supabase = createServerClient(Astro.cookies);
 
 const code = Astro.url.searchParams.get('code');
 const next = Astro.url.searchParams.get('next') || '/';
+const error = Astro.url.searchParams.get('error');
+const errorDescription =
+  Astro.url.searchParams.get('error_description') ||
+  Astro.url.searchParams.get('error_message');
 
-if (!code) {
-  return Astro.redirect('/auth/login?error=missing_code');
-}
-
-// Exchange the code for a session — sets auth cookies via @supabase/ssr
-const { data: sessionData, error: sessionError } =
-  await supabase.auth.exchangeCodeForSession(code);
-
-if (sessionError || !sessionData?.user) {
-  console.error('[auth/callback] Session exchange failed:', sessionError?.message);
-  return Astro.redirect('/auth/login?error=oauth_failed');
-}
-
-const user = sessionData.user;
-
-// Check if this user already has a username (returning OAuth user)
-const { data: profile } = await supabase
-  .from('users')
-  .select('username')
-  .eq('id', user.id)
-  .single();
-
-if (profile?.username) {
-  // Returning user — straight to destination
-  return Astro.redirect(next);
-}
-
-// ── New OAuth user ────────────────────────────────────────────────────────────
-// Build display info from provider metadata (stored by Supabase)
-const meta = user.user_metadata ?? {};
-const displayName = meta.full_name || meta.name || meta.preferred_username || null;
-const avatarUrl = meta.avatar_url || meta.picture || null;
-
-// Upsert a skeleton profile row so the middleware can resolve locals.user
-// on the next request. Username is intentionally left null — the user will
-// choose it on /auth/signup?social=true.
-await supabase
-  .from('users')
-  .upsert(
-    { id: user.id, display_name: displayName, avatar_url: avatarUrl },
-    { onConflict: 'id' },
+// If provider returned an error in the query parameters
+if (error) {
+  console.error('[auth/callback] OAuth error from provider:', error, errorDescription);
+  return Astro.redirect(
+    `/auth/login?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || '')}`,
   );
+}
 
-// Build a clean suggested username slug from provider metadata:
-//   GitHub  → preferred_username (their actual GH handle)
-//   Google  → name slugified
-// The suggestion may or may not already be taken — the form validates live.
-const rawSuggestion =
-  meta.preferred_username ||
-  meta.user_name ||
-  (meta.full_name || meta.name || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '-') ||
-  'user';
+// Case 1: PKCE authorization code in query params
+if (code) {
+  const { data: sessionData, error: sessionError } =
+    await supabase.auth.exchangeCodeForSession(code);
 
-const suggested = rawSuggestion.slice(0, 39);
+  if (sessionError || !sessionData?.user) {
+    console.error('[auth/callback] Session exchange failed:', sessionError?.message);
+    const msg = sessionError?.message || 'Failed to exchange authorization code';
+    return Astro.redirect(
+      `/auth/login?error=oauth_failed&error_description=${encodeURIComponent(msg)}`,
+    );
+  }
 
-return Astro.redirect(
-  `/auth/signup?social=true&suggested=${encodeURIComponent(suggested)}&next=${encodeURIComponent(next)}`,
-);
+  const user = sessionData.user;
+
+  // Check if this user already has a username (returning OAuth user)
+  const { data: profile } = await supabase
+    .from('users')
+    .select('username')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.username) {
+    // Returning user — straight to destination
+    return Astro.redirect(next);
+  }
+
+  // ── New OAuth user ────────────────────────────────────────────────────────────
+  // Build display info from provider metadata (stored by Supabase)
+  const meta = user.user_metadata ?? {};
+  const displayName = meta.full_name || meta.name || meta.preferred_username || null;
+  const avatarUrl = meta.avatar_url || meta.picture || null;
+
+  // Upsert skeleton profile row using admin client so RLS doesn't block insert
+  // and middleware can resolve locals.user
+  const adminClient = createAdminClient();
+  await adminClient
+    .from('users')
+    .upsert(
+      { id: user.id, display_name: displayName, avatar_url: avatarUrl },
+      { onConflict: 'id' },
+    );
+
+  let rawSuggestion =
+    meta.preferred_username ||
+    meta.user_name ||
+    (meta.full_name || meta.name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-') ||
+    'user';
+
+  if (rawSuggestion.length < 3) {
+    rawSuggestion = (rawSuggestion + 'user').slice(0, 10);
+  }
+  const suggested = rawSuggestion.slice(0, 39);
+
+  return Astro.redirect(
+    `/auth/signup?social=true&suggested=${encodeURIComponent(suggested)}&next=${encodeURIComponent(next)}`,
+  );
+}
 ---
+
+<!-- Case 2: No server code — fallback to client-side recovery (e.g. hash fragments) -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signing you in… · Showcrate</title>
+  </head>
+  <body class="bg-background text-foreground flex min-h-screen items-center justify-center font-sans antialiased">
+    <div class="flex flex-col items-center gap-4 text-center p-6">
+      <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+      <p class="text-sm text-muted-foreground">Completing authentication…</p>
+    </div>
+
+    <script>
+      import { createClient } from '@/lib/supabase/client';
+
+      async function handleClientCallback() {
+        const hash = window.location.hash;
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+
+        // Check for error in hash or search
+        const error = searchParams.get('error') || hashParams.get('error');
+        const errorDesc =
+          searchParams.get('error_description') ||
+          hashParams.get('error_description') ||
+          searchParams.get('message') ||
+          hashParams.get('message');
+
+        if (error) {
+          window.location.href = `/auth/login?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDesc || '')}`;
+          return;
+        }
+
+        const supabase = createClient();
+        const next = searchParams.get('next') || '/';
+
+        // Check if access_token is in hash (Implicit Grant)
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (accessToken) {
+          const { data: sessionData, error: setSessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+
+          if (setSessionError || !sessionData?.user) {
+            window.location.href = `/auth/login?error=oauth_failed&error_description=${encodeURIComponent(setSessionError?.message || '')}`;
+            return;
+          }
+
+          // Check if user has a username
+          const { data: profile } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', sessionData.user.id)
+            .single();
+
+          if (profile?.username) {
+            window.location.href = next;
+          } else {
+            // New user without username
+            const meta = sessionData.user.user_metadata || {};
+            let rawSuggestion =
+              meta.preferred_username ||
+              meta.user_name ||
+              (meta.full_name || meta.name || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .replace(/-{2,}/g, '-') ||
+              'user';
+
+            if (rawSuggestion.length < 3) {
+              rawSuggestion = (rawSuggestion + 'user').slice(0, 10);
+            }
+            const suggested = rawSuggestion.slice(0, 39);
+            window.location.href = `/auth/signup?social=true&suggested=${encodeURIComponent(suggested)}&next=${encodeURIComponent(next)}`;
+          }
+          return;
+        }
+
+        // Check if supabase client can pick up session automatically
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile?.username) {
+            window.location.href = next;
+          } else {
+            window.location.href = `/auth/signup?social=true&next=${encodeURIComponent(next)}`;
+          }
+          return;
+        }
+
+        // No code, no tokens, no session
+        window.location.href = '/auth/login?error=missing_code';
+      }
+
+      handleClientCallback();
+    </script>
+  </body>
+</html>

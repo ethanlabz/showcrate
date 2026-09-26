@@ -4,6 +4,9 @@ import LoginForm from '@/components/pages/auth/LoginForm';
 
 // Redirect logged-in users away
 if (Astro.locals.user) {
+  if (!Astro.locals.user.username) {
+    return Astro.redirect('/auth/signup?social=true');
+  }
   return Astro.redirect('/');
 }
 

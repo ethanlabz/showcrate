@@ -63,7 +63,7 @@ CREATE TYPE admin_action AS ENUM (
 -- users: extends auth.users with public profile data
 CREATE TABLE public.users (
   id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  username      TEXT NOT NULL UNIQUE,
+  username      TEXT UNIQUE,
   display_name  TEXT,
   avatar_url    TEXT,
   bio           TEXT,
@@ -72,9 +72,9 @@ CREATE TABLE public.users (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
   -- Constraints
-  CONSTRAINT username_length    CHECK (char_length(username) BETWEEN 3 AND 39),
-  CONSTRAINT username_format    CHECK (username ~ '^[a-z0-9][a-z0-9-]*[a-z0-9]$'),
-  CONSTRAINT username_no_double_hyphen CHECK (username NOT LIKE '%---%'),
+  CONSTRAINT username_length    CHECK (username IS NULL OR (char_length(username) BETWEEN 3 AND 39)),
+  CONSTRAINT username_format    CHECK (username IS NULL OR (username ~ '^[a-z0-9][a-z0-9-]*[a-z0-9]$')),
+  CONSTRAINT username_no_double_hyphen CHECK (username IS NULL OR (username NOT LIKE '%---%')),
   CONSTRAINT display_name_length CHECK (display_name IS NULL OR char_length(display_name) <= 60),
   CONSTRAINT bio_length         CHECK (bio IS NULL OR char_length(bio) <= 300)
 );
@@ -265,14 +265,42 @@ CREATE TRIGGER reports_updated_at
 
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_username TEXT;
+  v_display_name TEXT;
+  v_avatar_url TEXT;
 BEGIN
+  -- Username is only populated if provided explicitly in metadata (e.g. email/password signup)
+  v_username := NEW.raw_user_meta_data->>'username';
+
+  -- Extract display name from metadata or provider defaults
+  v_display_name := COALESCE(
+    NEW.raw_user_meta_data->>'display_name',
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name'
+  );
+
+  -- Extract avatar URL from metadata or provider defaults
+  v_avatar_url := COALESCE(
+    NEW.raw_user_meta_data->>'avatar_url',
+    NEW.raw_user_meta_data->>'picture',
+    NEW.raw_user_meta_data->>'avatar'
+  );
+
   INSERT INTO public.users (id, username, display_name, avatar_url)
   VALUES (
     NEW.id,
-    NEW.raw_user_meta_data->>'username',
-    NEW.raw_user_meta_data->>'display_name',
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
+    v_username,
+    v_display_name,
+    v_avatar_url
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    display_name = COALESCE(EXCLUDED.display_name, public.users.display_name),
+    avatar_url = COALESCE(EXCLUDED.avatar_url, public.users.avatar_url);
+
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'handle_new_user trigger error: %', SQLERRM;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
