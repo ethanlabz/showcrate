@@ -93,12 +93,12 @@ export function Header({ currentPath, user }: Props) {
             <div className='flex items-center justify-end space-x-2 sm:space-x-4'>
               <ThemeToggle />
               {user ? (
-                <a href={user.username ? `/${user.username}` : '/'}>
+                <a href='/'>
                   <Button
-                    size='sm'
-                    className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm rounded-full'
+                    size='lg'
+                    variant='default'
                   >
-                    My Profile
+                    Dashboard
                   </Button>
                 </a>
               ) : (
@@ -116,8 +116,8 @@ export function Header({ currentPath, user }: Props) {
                   </a>
                   <a href='/auth/signup'>
                     <Button
-                      size='sm'
-                      className='shadow-md shadow-primary/20 sm:px-6 sm:h-9 h-8 text-xs sm:text-sm'
+                      size='lg'
+                      variant='default'
                     >
                       Sign up
                     </Button>
@@ -128,8 +128,6 @@ export function Header({ currentPath, user }: Props) {
           </div>
         </header>
       </div>
-
-      {/* tablet will be same as Desktop for HomeLayout */}
 
       {/* Mobile Floating Bottom Dock (hidden on tablet and desktop) */}
       <MobileNav

@@ -3,7 +3,25 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-import { Brush, ChevronRight, LogOut, LucideBookMarked, Settings2, User } from 'lucide-react';
+import {
+  Brush,
+  ChevronRight,
+  LogOut,
+  LucideBookMarked,
+  Settings2,
+  User,
+} from 'lucide-react';
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 import {
   Menu,
@@ -14,6 +32,7 @@ import {
   MenuItem,
   MenuSeparator,
 } from '@/components/animate-ui/components/base/menu';
+import { Kbd, KbdGroup } from '@/components/ui/kbd';
 
 interface User {
   username?: string | null;
@@ -46,14 +65,14 @@ export function UserMenu({ user }: UserMenuProps) {
   }
 
   return (
-    <Menu>
-      <MenuTrigger
+    <DropdownMenu>
+      <DropdownMenuTrigger
         render={
           <Button
             variant='ghost'
             className='relative h-8 w-8 rounded-full border border-border p-0'
           >
-            <Avatar className='h-7 w-7'>
+            <Avatar className='h-8 w-8'>
               <AvatarImage
                 src={
                   user.avatarUrl ||
@@ -66,11 +85,11 @@ export function UserMenu({ user }: UserMenuProps) {
           </Button>
         }
       />
-      <MenuPanel className='w-56' align='end'>
-        <MenuGroup>
-          <MenuGroupLabel className='font-normal'>
+      <DropdownMenuContent className='w-60' align='start' sideOffset={25}>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
             <div className='flex gap-3'>
-              <Avatar className='h-7 w-7'>
+              <Avatar className='h-8 w-8'>
                 <AvatarImage
                   src={
                     user.avatarUrl ||
@@ -81,7 +100,7 @@ export function UserMenu({ user }: UserMenuProps) {
                 <AvatarFallback>{initial}</AvatarFallback>
               </Avatar>
               <div className='flex flex-col space-y-1'>
-                <p className='text-sm font-medium leading-none'>
+                <p className='text-sm text-foreground font-bold leading-none'>
                   {user.username}
                 </p>
                 <p className='text-xs leading-none text-muted-foreground'>
@@ -89,53 +108,35 @@ export function UserMenu({ user }: UserMenuProps) {
                 </p>
               </div>
             </div>
-          </MenuGroupLabel>
-        </MenuGroup>
-        <MenuSeparator />
-        <MenuItem>
-          <a
-            href={`/${user.username}`}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem render={<a href={`/${user.username}`}>Profile</a>}>
+            <DropdownMenuShortcut>
+              <Kbd></Kbd>
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            render={<a href={`/${user.username}?tab=projects`}>Projects</a>}
+          />
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem render={<a href='/settings/profile'>Settings</a>} />
+          <DropdownMenuItem render={<a href='/settings/appearance'>Appearance</a>} />
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            variant='destructive'
             className='cursor-pointer flex gap-2 items-center'
+            disabled={loggingOut}
+            onClick={handleLogout}
           >
-            <User />
-            Profile
-          </a>
-        </MenuItem>
-        <MenuItem>
-          <a
-            href={`/${user.username}?tab=projects`}
-            className='cursor-pointer flex gap-2 items-center'
-          >
-            <LucideBookMarked />
-            Projects
-          </a>
-        </MenuItem>
-        <MenuSeparator />
-        <MenuGroup>
-          <MenuItem>
-            <a href='/settings/profile' className='cursor-pointer flex gap-2 items-center'>
-            <Settings2 />
-              Settings
-            </a>
-          </MenuItem>
-          <MenuItem>
-            <a href='/settings/appearance' className='cursor-pointer flex gap-2 items-center'>
-            <Brush />
-              Appearance
-            </a>
-          </MenuItem>
-        </MenuGroup>
-        <MenuSeparator />
-        <MenuItem
-          variant='destructive'
-          className='cursor-pointer flex gap-2 items-center'
-          disabled={loggingOut}
-          onClick={handleLogout}
-        >
-          <LogOut />
-          Log out
-        </MenuItem>
-      </MenuPanel>
-    </Menu>
+            Log out
+            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

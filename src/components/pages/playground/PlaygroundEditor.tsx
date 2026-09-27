@@ -1,25 +1,44 @@
-import { useEffect, useMemo, useState } from "react";
-import { useCreateBlockNote } from "@blocknote/react";
-import { BlockNoteView } from "@blocknote/shadcn";
-import "@blocknote/shadcn/style.css";
+import { useEffect, useMemo, useState } from 'react';
+import { useCreateBlockNote } from '@blocknote/react';
+import { BlockNoteView } from '@blocknote/shadcn';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogPopup,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/animate-ui/components/base/alert-dialog';
+import '@blocknote/shadcn/style.css';
 
-const STORAGE_KEY = "showcrate-playground-data";
+import '@/styles/global.css';
+
+const STORAGE_KEY = 'showcrate-playground-data';
 
 const DEFAULT_CONTENT = [
   {
-    type: "heading",
-    content: "Showcrate Playground",
+    type: 'heading',
+    content: 'Playground',
   },
   {
-    type: "paragraph",
-    content: "Start typing, use the slash (/) command to add blocks, or drag the handles on the left to reorder them.",
+    type: 'paragraph',
+    content:
+      'Content is automatically saved to the local storage and is not lost on page reload',
+  },
+  {
+    type: 'paragraph',
+    content:
+      'Start typing, use the slash (/) command to add blocks, or drag the handles on the left to reorder them.',
   },
 ];
 
 export function PlaygroundEditor() {
   const [isMounted, setIsMounted] = useState(false);
 
-  // 1. Safe, sanitized initialization from local storage
   const initialContent = useMemo(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -30,7 +49,7 @@ export function PlaygroundEditor() {
         }
       }
     } catch (e) {
-      console.error("Playground storage parse error:", e);
+      console.error('Playground storage parse error:', e);
       localStorage.removeItem(STORAGE_KEY); // Clear corrupted data
     }
     return DEFAULT_CONTENT;
@@ -38,15 +57,14 @@ export function PlaygroundEditor() {
 
   const editor = useCreateBlockNote({ initialContent });
 
-  // 2. Prevent hydration mismatches by deferring the render
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   if (!isMounted) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground animate-pulse font-mono text-sm">
+      <div className='flex-1 flex items-center justify-center min-h-[60vh]'>
+        <p className='text-muted-foreground animate-pulse font-mono text-sm'>
           Loading editor...
         </p>
       </div>
@@ -54,37 +72,48 @@ export function PlaygroundEditor() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col">
-      <div className="mb-8 border-b border-border pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-foreground">Playground</h1>
-          <p className="text-muted-foreground text-sm flex items-center gap-2 font-medium">
-            Changes are saved locally to your browser
-          </p>
-        </div>
-        <button 
-          onClick={() => {
-            if (confirm("Are you sure you want to clear the playground?")) {
-              localStorage.removeItem(STORAGE_KEY);
-              window.location.reload();
-            }
-          }}
-          className="text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors px-3 py-1.5 rounded-md border border-border/50 hover:border-destructive/30 hover:bg-destructive/10 cursor-pointer"
-        >
-          Reset
-        </button>
+    <div className='flex mx-[1em]'>
+      <div className='fixed bottom-2 right-2'>
+        <AlertDialog>
+          <AlertDialogTrigger>
+            <Button variant='destructive' size='lg' className='relative'>
+              Reset
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogPopup>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset the playground?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This deletes everything you've written here from local storage. This can't be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  localStorage.removeItem(STORAGE_KEY);
+                  window.location.reload();
+                }}
+              >
+                Reset
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialog>
       </div>
-      
-      {/* 3. The BlockNote editing surface */}
-      <div className="bg-background rounded-xl border border-border shadow-sm flex-1 py-8 sm:px-4 overflow-hidden">
+
+      <div className='bg-background rounded-lg border border-border shadow-sm flex-1 overflow-hidden'>
         <BlockNoteView
           editor={editor}
-          theme="dark"
+          theme='dark'
           onChange={() => {
             try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(editor.document));
+              localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(editor.document),
+              );
             } catch (e) {
-              console.error("Failed to save to local storage", e);
+              console.error('Failed to save to local storage', e);
             }
           }}
         />

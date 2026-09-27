@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { FolderKanban, BookMarked } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { FolderKanban, BookMarked } from 'lucide-react';
 
 type Project = {
   id: string;
+  slug: string;
   name: string;
   tagline: string;
   visibility: string;
   updated_at: string;
-  slug: string;
   owner: { username: string };
 };
 
@@ -23,28 +23,9 @@ interface Props {
   };
 }
 
-export function LeftRail({ projects, viewer }: Props) {
+export function Projects({ projects, viewer }: Props) {
   return (
-    <aside className='hidden lg:flex lg:flex-col gap-3 border-r border-border sticky top-0 md:h-screen p-6 bg-surface/90'>
-      <div className='flex items-center justify-between mb-3'>
-        <h2 className='text-sm font-semibold text-foreground'>Top projects</h2>
-        <a href='/new'>
-          <Button size='md' className='px-4 h-8'>
-            <BookMarked />
-            New
-          </Button>
-        </a>
-      </div>
-
-      <div className='relative mb-2'>
-        <input
-          type='text'
-          placeholder='Find a project...'
-          className='w-full p-3 py-1.5 text-sm rounded-md border border-foreground/30 bg-surface focus:outline-none focus:ring-1 focus:ring-primary'
-          data-project-filter
-        />
-      </div>
-
+    <>
       <ul className='space-y-0.5' data-project-list>
         {projects && projects.length > 0 ? (
           projects.map((p) => (
@@ -74,6 +55,6 @@ export function LeftRail({ projects, viewer }: Props) {
       >
         Show all →
       </a>
-    </aside>
+    </>
   );
 }

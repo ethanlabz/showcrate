@@ -1,33 +1,18 @@
 ---
-/**
- * Dashboard.astro
- *
- * Authenticated root-route view (mounted by index.astro when
- * Astro.locals.viewer is set). Layout is deliberately modeled on GitHub's
- * dashboard skeleton — left rail of top projects, center quick-actions +
- * activity feed, right rail panel — because that skeleton is genuinely
- * good UX and the request asked for it.
- *
- * What is intentionally NOT cloned, and why:
- *   - "Ask anything / Copilot" box       → no AI doc assistant in v1 scope
- *   - Debug / Agent / Create issue row   → no issues, no agents in schema
- *   - Git ▾ / Pull requests ▾ dropdowns  → no git integration, no PRs
- *   - Release feed + emoji reactions     → no releases entity, no reactions
- *   - Org switcher                       → no organisations in v1 scope
- * Recreating these as static decoration would ship dead buttons and
- * misrepresent the product — see Legal.md item 7 (ToS must match actual
- * functionality) and item 9 (moderation/report affordances must be real).
- *
- * Data model used instead: projects, project_collaborators, page_versions.
- * Query shapes below assume Supabase table/column names from
- * Project_Overview.md's schema — adjust `.select()` strings to your actual
- * generated types.
- */
+/* Dashboard.astro */
 import { createServerClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
-import { Plus, FolderKanban, Search, Bell, BookMarked } from 'lucide-react';
+import {
+  Plus,
+  FolderKanban,
+  Search,
+  Bell,
+  BookMarked,
+  BookSearch,
+} from 'lucide-react';
 
-import { LeftRail } from '@/components/pages/app/LeftRail';
+import { Projects } from '@/components/pages/app/Projects';
+import { Activities } from '@/components/pages/app/Activities';
 
 interface Props {
   viewer: {
@@ -94,19 +79,140 @@ if (activityError)
   class='w-full min-h-screen bg-background text-foreground grid grid-cols-1 lg:grid-cols-[312px_1fr] max-w-screen mx-auto'
 >
   <!-- left rail -->
-  <LeftRail client:load projects={projects || []} viewer={viewer} />
-
-  <!-- center rail -->
-  <div class='grid grid-cols-1 lg:grid-cols-[1fr_312px] max-w-auto mx-auto'>
-    <!-- center rail -->
-    <main class="min-w-0">
-
-    </main>
-
-    <!-- right rail -->
-    <div>
-
+  <aside
+    class='hidden lg:flex lg:flex-col gap-3 border-r border-border sticky top-0 md:h-screen p-6 pt-8 bg-surface/90'
+  >
+    <div class='flex items-center justify-between mb-3'>
+      <h2 class='text-sm font-semibold text-foreground'>Top projects</h2>
+      <a href='/new'>
+        <Button size='md' className='px-4 h-8'>
+          <BookMarked />
+          New
+        </Button>
+      </a>
     </div>
+
+    <div class='relative mb-2'>
+      <input
+        type='text'
+        placeholder='Find a project...'
+        class='w-full p-3 py-1.5 text-sm rounded-md border border-foreground/30 bg-surface focus:outline-none focus:ring-1 focus:ring-primary'
+        data-project-filter
+      />
+    </div>
+
+    <!-- Projects -->
+    <Projects client:load projects={projects || []} viewer={viewer} />
+  </aside>
+
+  <!-- Center Rail -->
+  <div class='flex flex-col p-8'>
+    <div class='flex flex-1 w-full mx-auto gap-8'>
+      <main class='flex flex-col md:w-3/4'>
+        <span class='text-lg lg:text-3xl mb-8'>Home</span>
+        <div class='flex flex-wrap items-center gap-3 mb-8'>
+          <a href='/new'>
+            <Button>
+              <Plus className='w-4 h-4 mr-1.5' />
+              New project
+            </Button>
+          </a>
+          <a href='/templates'>
+            <Button variant='outline'>
+              <BookSearch />
+              Browse templates
+            </Button>
+          </a>
+          <a href='/notifications'>
+            <Button variant='outline'>
+              <Bell className='w-4 h-4 mr-1.5' />
+              Notifications
+            </Button>
+          </a>
+        </div>
+
+        <h3 class='text-sm font-semibold text-muted-foreground mb-3'>
+          Recent activity
+        </h3>
+
+        <!-- Activities -->
+        <Activities client:load activities={activity || []} viewer={viewer} />
+      </main>
+
+      <!-- right rail -->
+      <div class='hidden md:block w-1/4'>
+        <aside class='lg:sticky lg:top-8 lg:self-start'>
+          <div class='border border-border rounded-xl p-4 bg-card/40'>
+            <h2 class='text-sm font-semibold mb-3'>Get started</h2>
+            <ul class='space-y-2 text-sm'>
+              <li>
+                <a href='/templates' class='hover:underline'>
+                  Start from a template
+                </a>
+              </li>
+              <li>
+                <a href='/help' class='hover:underline'>
+                  Read the help center
+                </a>
+              </li>
+              <li>
+                <a href='/settings/collaborators' class='hover:underline'>
+                  Invite a collaborator
+                </a>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <footer class='bottom-0 relative w-full border-t border-border pt-8'>
+      <div class='flex gap-14 justify-center '>
+        <div class='flex gap-2 items-center'>
+          <a class='flex items-center' href='/'>
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              viewBox='0 0 256 256'
+              class='h-6 w-6 text-primary'
+            >
+              <rect width='256' height='256' fill='none'></rect>
+              <line
+                x1='208'
+                y1='128'
+                x2='128'
+                y2='208'
+                fill='none'
+                stroke='currentColor'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+                stroke-width='16'></line>
+              <line
+                x1='192'
+                y1='40'
+                x2='40'
+                y2='192'
+                fill='none'
+                stroke='currentColor'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+                stroke-width='16'></line>
+            </svg>
+          </a>
+          <span class="text-xs font-sans text-muted-foreground">© 2026 Showcrate</span>
+        </div>
+        <div>
+          <ul class="list-none flex justify-center flex-wrap space-x-4 text-sm text-muted-foreground hover:underline">
+            <li><a href="/terms">Terms</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/security">Security</a></li>
+            <li><a href="/status">Status</a></li>
+            <li><a href="/community">Community</a></li>
+            <li><a href="/docs">Docs</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/contact">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
   </div>
 </div>
 

@@ -87,20 +87,5 @@ const resolvedOgImage =
     <TooltipProvider>
       <slot />
     </TooltipProvider>
-
-    <script>
-      import Lenis from 'lenis';
-
-      const lenis = new Lenis();
-      // Expose to window for GSAP synchronization
-      (window as any).lenis = lenis;
-
-      function raf(time: number) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
-      }
-
-      requestAnimationFrame(raf);
-    </script>
   </body>
 </html>

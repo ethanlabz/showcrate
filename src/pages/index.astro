@@ -39,22 +39,6 @@ if (viewer && !viewer.username) {
     >
       <!-- Background Light Rays -->
       <div class='absolute inset-0 pointer-events-none z-0 overflow-hidden'>
-        {/* <LightRays
-          client:load
-          raysOrigin='top-center'
-          raysColor='#ffffff'
-          raysSpeed={0.8}
-          lightSpread={1.2}
-          rayLength={2.0}
-          pulsating={false}
-          fadeDistance={1.0}
-          saturation={1.0}
-          followMouse={true}
-          mouseInfluence={0.12}
-          noiseAmount={0.02}
-          distortion={0.03}
-          className='w-full h-full'
-        /> */}
         <SideRays
           client:load
           speed={2.5}
@@ -380,159 +364,140 @@ if (viewer && !viewer.username) {
 <script>
   import { animate, scroll, inView, stagger } from 'framer-motion';
 
-  const isMobile = window.innerWidth < 768;
+  const prefersReducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
 
-  // 1. Parallax Hero Section
-  const heroContainer = document.querySelector('#hero-section .max-w-7xl');
-  if (heroContainer) {
-    scroll(
-      animate(heroContainer, { y: [0, isMobile ? 80 : 150], opacity: [1, 0] }),
-      {
-        target: document.querySelector('#hero-section') as Element,
-        offset: ['start start', 'end start'],
-      },
-    );
+  // Belt-and-suspenders: if anything below throws, or the user has
+  // reduced motion set, every opacity-0 element still ends up visible.
+  const revealEverything = () => {
+    document
+      .querySelectorAll(
+        '.editor-window, .feature-card-fade, .cta-fade-in, .type-animate span'
+      )
+      .forEach((el) => {
+        (el as HTMLElement).style.opacity = '1';
+        (el as HTMLElement).style.transform = 'none';
+      });
+  };
+
+  if (prefersReducedMotion) {
+    revealEverything();
+  } else {
+    try {
+      runAnimations();
+    } catch (err) {
+      console.error('Animation setup failed, revealing content:', err);
+      revealEverything();
+    }
   }
 
-  // 2. Story Section 1: Sequenced Word-by-Word Reveal (Scrubbed)
-  const problemSection = document.querySelector('#problem-section');
-  if (problemSection) {
-    scroll(
-      animate([
-        [
-          '.story-word',
-          { opacity: [0, 1], y: [20, 0] },
-          { delay: stagger(0.1) },
-        ],
-        [
-          '.story-word-sub',
-          { opacity: [0, 1], y: [20, 0] },
-          { delay: stagger(0.05), at: '+0.5' },
-        ],
-      ]),
-      {
-        target: problemSection,
-        offset: ['start start', 'end start'],
-      },
-    );
-  }
+  // Absolute last resort: nothing should stay invisible past 2.5s
+  // no matter what happened above.
+  setTimeout(revealEverything, 2500);
 
-  // 3. Story Section 2: Sequenced Component Fade In (Scrubbed)
-  const solutionSection = document.querySelector('#solution-section');
-  if (solutionSection) {
-    scroll(
-      animate([
-        [
-          '.interactive-icon-anim',
-          { opacity: [0, 1], y: [20, 0] },
-          { duration: 1 },
-        ],
-        ['.interactive-icon-anim', { x: [20, 0] }, { duration: 1, at: '+0.5' }],
-        [
-          '.interactive-text-anim',
-          { opacity: [0, 1], x: [20, 0] },
-          { duration: 1, at: '<' },
-        ],
-        [
-          '.solution-fade-in',
-          { opacity: [0, 1], y: [20, 0] },
-          { delay: stagger(0.2), duration: 1, at: '+0.2' },
-        ],
-      ]),
-      {
-        target: solutionSection,
-        offset: ['start start', 'end start'],
-      },
-    );
-  }
+  function runAnimations() {
+    const isMobile = window.innerWidth < 768;
 
-  // 4. Animation: Scale up and fade in Editor window
-  inView(
-    '#editor-mockup-container',
-    () => {
-      animate(
-        '.editor-window',
-        { opacity: [0, 1], y: [60, 0], scale: [0.95, 1] },
-        { duration: 1, ease: 'easeOut' },
+    const heroContainer = document.querySelector('#hero-section .max-w-7xl');
+    if (heroContainer) {
+      scroll(
+        animate(heroContainer, { y: [0, isMobile ? 80 : 150], opacity: [1, 0] }),
+        {
+          target: (document.querySelector('#hero-section') as Element) ?? undefined,
+          offset: ['start start', 'end start'],
+        }
       );
-    },
-    { amount: isMobile ? 0.2 : 0.4 },
-  );
+    }
 
-  // 5. Split text into spans for typing animation
-  document.querySelectorAll('.type-animate').forEach((el) => {
-    const text = (el as HTMLElement).innerText;
-    el.innerHTML = '';
-    (el as HTMLElement).style.whiteSpace = 'pre-wrap';
-    text.split('').forEach((char) => {
-      const span = document.createElement('span');
-      span.textContent = char;
-      span.style.opacity = '0';
-      el.appendChild(span);
+    const problemSection = document.querySelector('#problem-section');
+    if (problemSection) {
+      scroll(
+        animate([
+          ['.story-word', { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.1) }],
+          ['.story-word-sub', { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05), at: '+0.5' }],
+        ]),
+        { target: problemSection, offset: ['start start', 'end start'] }
+      );
+    }
+
+    const solutionSection = document.querySelector('#solution-section');
+    if (solutionSection) {
+      scroll(
+        animate([
+          ['.interactive-icon-anim', { opacity: [0, 1], y: [20, 0] }, { duration: 1 }],
+          ['.interactive-icon-anim', { x: [20, 0] }, { duration: 1, at: '+0.5' }],
+          ['.interactive-text-anim', { opacity: [0, 1], x: [20, 0] }, { duration: 1, at: '<' }],
+          ['.solution-fade-in', { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.2), duration: 1, at: '+0.2' }],
+        ]),
+        { target: solutionSection, offset: ['start start', 'end start'] }
+      );
+    }
+
+    inView(
+      '#editor-mockup-container',
+      () => {
+        animate(
+          '.editor-window',
+          { opacity: [0, 1], y: [60, 0], scale: [0.95, 1] },
+          { duration: 1, ease: 'easeOut' }
+        );
+      },
+      { amount: isMobile ? 0.2 : 0.4 }
+    );
+
+    // Lazy char-split: only pay this DOM cost when the section is
+    // actually about to be seen, not unconditionally on page load.
+    inView(
+      '#features-grid',
+      () => {
+        document.querySelectorAll('.type-animate').forEach((el) => {
+          const element = el as HTMLElement;
+          const text = element.innerText;
+          const label = document.createElement('span');
+          label.className = 'sr-only';
+          label.textContent = text;
+          element.setAttribute('aria-hidden', 'true');
+          element.style.whiteSpace = 'pre-wrap';
+          element.innerHTML = '';
+          text.split('').forEach((char) => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            span.style.opacity = '0';
+            element.appendChild(span);
+          });
+          element.after(label);
+        });
+
+        animate('.type-animate span', { opacity: [0, 1] }, { delay: stagger(0.03) });
+        animate(
+          '.feature-card-fade',
+          { opacity: [0, 1], y: [40, 0], scale: [0.95, 1] },
+          { delay: stagger(0.3), duration: 1.5, ease: 'backOut' }
+        );
+      },
+      { amount: 0.1 }
+    );
+
+    document.querySelectorAll('.cta-fade-in').forEach((el) => {
+      scroll(animate(el, { opacity: [0, 1], y: [32, 0] }), {
+        target: el,
+        offset: ['start 100%', isMobile ? 'start 50%' : 'start 30%'],
+      });
     });
-  });
 
-  // Features Header Typing Animation
-  inView(
-    '#features-grid',
-    () => {
-      animate(
-        '.type-animate span',
-        { opacity: [0, 1] },
-        { delay: stagger(0.03) },
+    const ctaSection = document.querySelector('#cta-section');
+    if (ctaSection) {
+      scroll(
+        animate([
+          ['.cta-badge-anim', { opacity: [0, 1], y: [32, 0] }, { duration: 1 }],
+          ['.badge-avatar', { opacity: [0, 1], x: [48, 0] }, { delay: stagger(0.2), duration: 1.5, at: '+0.2' }],
+          ['.badge-typing', { width: ['0px', '100%'] }, { duration: 1.5, ease: 'linear', at: '+0.2' }],
+          ['.badge-typing', { borderColor: ['var(--color-primary)', 'transparent'] }, { duration: 0.2 }],
+        ]),
+        { target: ctaSection, offset: ['start 95%', isMobile ? 'start 50%' : 'start 35%'] }
       );
-    },
-    { amount: 0.1 },
-  );
-
-  // Slower Feature Cards
-  inView(
-    '#features-grid',
-    () => {
-      animate(
-        '.feature-card-fade',
-        { opacity: [0, 1], y: [40, 0], scale: [0.95, 1] },
-        { delay: stagger(0.3), duration: 1.5, ease: 'backOut' },
-      );
-    },
-    { amount: 0.15 },
-  );
-
-  // 6. CTA Section Fade In (Scrubbing individually)
-  document.querySelectorAll('.cta-fade-in').forEach((el) => {
-    scroll(animate(el, { opacity: [0, 1], y: [32, 0] }), {
-      target: el as Element,
-      offset: ['start 100%', isMobile ? 'start 50%' : 'start 30%'],
-    });
-  });
-
-  // 7. Social Proof Badge Custom Timeline (If utilized)
-  const ctaSection = document.querySelector('#cta-section');
-  if (ctaSection) {
-    scroll(
-      animate([
-        ['.cta-badge-anim', { opacity: [0, 1], y: [32, 0] }, { duration: 1 }],
-        [
-          '.badge-avatar',
-          { opacity: [0, 1], x: [48, 0] },
-          { delay: stagger(0.2), duration: 1.5, at: '+0.2' },
-        ],
-        [
-          '.badge-typing',
-          { width: ['0px', '100%'] },
-          { duration: 1.5, ease: 'linear', at: '+0.2' },
-        ],
-        [
-          '.badge-typing',
-          { borderColor: ['var(--color-primary)', 'transparent'] },
-          { duration: 0.2 },
-        ],
-      ]),
-      {
-        target: ctaSection,
-        offset: ['start 95%', isMobile ? 'start 50%' : 'start 35%'],
-      },
-    );
+    }
   }
 </script>
 }
