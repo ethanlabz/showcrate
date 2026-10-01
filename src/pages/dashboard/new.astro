@@ -1,0 +1,105 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { ProjectService } from '@/lib/services/projectService';
+import { createProjectSchema } from '@/lib/validators/project.schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+if (!viewer) {
+  return Astro.redirect('/auth/login?next=%2Fdashboard%2Fnew');
+}
+
+let errorMsg = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const name = String(formData.get('name') ?? '').trim();
+    const tagline = String(formData.get('tagline') ?? '').trim() || undefined;
+
+    const parsed = createProjectSchema.safeParse({ name, tagline });
+    if (!parsed.success) {
+      errorMsg = parsed.error.issues.map((i) => i.message).join(', ');
+    } else {
+      const db = createServerClient(Astro.cookies);
+      const projectService = new ProjectService(db);
+      const project = await projectService.createProject(viewer.id, parsed.data);
+      return Astro.redirect(`/dashboard/projects/${project.id}/editor`);
+    }
+  } catch (err: any) {
+    console.error('[dashboard/new] Failed to create project:', err);
+    errorMsg = err.message || 'Failed to create project';
+  }
+}
+---
+
+<AppLayout
+  title="New Project"
+  iconName="new"
+  headerTitle="Create New Project"
+  headerDescription="Set up a new documentation stage for your software."
+  maxWidth="max-w-[720px]"
+>
+  <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+    {errorMsg && (
+      <div class="mb-6 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+        {errorMsg}
+      </div>
+    )}
+
+    <form method="POST" class="space-y-6">
+      <div class="space-y-2">
+        <Label htmlFor="name" className="text-sm font-medium text-foreground">
+          Project Name <span class="text-[#C9A96A]">*</span>
+        </Label>
+        <Input
+          id="name"
+          name="name"
+          placeholder="e.g. Acme API Docs"
+          required
+          maxLength={100}
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A]"
+        />
+        <p class="text-[11px] text-muted-foreground">
+          A readable name for your project. A URL slug will be automatically created from this.
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <Label htmlFor="tagline" className="text-sm font-medium text-foreground">
+          Tagline
+        </Label>
+        <Textarea
+          id="tagline"
+          name="tagline"
+          placeholder="A quick summary of what this project provides..."
+          rows={3}
+          maxLength={200}
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A] resize-none"
+        />
+        <p class="text-[11px] text-muted-foreground">
+          Optional short description (up to 200 characters).
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-border/40 flex items-center justify-end gap-3">
+        <a href="/dashboard">
+          <Button type="button" variant="outline" size="sm">
+            Cancel
+          </Button>
+        </a>
+        <Button
+          type="submit"
+          size="sm"
+          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+        >
+          Create Project
+        </Button>
+      </div>
+    </form>
+  </div>
+</AppLayout>

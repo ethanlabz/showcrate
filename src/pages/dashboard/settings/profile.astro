@@ -1,0 +1,167 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { UserRepository } from '@/lib/repositories/UserRepository';
+import { updateProfileSchema } from '@/lib/validators/user.schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { CheckCircle2, Lock } from 'lucide-react';
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+if (!viewer) {
+  return Astro.redirect('/auth/login?next=%2Fdashboard%2Fsettings%2Fprofile');
+}
+
+let successMsg = '';
+let errorMsg = '';
+
+const supabase = createServerClient(Astro.cookies);
+const userRepo = new UserRepository(supabase);
+
+// Fetch latest user data from DB
+const userRecord = await userRepo.findById(viewer.id);
+const displayName = userRecord?.display_name ?? viewer.displayName ?? '';
+const username = userRecord?.username ?? viewer.username ?? '';
+const email = viewer.email ?? '';
+const bio = userRecord?.bio ?? '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const newDisplayName = String(formData.get('displayName') ?? '').trim();
+    const newBio = String(formData.get('bio') ?? '').trim();
+
+    const parsed = updateProfileSchema.safeParse({
+      displayName: newDisplayName || undefined,
+      bio: newBio || undefined,
+    });
+
+    if (!parsed.success) {
+      errorMsg = parsed.error.issues.map((i) => i.message).join(', ');
+    } else {
+      await userRepo.updateProfile(viewer.id, parsed.data);
+      successMsg = 'Profile updated successfully.';
+    }
+  } catch (err: any) {
+    console.error('[settings/profile] Update error:', err);
+    errorMsg = err.message || 'Failed to update profile';
+  }
+}
+---
+
+<AppLayout
+  title="Profile Settings"
+  iconName="profile"
+  headerTitle="Profile"
+  headerDescription="Manage your public display name and profile details."
+  maxWidth="max-w-[720px]"
+>
+  <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+    {successMsg && (
+      <div class="mb-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-400 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        <span>{successMsg}</span>
+      </div>
+    )}
+
+    {errorMsg && (
+      <div class="mb-6 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+        {errorMsg}
+      </div>
+    )}
+
+    <form method="POST" class="space-y-6">
+      {/* 1. Name (editable) */}
+      <div class="space-y-2">
+        <Label htmlFor="displayName" className="text-sm font-medium text-foreground">
+          Display Name
+        </Label>
+        <Input
+          id="displayName"
+          name="displayName"
+          defaultValue={displayName}
+          maxLength={60}
+          placeholder="Your full name or display handle"
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A]"
+        />
+        <p class="text-[11px] text-muted-foreground">
+          This is the name displayed publicly on your projects and profile.
+        </p>
+      </div>
+
+      {/* 2. Username (read-only with helper text) */}
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <Label htmlFor="username" className="text-sm font-medium text-foreground flex items-center gap-1.5">
+            <span>Username</span>
+            <Lock className="h-3 w-3 text-muted-foreground" />
+          </Label>
+        </div>
+        <Input
+          id="username"
+          value={username}
+          readOnly
+          disabled
+          className="bg-surface-raised/40 border-border/40 text-muted-foreground cursor-not-allowed select-none"
+        />
+        <p class="text-[11px] text-muted-foreground/80">
+          Usernames can't be changed yet
+        </p>
+      </div>
+
+      {/* 3. Email (read-only with verified indicator) */}
+      <div class="space-y-2">
+        <Label htmlFor="email" className="text-sm font-medium text-foreground">
+          Email Address
+        </Label>
+        <div class="relative">
+          <Input
+            id="email"
+            value={email}
+            readOnly
+            disabled
+            className="bg-surface-raised/40 border-border/40 text-muted-foreground pr-24 cursor-not-allowed select-none"
+          />
+          <div class="absolute inset-y-0 right-3 flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>Verified</span>
+          </div>
+        </div>
+        <p class="text-[11px] text-muted-foreground">
+          Your primary email address associated with this account.
+        </p>
+      </div>
+
+      {/* 4. Bio (optional) */}
+      <div class="space-y-2">
+        <Label htmlFor="bio" className="text-sm font-medium text-foreground">
+          Bio
+        </Label>
+        <Textarea
+          id="bio"
+          name="bio"
+          defaultValue={bio}
+          rows={3}
+          maxLength={300}
+          placeholder="Brief intro about yourself or what you build..."
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A] resize-none"
+        />
+        <p class="text-[11px] text-muted-foreground">
+          Up to 300 characters shown on your public profile.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-border/40 flex items-center justify-end">
+        <Button
+          type="submit"
+          size="sm"
+          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+        >
+          Save changes
+        </Button>
+      </div>
+    </form>
+  </div>
+</AppLayout>

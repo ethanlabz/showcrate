@@ -1,27 +1,78 @@
 ---
-import BaseLayout from "./BaseLayout.astro";
-
-import { AppShell } from "../components/pages/app/app-shell";
-import { MobileBottomNav } from "../components/pages/app/mobile-bottom-nav";
+import BaseLayout from './BaseLayout.astro';
+import { DashboardShell } from '@/components/DashboardShell';
 
 export interface Props {
   title: string;
   description?: string;
   noIndex?: boolean;
+  iconName?: string;
+  headerTitle?: string;
+  headerDescription?: string;
+  hideContentHeader?: boolean;
+  defaultCollapsed?: boolean;
+  maxWidth?: string;
 }
 
-const { title, description, noIndex = true } = Astro.props;
-const user = Astro.locals.user;
+const {
+  title,
+  description,
+  noIndex = true,
+  iconName,
+  headerTitle,
+  headerDescription,
+  hideContentHeader = false,
+  defaultCollapsed = false,
+  maxWidth = 'max-w-[720px]',
+} = Astro.props;
 
-if (user && !user.username) {
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+const activeProject = Astro.locals.project;
+
+if (viewer && !viewer.username) {
   return Astro.redirect('/auth/signup?social=true');
 }
+
+const sidebarViewer = viewer
+  ? {
+      displayName: viewer.displayName ?? viewer.username,
+      email: viewer.email ?? '',
+      avatarUrl: viewer.avatarUrl ?? null,
+      username: viewer.username ?? null,
+      platformRole: viewer.platformRole ?? 'user',
+    }
+  : {
+      displayName: 'User',
+      email: '',
+      avatarUrl: null,
+      username: null,
+      platformRole: 'user',
+    };
+
+const sidebarProject = activeProject
+  ? {
+      id: activeProject.id,
+      name: activeProject.name,
+      slug: activeProject.slug,
+      published: Boolean(activeProject.published),
+    }
+  : null;
 ---
 
 <BaseLayout title={title} description={description} noIndex={noIndex}>
-  <AppShell user={user} client:load>
+  <DashboardShell
+    client:load
+    viewer={sidebarViewer}
+    activeProject={sidebarProject}
+    currentPath={Astro.url.pathname}
+    pageTitle={title}
+    headerTitle={headerTitle ?? title}
+    headerDescription={headerDescription}
+    iconName={iconName}
+    hideContentHeader={hideContentHeader}
+    defaultCollapsed={defaultCollapsed}
+    maxWidth={maxWidth}
+  >
     <slot />
-  </AppShell>
-
-  <MobileBottomNav username={user?.username ?? ''} client:load />
+  </DashboardShell>
 </BaseLayout>

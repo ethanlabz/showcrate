@@ -1,0 +1,72 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Trash2 } from 'lucide-react';
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+if (!viewer) {
+  return Astro.redirect('/auth/login?next=%2Fdashboard%2Fsettings%2Fdanger');
+}
+---
+
+<AppLayout
+  title="Danger Zone"
+  iconName="danger"
+  headerTitle="Danger Zone"
+  headerDescription="Irreversible and destructive actions for your Showcrate account."
+  maxWidth="max-w-[720px]"
+>
+  <div class="rounded-xl border border-destructive/40 bg-destructive/5 p-6 sm:p-8 space-y-6">
+    <div class="flex items-start gap-4">
+      <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive border border-destructive/30 shrink-0">
+        <AlertTriangle className="h-5 w-5" />
+      </div>
+
+      <div class="flex-1">
+        <h3 class="text-sm font-semibold text-destructive">
+          Delete Showcrate Account
+        </h3>
+        <p class="text-xs text-muted-foreground mt-1 max-w-md">
+          Permanently delete your user profile and all personal settings. This action is irreversible and cannot be undone. Any projects you own will have their ownership revoked.
+        </p>
+
+        <div class="mt-6">
+          <Button
+            id="delete-account-btn"
+            variant="destructive"
+            size="sm"
+            className="flex items-center gap-1.5 cursor-pointer font-medium"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete my account
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<script>
+  const deleteBtn = document.getElementById('delete-account-btn');
+  deleteBtn?.addEventListener('click', async () => {
+    const confirmed = window.confirm(
+      'Are you completely sure you want to delete your account? This action CANNOT be undone.',
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/auth/delete-account', {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        window.location.href = '/';
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error?.message || 'Failed to delete account');
+      }
+    } catch (err) {
+      console.error('Delete account error:', err);
+      alert('An unexpected error occurred while deleting your account.');
+    }
+  });
+</script>

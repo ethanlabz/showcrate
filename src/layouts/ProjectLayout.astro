@@ -1,7 +1,20 @@
 ---
-const { title } = Astro.props;
+import BaseLayout from './BaseLayout.astro';
+import { MobileBottomNav } from '@/components/pages/app/mobile-bottom-nav';
+
+export interface Props {
+  title: string;
+  description?: string;
+  noIndex?: boolean;
+}
+
+const { title, description, noIndex = false } = Astro.props;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
 ---
 
-<div id="projectLayout">
-  <slot />
-</div>
+<BaseLayout title={title} description={description} noIndex={noIndex}>
+  <div id="projectLayout">
+    <slot />
+  </div>
+  <MobileBottomNav username={viewer?.username ?? ''} client:load />
+</BaseLayout>

@@ -1,0 +1,102 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { Button } from '@/components/ui/button';
+import { Bell, Mail, CheckCircle2 } from 'lucide-react';
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+if (!viewer) {
+  return Astro.redirect('/auth/login?next=%2Fdashboard%2Fsettings%2Fnotifications');
+}
+
+let savedMsg = '';
+if (Astro.request.method === 'POST') {
+  savedMsg = 'Notification preferences saved.';
+}
+---
+
+<AppLayout
+  title="Notification Settings"
+  iconName="notifications"
+  headerTitle="Notification Preferences"
+  headerDescription="Control how and when you receive updates from Showcrate."
+  maxWidth="max-w-[720px]"
+>
+  <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+    {savedMsg && (
+      <div class="mb-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-400 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        <span>{savedMsg}</span>
+      </div>
+    )}
+
+    <form method="POST" class="space-y-6">
+      <div class="space-y-4">
+        <div class="flex items-start justify-between gap-4 pb-4 border-b border-border/40">
+          <div class="space-y-0.5">
+            <label for="collabInvites" class="text-sm font-medium text-foreground flex items-center gap-2 cursor-pointer">
+              <Mail className="h-4 w-4 text-[#C9A96A]" />
+              <span>Collaborator invitations</span>
+            </label>
+            <p class="text-xs text-muted-foreground">
+              Receive an email notification when someone invites you to collaborate on a project.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            id="collabInvites"
+            name="collabInvites"
+            checked
+            class="h-4 w-4 rounded border-border text-[#C9A96A] focus:ring-[#C9A96A] mt-1 cursor-pointer"
+          />
+        </div>
+
+        <div class="flex items-start justify-between gap-4 pb-4 border-b border-border/40">
+          <div class="space-y-0.5">
+            <label for="activityUpdates" class="text-sm font-medium text-foreground flex items-center gap-2 cursor-pointer">
+              <Bell className="h-4 w-4 text-[#C9A96A]" />
+              <span>Project activity & versions</span>
+            </label>
+            <p class="text-xs text-muted-foreground">
+              Notify you in-app when new versions are published or pages are edited.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            id="activityUpdates"
+            name="activityUpdates"
+            checked
+            class="h-4 w-4 rounded border-border text-[#C9A96A] focus:ring-[#C9A96A] mt-1 cursor-pointer"
+          />
+        </div>
+
+        <div class="flex items-start justify-between gap-4">
+          <div class="space-y-0.5">
+            <label for="productNews" class="text-sm font-medium text-foreground flex items-center gap-2 cursor-pointer">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span>Product updates & changelog</span>
+            </label>
+            <p class="text-xs text-muted-foreground">
+              Occasional highlights of major new features and release notes.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            id="productNews"
+            name="productNews"
+            class="h-4 w-4 rounded border-border text-[#C9A96A] focus:ring-[#C9A96A] mt-1 cursor-pointer"
+          />
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-border/40 flex items-center justify-end">
+        <Button
+          type="submit"
+          size="sm"
+          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+        >
+          Save preferences
+        </Button>
+      </div>
+    </form>
+  </div>
+</AppLayout>

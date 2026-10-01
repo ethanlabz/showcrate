@@ -1,0 +1,68 @@
+---
+import EditorLayout from '@/layouts/EditorLayout.astro';
+import { PlaygroundEditor } from '@/components/pages/playground/playground-editor';
+import { ExternalLink, Settings, History } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const project = Astro.locals.project;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+if (!project) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+---
+
+<EditorLayout title={`Editor — ${project.name}`}>
+  <div class="flex flex-col h-full min-h-[calc(100vh-4rem)]">
+    <!-- Top Editor Bar -->
+    <div class="flex items-center justify-between border-b border-border/40 pb-3 mb-4">
+      <div class="flex items-center gap-3">
+        <h2 class="font-serif font-bold text-lg text-foreground">
+          {project.name}
+        </h2>
+        <span class={`text-[10px] uppercase font-mono px-2 py-0.5 rounded border ${
+          project.published
+            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+            : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+        }`}>
+          {project.published ? 'Published' : 'Draft'}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href={`/dashboard/projects/${project.id}/versions`}>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+            <History className="h-3.5 w-3.5" />
+            <span class="hidden sm:inline">Versions</span>
+          </Button>
+        </a>
+
+        <a href={`/dashboard/projects/${project.id}/settings/general`}>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+            <Settings className="h-3.5 w-3.5" />
+            <span class="hidden sm:inline">Settings</span>
+          </Button>
+        </a>
+
+        {project.published && viewer?.username && (
+          <a
+            href={`/${viewer.username}/${project.slug}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Button size="sm" className="h-8 gap-1.5 text-xs bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90">
+              <span>View live</span>
+              <ExternalLink className="h-3 w-3" />
+            </Button>
+          </a>
+        )}
+      </div>
+    </div>
+
+    <!-- Main BlockNote Editor Component -->
+    <div class="flex-1 w-full rounded-xl border border-border/50 bg-background overflow-hidden p-4">
+      <PlaygroundEditor client:only="react" />
+    </div>
+  </div>
+</EditorLayout>

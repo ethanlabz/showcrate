@@ -1,0 +1,128 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { ProjectService } from '@/lib/services/projectService';
+import { updateProjectSchema } from '@/lib/validators/project.schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { CheckCircle2 } from 'lucide-react';
+
+const project = Astro.locals.project;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+if (!project || !viewer) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+let successMsg = '';
+let errorMsg = '';
+
+const supabase = createServerClient(Astro.cookies);
+const projectService = new ProjectService(supabase);
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const name = String(formData.get('name') ?? '').trim();
+    const tagline = String(formData.get('tagline') ?? '').trim();
+
+    const parsed = updateProjectSchema.safeParse({
+      name: name || undefined,
+      tagline: tagline || null,
+    });
+
+    if (!parsed.success) {
+      errorMsg = parsed.error.issues.map((i) => i.message).join(', ');
+    } else {
+      await projectService.updateProject(project.id, viewer.id, parsed.data);
+      project.name = name || project.name;
+      project.tagline = tagline || null;
+      successMsg = 'Project settings updated successfully.';
+    }
+  } catch (err: any) {
+    console.error('[projects/settings/general] Update error:', err);
+    errorMsg = err.message || 'Failed to update project settings';
+  }
+}
+---
+
+<AppLayout
+  title={`General Settings — ${project.name}`}
+  iconName="settings"
+  headerTitle="General Settings"
+  headerDescription="Update your project's basic details and metadata."
+  maxWidth="max-w-[720px]"
+>
+  <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+    {successMsg && (
+      <div class="mb-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-400 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        <span>{successMsg}</span>
+      </div>
+    )}
+
+    {errorMsg && (
+      <div class="mb-6 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+        {errorMsg}
+      </div>
+    )}
+
+    <form method="POST" class="space-y-6">
+      <div class="space-y-2">
+        <Label htmlFor="name" className="text-sm font-medium text-foreground">
+          Project Name
+        </Label>
+        <Input
+          id="name"
+          name="name"
+          defaultValue={project.name}
+          required
+          maxLength={100}
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A]"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <Label htmlFor="slug" className="text-sm font-medium text-foreground">
+          URL Slug
+        </Label>
+        <Input
+          id="slug"
+          value={project.slug}
+          disabled
+          readOnly
+          className="bg-surface-raised/40 border-border/40 text-muted-foreground cursor-not-allowed select-none"
+        />
+        <p class="text-[11px] text-muted-foreground">
+          Public URL: <span class="font-mono text-foreground">/{viewer.username}/{project.slug}</span>
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <Label htmlFor="tagline" className="text-sm font-medium text-foreground">
+          Tagline
+        </Label>
+        <Textarea
+          id="tagline"
+          name="tagline"
+          defaultValue={project.tagline ?? ''}
+          rows={3}
+          maxLength={200}
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A] resize-none"
+        />
+      </div>
+
+      <div class="pt-4 border-t border-border/40 flex items-center justify-end">
+        <Button
+          type="submit"
+          size="sm"
+          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+        >
+          Save changes
+        </Button>
+      </div>
+    </form>
+  </div>
+</AppLayout>

@@ -1,0 +1,161 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { ProjectService } from '@/lib/services/projectService';
+import { Button } from '@/components/ui/button';
+import { Eye, Globe, CheckCircle2 } from 'lucide-react';
+
+const project = Astro.locals.project;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+if (!project || !viewer) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+let successMsg = '';
+let errorMsg = '';
+
+const supabase = createServerClient(Astro.cookies);
+const projectService = new ProjectService(supabase);
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const action = String(formData.get('action') ?? '');
+
+    if (action === 'visibility') {
+      const visibility = String(formData.get('visibility') ?? 'public') as 'public' | 'private' | 'unlisted';
+      await projectService.setVisibility(project.id, viewer.id, visibility);
+      project.visibility = visibility;
+      successMsg = `Project visibility set to ${visibility}.`;
+    } else if (action === 'publish') {
+      const published = formData.get('published') === 'true';
+      await projectService.publishProject(project.id, viewer.id, published);
+      project.published = published;
+      successMsg = published ? 'Project has been published.' : 'Project reverted to draft.';
+    }
+  } catch (err: any) {
+    console.error('[projects/settings/visibility] Error:', err);
+    errorMsg = err.message || 'Failed to update visibility settings';
+  }
+}
+---
+
+<AppLayout
+  title={`Visibility — ${project.name}`}
+  iconName="visibility"
+  headerTitle="Project Visibility"
+  headerDescription="Control who can discover and view this documentation."
+  maxWidth="max-w-[720px]"
+>
+  <div class="space-y-6">
+    {successMsg && (
+      <div class="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-400 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        <span>{successMsg}</span>
+      </div>
+    )}
+
+    {errorMsg && (
+      <div class="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+        {errorMsg}
+      </div>
+    )}
+
+    <!-- Publication status -->
+    <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Globe className="h-4 w-4 text-[#C9A96A]" />
+            <span>Publication Status</span>
+          </h3>
+          <p class="text-xs text-muted-foreground mt-1 max-w-md">
+            {project.published
+              ? 'Your project is currently published and accessible at its public URL.'
+              : 'Your project is currently in draft mode. Only you and invited collaborators can view it.'}
+          </p>
+        </div>
+
+        <form method="POST">
+          <input type="hidden" name="action" value="publish" />
+          <input type="hidden" name="published" value={project.published ? 'false' : 'true'} />
+          <Button
+            type="submit"
+            size="sm"
+            variant={project.published ? 'outline' : 'default'}
+            className={project.published ? '' : 'bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium'}
+          >
+            {project.published ? 'Unpublish to draft' : 'Publish live'}
+          </Button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Access visibility -->
+    <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+      <h3 class="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+        <Eye className="h-4 w-4 text-[#C9A96A]" />
+        <span>Audience Access</span>
+      </h3>
+
+      <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="visibility" />
+
+        <div class="space-y-3">
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-border/40 hover:bg-surface-raised cursor-pointer transition-colors">
+            <input
+              type="radio"
+              name="visibility"
+              value="public"
+              checked={project.visibility === 'public'}
+              class="mt-1 text-[#C9A96A] focus:ring-[#C9A96A]"
+            />
+            <div class="text-xs">
+              <span class="font-semibold text-foreground block">Public</span>
+              <span class="text-muted-foreground">Visible to everyone and eligible for Showcrate showcase and search.</span>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-border/40 hover:bg-surface-raised cursor-pointer transition-colors">
+            <input
+              type="radio"
+              name="visibility"
+              value="unlisted"
+              checked={project.visibility === 'unlisted'}
+              class="mt-1 text-[#C9A96A] focus:ring-[#C9A96A]"
+            />
+            <div class="text-xs">
+              <span class="font-semibold text-foreground block">Unlisted</span>
+              <span class="text-muted-foreground">Anyone with the direct link can view, but hidden from public directory and search engines.</span>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 p-3 rounded-lg border border-border/40 hover:bg-surface-raised cursor-pointer transition-colors">
+            <input
+              type="radio"
+              name="visibility"
+              value="private"
+              checked={project.visibility === 'private'}
+              class="mt-1 text-[#C9A96A] focus:ring-[#C9A96A]"
+            />
+            <div class="text-xs">
+              <span class="font-semibold text-foreground block">Private</span>
+              <span class="text-muted-foreground">Only you and credited collaborators can view this project.</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="pt-4 border-t border-border/40 flex items-center justify-end">
+          <Button
+            type="submit"
+            size="sm"
+            className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+          >
+            Save visibility
+          </Button>
+        </div>
+      </form>
+    </div>
+  </div>
+</AppLayout>

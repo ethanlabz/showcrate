@@ -1,0 +1,71 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { ProjectService } from '@/lib/services/projectService';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Trash2 } from 'lucide-react';
+
+const project = Astro.locals.project;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+if (!project || !viewer) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+let errorMsg = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const supabase = createServerClient(Astro.cookies);
+    const projectService = new ProjectService(supabase);
+    await projectService.deleteProject(project.id, viewer.id);
+    return Astro.redirect('/dashboard');
+  } catch (err: any) {
+    console.error('[projects/danger] Delete error:', err);
+    errorMsg = err.message || 'Failed to delete project';
+  }
+}
+---
+
+<AppLayout
+  title={`Danger Zone — ${project.name}`}
+  iconName="danger"
+  headerTitle="Danger Zone"
+  headerDescription="Irreversible actions for this project."
+  maxWidth="max-w-[720px]"
+>
+  <div class="rounded-xl border border-destructive/40 bg-destructive/5 p-6 sm:p-8 space-y-6">
+    {errorMsg && (
+      <div class="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+        {errorMsg}
+      </div>
+    )}
+
+    <div class="flex items-start gap-4">
+      <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive border border-destructive/30 shrink-0">
+        <AlertTriangle className="h-5 w-5" />
+      </div>
+
+      <div class="flex-1">
+        <h3 class="text-sm font-semibold text-destructive">
+          Delete this project
+        </h3>
+        <p class="text-xs text-muted-foreground mt-1 max-w-md">
+          Deleting <strong class="text-foreground">{project.name}</strong> will unpublish all associated pages, invalidate its public link, and schedule it for deletion. This action cannot be undone.
+        </p>
+
+        <form method="POST" class="mt-6" onsubmit="return confirm('Are you sure you want to delete this project? This action cannot be undone.');">
+          <Button
+            type="submit"
+            variant="destructive"
+            size="sm"
+            className="flex items-center gap-1.5 cursor-pointer font-medium"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete {project.name}
+          </Button>
+        </form>
+      </div>
+    </div>
+  </div>
+</AppLayout>

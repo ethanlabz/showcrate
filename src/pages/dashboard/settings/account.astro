@@ -1,0 +1,58 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { Button } from '@/components/ui/button';
+import { KeyRound, ShieldCheck } from 'lucide-react';
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+if (!viewer) {
+  return Astro.redirect('/auth/login?next=%2Fdashboard%2Fsettings%2Faccount');
+}
+---
+
+<AppLayout
+  title="Account Settings"
+  iconName="account"
+  headerTitle="Account & Security"
+  headerDescription="Manage your password, authentication methods, and security preferences."
+  maxWidth="max-w-[720px]"
+>
+  <div class="space-y-6">
+    <!-- Password reset -->
+    <div class="rounded-xl border border-border/50 bg-surface/30 p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-sm font-semibold text-foreground flex items-center gap-2">
+            <KeyRound className="h-4 w-4 text-[#C9A96A]" />
+            <span>Password & Authentication</span>
+          </h3>
+          <p class="text-xs text-muted-foreground mt-1 max-w-md">
+            Need to change your password or update your authentication credentials? Request a password reset link sent to your registered email.
+          </p>
+        </div>
+
+        <a href="/auth/forgot-password">
+          <Button variant="outline" size="sm" className="shrink-0">
+            Reset password
+          </Button>
+        </a>
+      </div>
+    </div>
+
+    <!-- Active session -->
+    <div class="rounded-xl border border-border/50 bg-surface/30 p-6">
+      <h3 class="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
+        <ShieldCheck className="h-4 w-4 text-emerald-400" />
+        <span>Active Session</span>
+      </h3>
+      <p class="text-xs text-muted-foreground mb-4">
+        You are currently signed in as <span class="text-foreground font-mono">{viewer.email}</span>.
+      </p>
+
+      <form action="/auth/logout" method="POST">
+        <Button type="submit" variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+          Sign out of all sessions
+        </Button>
+      </form>
+    </div>
+  </div>
+</AppLayout>

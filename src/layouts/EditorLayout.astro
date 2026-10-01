@@ -1,0 +1,22 @@
+---
+import AppLayout from './AppLayout.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  noIndex?: boolean;
+}
+
+const { title, description, noIndex = true } = Astro.props;
+---
+
+<AppLayout
+  title={title}
+  description={description}
+  noIndex={noIndex}
+  defaultCollapsed={true}
+  hideContentHeader={true}
+  maxWidth="w-full max-w-none"
+>
+  <slot />
+</AppLayout>

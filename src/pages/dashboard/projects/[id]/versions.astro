@@ -1,0 +1,91 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { History, Clock, User as UserIcon } from 'lucide-react';
+
+const project = Astro.locals.project;
+if (!project) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const supabase = createServerClient(Astro.cookies);
+
+// Fetch pages for this project
+const { data: pages } = await supabase
+  .from('doc_pages')
+  .select('id, title, slug')
+  .eq('project_id', project.id);
+
+const pageIds = (pages || []).map((p: any) => p.id);
+
+let versions: any[] = [];
+if (pageIds.length > 0) {
+  const { data } = await supabase
+    .from('page_versions')
+    .select(`
+      id,
+      title,
+      created_at,
+      page_id,
+      saved_by:saved_by ( username, display_name )
+    `)
+    .in('page_id', pageIds)
+    .order('created_at', { ascending: false })
+    .limit(30);
+  versions = data || [];
+}
+---
+
+<AppLayout
+  title={`Versions — ${project.name}`}
+  iconName="versions"
+  headerTitle={`${project.name} Versions`}
+  headerDescription="History of page saves, revisions, and snapshots for this project."
+  maxWidth="max-w-[720px]"
+>
+  <div class="space-y-4">
+    {versions.length > 0 ? (
+      <div class="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/30 overflow-hidden">
+        {versions.map((v: any) => {
+          const page = pages?.find((p: any) => p.id === v.page_id);
+          return (
+            <div class="p-4 flex items-start justify-between gap-4 hover:bg-surface/50 transition-colors">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-serif font-semibold text-sm text-foreground">
+                    {v.title || page?.title || 'Untitled revision'}
+                  </span>
+                  {page && (
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-raised border border-border/40 text-muted-foreground">
+                      /{page.slug}
+                    </span>
+                  )}
+                </div>
+                <div class="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div class="flex items-center gap-1">
+                    <UserIcon className="h-3 w-3" />
+                    <span>{v.saved_by?.display_name || v.saved_by?.username || 'Owner'}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span>{new Date(v.created_at).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="rounded-xl border border-dashed border-border/60 p-12 text-center bg-surface/20">
+        <History className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+        <h3 class="font-serif font-semibold text-foreground text-sm mb-1">
+          No version history yet
+        </h3>
+        <p class="text-xs text-muted-foreground max-w-xs mx-auto">
+          As you make and save revisions in the editor, version snapshots will be listed here.
+        </p>
+      </div>
+    )}
+  </div>
+</AppLayout>

@@ -1,0 +1,125 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { CheckCircle2 } from 'lucide-react';
+
+const project = Astro.locals.project;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+if (!project || !viewer) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+let successMsg = '';
+let errorMsg = '';
+
+const supabase = createServerClient(Astro.cookies);
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const coverUrl = String(formData.get('coverUrl') ?? '').trim() || null;
+    const tagline = String(formData.get('tagline') ?? '').trim() || null;
+
+    const { error } = await supabase
+      .from('projects')
+      .update({ cover_url: coverUrl, tagline })
+      .eq('id', project.id);
+
+    if (error) throw error;
+    project.cover_url = coverUrl;
+    project.tagline = tagline;
+    successMsg = 'SEO & Social preview settings saved.';
+  } catch (err: any) {
+    console.error('[seo] Error:', err);
+    errorMsg = err.message || 'Failed to save SEO settings';
+  }
+}
+---
+
+<AppLayout
+  title={`SEO & Social — ${project.name}`}
+  iconName="seo"
+  headerTitle="SEO & Social Preview"
+  headerDescription="Customize how your project appears when shared on search engines and social platforms."
+  maxWidth="max-w-[720px]"
+>
+  <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+    {successMsg && (
+      <div class="mb-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-400 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        <span>{successMsg}</span>
+      </div>
+    )}
+
+    {errorMsg && (
+      <div class="mb-6 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+        {errorMsg}
+      </div>
+    )}
+
+    <form method="POST" class="space-y-6">
+      <div class="space-y-2">
+        <Label htmlFor="metaTitle" className="text-sm font-medium text-foreground">
+          Meta Title
+        </Label>
+        <Input
+          id="metaTitle"
+          value={`${project.name} — Showcrate`}
+          disabled
+          readOnly
+          className="bg-surface-raised/40 border-border/40 text-muted-foreground text-xs"
+        />
+        <p class="text-[11px] text-muted-foreground">
+          Auto-generated from your project name.
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <Label htmlFor="tagline" className="text-sm font-medium text-foreground">
+          Meta Description
+        </Label>
+        <Textarea
+          id="tagline"
+          name="tagline"
+          defaultValue={project.tagline ?? ''}
+          rows={3}
+          maxLength={200}
+          placeholder="A short summary of your project for search results..."
+          className="bg-surface border-border/60 text-foreground text-xs focus-visible:ring-[#C9A96A] resize-none"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <Label htmlFor="coverUrl" className="text-sm font-medium text-foreground">
+          Social Share Card Image (OpenGraph URL)
+        </Label>
+        <Input
+          id="coverUrl"
+          name="coverUrl"
+          type="url"
+          defaultValue={project.cover_url ?? ''}
+          placeholder="https://example.com/og-image.png"
+          className="bg-surface border-border/60 text-foreground text-xs focus-visible:ring-[#C9A96A]"
+        />
+        <p class="text-[11px] text-muted-foreground">
+          Recommended resolution: 1200x630px.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-border/40 flex items-center justify-end">
+        <Button
+          type="submit"
+          size="sm"
+          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+        >
+          Save SEO settings
+        </Button>
+      </div>
+    </form>
+  </div>
+</AppLayout>

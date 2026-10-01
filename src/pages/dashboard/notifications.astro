@@ -1,0 +1,98 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { NotificationService } from '@/lib/services/notificationService';
+import { Bell, CheckCheck, Clock } from 'lucide-react';
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+if (!viewer) {
+  return Astro.redirect('/auth/login?next=%2Fdashboard%2Fnotifications');
+}
+
+const supabase = createServerClient(Astro.cookies);
+const service = new NotificationService(supabase);
+const result = await service.getUserNotifications(viewer.id, 1).catch((err) => {
+  console.error('[dashboard/notifications] Error:', err);
+  return { notifications: [], total: 0, unreadCount: 0 };
+});
+
+const notifications = result.notifications || [];
+---
+
+<AppLayout
+  title="Notifications"
+  iconName="notifications"
+  headerTitle="Notifications"
+  headerDescription="Keep track of collaborator invites, mentions, and updates."
+  maxWidth="max-w-[720px]"
+>
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <span class="text-xs text-muted-foreground">
+        {result.unreadCount > 0 ? `${result.unreadCount} unread notification(s)` : 'All caught up'}
+      </span>
+
+      {result.unreadCount > 0 && (
+        <button
+          id="mark-all-read"
+          class="text-xs text-[#C9A96A] hover:underline flex items-center gap-1 cursor-pointer"
+        >
+          <CheckCheck className="h-3.5 w-3.5" />
+          Mark all as read
+        </button>
+      )}
+    </div>
+
+    {notifications.length > 0 ? (
+      <div class="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/30 overflow-hidden">
+        {notifications.map((n: any) => (
+          <div class={`p-4 flex items-start gap-3 transition-colors ${n.read ? 'opacity-80' : 'bg-[#C9A96A]/5'}`}>
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-raised border border-border/50 text-[#C9A96A] shrink-0 mt-0.5">
+              <Bell className="h-3.5 w-3.5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-foreground">
+                {n.title || n.message || 'Notification'}
+              </p>
+              {n.body && (
+                <p class="text-xs text-muted-foreground mt-0.5">
+                  {n.body}
+                </p>
+              )}
+              <div class="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground/70">
+                <Clock className="h-3 w-3" />
+                <span>{new Date(n.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="rounded-xl border border-dashed border-border/60 p-12 text-center bg-surface/20">
+        <Bell className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+        <h3 class="font-serif font-semibold text-foreground text-sm mb-1">
+          No notifications yet
+        </h3>
+        <p class="text-xs text-muted-foreground max-w-xs mx-auto">
+          When collaborators invite you or project updates occur, they'll show up here.
+        </p>
+      </div>
+    )}
+  </div>
+</AppLayout>
+
+<script>
+  const btn = document.getElementById('mark-all-read');
+  btn?.addEventListener('click', async () => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      });
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
+  });
+</script>

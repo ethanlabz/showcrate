@@ -1,0 +1,236 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Users, UserPlus, Trash2, CheckCircle2 } from 'lucide-react';
+
+const project = Astro.locals.project;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+if (!project || !viewer) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+let successMsg = '';
+let errorMsg = '';
+
+const supabase = createServerClient(Astro.cookies);
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const action = String(formData.get('action') ?? '');
+
+    if (action === 'invite') {
+      const username = String(formData.get('username') ?? '').trim();
+      const displayRole = String(formData.get('displayRole') ?? '').trim() || 'Contributor';
+
+      // Look up user by username
+      const { data: targetUser } = await supabase
+        .from('users')
+        .select('id, username')
+        .eq('username', username)
+        .single();
+
+      if (!targetUser) {
+        errorMsg = `User @${username} not found.`;
+      } else if (targetUser.id === viewer.id) {
+        errorMsg = 'You cannot invite yourself as a collaborator.';
+      } else {
+        const { error: insertErr } = await supabase
+          .from('project_collaborators')
+          .insert({
+            project_id: project.id,
+            user_id: targetUser.id,
+            display_role: displayRole,
+            visible: true,
+          });
+
+        if (insertErr) {
+          if (insertErr.code === '23505') {
+            errorMsg = `@${username} is already invited or a collaborator.`;
+          } else {
+            errorMsg = insertErr.message;
+          }
+        } else {
+          successMsg = `Invitation sent to @${username}.`;
+        }
+      }
+    } else if (action === 'remove') {
+      const collaboratorId = String(formData.get('collaboratorId') ?? '');
+      await supabase
+        .from('project_collaborators')
+        .delete()
+        .eq('id', collaboratorId)
+        .eq('project_id', project.id);
+      successMsg = 'Collaborator removed.';
+    }
+  } catch (err: any) {
+    console.error('[collaborators] Error:', err);
+    errorMsg = err.message || 'Operation failed';
+  }
+}
+
+// Fetch current collaborators
+const { data: collaborators } = await supabase
+  .from('project_collaborators')
+  .select(`
+    id,
+    display_role,
+    accepted_at,
+    invited_at,
+    user:user_id (
+      id,
+      username,
+      display_name,
+      avatar_url
+    )
+  `)
+  .eq('project_id', project.id)
+  .order('invited_at', { ascending: true });
+---
+
+<AppLayout
+  title={`Collaborators — ${project.name}`}
+  iconName="collaborators"
+  headerTitle="Collaborators"
+  headerDescription="Invite contributors and assign attribution roles for your project."
+  maxWidth="max-w-[720px]"
+>
+  <div class="space-y-6">
+    {successMsg && (
+      <div class="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-400 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        <span>{successMsg}</span>
+      </div>
+    )}
+
+    {errorMsg && (
+      <div class="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+        {errorMsg}
+      </div>
+    )}
+
+    <!-- Invite form -->
+    <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+      <h3 class="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+        <UserPlus className="h-4 w-4 text-[#C9A96A]" />
+        <span>Invite Contributor</span>
+      </h3>
+
+      <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="invite" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <Label htmlFor="username" className="text-xs font-medium text-foreground">
+              Username <span class="text-[#C9A96A]">*</span>
+            </Label>
+            <Input
+              id="username"
+              name="username"
+              placeholder="e.g. alex"
+              required
+              className="bg-surface border-border/60 text-foreground text-xs h-9"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <Label htmlFor="displayRole" className="text-xs font-medium text-foreground">
+              Display Role
+            </Label>
+            <Input
+              id="displayRole"
+              name="displayRole"
+              placeholder="e.g. Co-Author, Editor"
+              defaultValue="Contributor"
+              className="bg-surface border-border/60 text-foreground text-xs h-9"
+            />
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <Button
+            type="submit"
+            size="sm"
+            className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium text-xs"
+          >
+            Send invite
+          </Button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Collaborator list -->
+    <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
+      <h3 class="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+        <Users className="h-4 w-4 text-[#C9A96A]" />
+        <span>Project Team</span>
+      </h3>
+
+      <div class="space-y-3">
+        <!-- Owner row -->
+        <div class="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-surface/50 text-xs">
+          <div class="flex items-center gap-2.5">
+            <div class="h-8 w-8 rounded-full bg-[#C9A96A]/20 border border-[#C9A96A]/40 text-[#C9A96A] flex items-center justify-center font-bold">
+              {(viewer.username?.[0] || 'O').toUpperCase()}
+            </div>
+            <div>
+              <span class="font-semibold text-foreground">@{viewer.username}</span>
+              <span class="text-muted-foreground block text-[11px]">Owner (You)</span>
+            </div>
+          </div>
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#C9A96A]/10 text-[#C9A96A] border border-[#C9A96A]/30">
+            Owner
+          </span>
+        </div>
+
+        {/* Invited / Accepted Collaborators */}
+        {collaborators && collaborators.length > 0 ? (
+          collaborators.map((c: any) => {
+            const u = c.user;
+            return (
+              <div class="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-surface/20 text-xs">
+                <div class="flex items-center gap-2.5">
+                  <div class="h-8 w-8 rounded-full bg-surface-raised border border-border/40 flex items-center justify-center text-muted-foreground font-bold">
+                    {(u?.username?.[0] || 'U').toUpperCase()}
+                  </div>
+                  <div>
+                    <span class="font-semibold text-foreground">@{u?.username}</span>
+                    <span class="text-muted-foreground block text-[11px]">
+                      {c.display_role} {c.accepted_at ? '' : '• (Pending)'}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <span class={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                    c.accepted_at
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                      : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                  }`}>
+                    {c.accepted_at ? 'Accepted' : 'Invited'}
+                  </span>
+
+                  <form method="POST">
+                    <input type="hidden" name="action" value="remove" />
+                    <input type="hidden" name="collaboratorId" value={c.id} />
+                    <button
+                      type="submit"
+                      class="text-muted-foreground hover:text-destructive p-1 rounded cursor-pointer transition-colors"
+                      title="Remove collaborator"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </form>
+                </div>
+              </div>
+            );
+          })
+        ) : null}
+      </div>
+    </div>
+  </div>
+</AppLayout>
