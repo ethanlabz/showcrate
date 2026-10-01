@@ -62,11 +62,23 @@ const { data: allPages } = await supabase
 
 // 7. Render markdown -> sanitized HTML
 const html = await renderMarkdown(page.content);
+const isOwner = Boolean(Astro.locals.isOwner);
 ---
 
 <Layout title={`${page.title} — ${project.name}`}>
   <div class="docs-shell">
     <aside class="docs-sidebar">
+      {isOwner && (
+        <div class="mb-4 pb-3 border-b border-border/40">
+          <a
+            href={`/dashboard/projects/${project.id}/editor`}
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#C9A96A]/40 text-[#C9A96A] hover:bg-[#C9A96A]/10 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Edit in dashboard</span>
+          </a>
+        </div>
+      )}
       <ul>
         {allPages?.map((p: { is_index: any; slug: any; title: unknown; }) => (
           <li>
@@ -79,7 +91,18 @@ const html = await renderMarkdown(page.content);
     </aside>
 
     <article class="docs-content">
-      <h1>{page.title}</h1>
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <h1>{page.title}</h1>
+        {isOwner && (
+          <a
+            href={`/dashboard/projects/${project.id}/editor`}
+            class="text-xs text-[#C9A96A] hover:underline flex items-center gap-1 font-medium"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Edit page</span>
+          </a>
+        )}
+      </div>
       <!-- set:html because we already sanitized this ourselves -->
       <div set:html={html} />
     </article>

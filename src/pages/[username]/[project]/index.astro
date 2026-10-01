@@ -1,0 +1,159 @@
+---
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { Button } from '@/components/ui/button';
+import { BookOpen, Edit3, ArrowRight, User, Calendar } from 'lucide-react';
+
+const { username, project: projectSlug } = Astro.params;
+const isOwner = Boolean(Astro.locals.isOwner);
+const resolvedProject = Astro.locals.project;
+
+const supabase = createServerClient(Astro.cookies);
+
+// Look up owner & project if not already in locals
+let project = resolvedProject;
+let owner: any = null;
+
+if (!project) {
+  const { data: ownerData } = await supabase
+    .from('users')
+    .select('id, username, display_name, avatar_url')
+    .eq('username', username)
+    .single();
+
+  if (!ownerData) {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+  owner = ownerData;
+
+  const { data: projectData } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('owner_id', owner.id)
+    .eq('slug', projectSlug)
+    .is('deleted_at', null)
+    .single();
+
+  if (!projectData) {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+
+  // Private project access restriction
+  if (projectData.visibility === 'private' && !isOwner) {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+
+  project = projectData;
+} else {
+  const { data: ownerData } = await supabase
+    .from('users')
+    .select('id, username, display_name, avatar_url')
+    .eq('id', project.owner_id)
+    .single();
+  owner = ownerData;
+}
+
+// Fetch pages
+const { data: pages } = await supabase
+  .from('doc_pages')
+  .select('id, title, slug, order_index, is_index')
+  .eq('project_id', project.id)
+  .order('order_index', { ascending: true });
+
+const indexPage = pages?.find((p: any) => p.is_index) || pages?.[0];
+const readDocsUrl = indexPage
+  ? `/${username}/${project.slug}/docs/${indexPage.is_index ? '' : indexPage.slug}`
+  : `/${username}/${project.slug}/docs`;
+---
+
+<HomeLayout title={`${project.name} by @${username}`}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+    <!-- Hero / Header -->
+    <div class="border-b border-border/40 pb-8 mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-mono text-muted-foreground">
+              by <a href={`/${username}`} class="text-foreground hover:underline">@{username}</a>
+            </span>
+            <span class={`text-[10px] uppercase font-mono px-2 py-0.5 rounded border ${
+              project.published
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+            }`}>
+              {project.published ? 'Published' : 'Draft'}
+            </span>
+          </div>
+
+          <h1 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            {project.name}
+          </h1>
+
+          {project.tagline && (
+            <p class="text-base text-muted-foreground mt-3 max-w-2xl leading-relaxed">
+              {project.tagline}
+            </p>
+          )}
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex items-center gap-3 shrink-0 pt-2 sm:pt-0">
+          {/* Owner Edit Button — rendered ONLY when locals.isOwner is true */}
+          {isOwner && (
+            <a href={`/dashboard/projects/${project.id}/editor`}>
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs font-medium border-[#C9A96A]/40 text-[#C9A96A] hover:bg-[#C9A96A]/10">
+                <Edit3 className="h-3.5 w-3.5" />
+                <span>Edit project</span>
+              </Button>
+            </a>
+          )}
+
+          <a href={readDocsUrl}>
+            <Button size="sm" className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 gap-1.5 text-xs font-semibold">
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>Read docs</span>
+            </Button>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Doc pages directory -->
+    <div class="space-y-4">
+      <h2 class="font-serif text-lg font-semibold text-foreground">
+        Documentation
+      </h2>
+
+      {pages && pages.length > 0 ? (
+        <div class="divide-y divide-border/40 rounded-xl border border-border/50 bg-surface/30 overflow-hidden">
+          {pages.map((p: any) => (
+            <a
+              href={`/${username}/${project.slug}/docs/${p.is_index ? '' : p.slug}`}
+              class="p-4 flex items-center justify-between hover:bg-surface/60 transition-colors group"
+            >
+              <div class="flex items-center gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised border border-border/40 text-[#C9A96A]">
+                  <BookOpen className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold text-foreground group-hover:text-[#C9A96A] transition-colors">
+                    {p.title}
+                  </h3>
+                  <span class="text-[11px] font-mono text-muted-foreground">
+                    /{p.slug}
+                  </span>
+                </div>
+              </div>
+
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-[#C9A96A] group-hover:translate-x-0.5 transition-all" />
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="rounded-xl border border-dashed border-border/60 p-8 text-center bg-surface/20 text-xs text-muted-foreground">
+          No documentation pages published yet.
+        </div>
+      )}
+    </div>
+  </div>
+</HomeLayout>
