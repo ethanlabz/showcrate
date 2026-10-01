@@ -60,7 +60,6 @@
  
 ### Public 🟢
 ```
- 
 /                          Landing page (storytelling, Lenis scroll)
 /showcase                  Public discovery gallery
 /templates                 Template browser
@@ -69,34 +68,34 @@
 /terms                     Terms of service
 /privacy                   Privacy policy
 /auth/login                Login
-/auth/logout               Logout
+/auth/logout               Logout (POST)
 /auth/signup               Registration
 /auth/forgot-password      Password reset request
 /auth/reset-password       Password reset form
 /{username}                Public user profile
-/{username}/{project}      Project overview page
-/{username}/{project}/docs/*    Documentation pages
+/{username}/{project}      Public project overview page
+/{username}/{project}/docs/[...path] Documentation pages
 ```
- 
+
 ### Authenticated 🔵
 ```
-/new                                          Project creation wizard
-/notifications                                Notification center
-/settings/profile                             Avatar, display name, bio, links
-/settings/account                             Email, password, OAuth, 2FA
-/settings/notifications                       Email preferences
-/settings/appearance                          Theme
-/settings/danger                              Export data, delete account
-/{username}/{project}/editor                  Block editor with page tree
-/{username}/{project}/settings/general        Rename, description, delete
-/{username}/{project}/settings/visibility     Public/Private/Unlisted
-/{username}/{project}/settings/collaborators  Invite, manage, remove
-/{username}/{project}/settings/seo            Meta title, OG image
-/{username}/{project}/settings/danger         Archive, delete
-/{username}/{project}/versions                Page version history — preview, restore
- 
+/dashboard                                    Dashboard homepage (Your projects + Credited on)
+/dashboard/new                                Project creation wizard
+/dashboard/notifications                      Notification center
+/dashboard/settings/profile                   Profile settings (Name, read-only Username & Email)
+/dashboard/settings/account                   Password, authentication & session info
+/dashboard/settings/notifications             Notification preferences
+/dashboard/settings/appearance                Theme & appearance
+/dashboard/settings/danger                    Account deletion & danger zone
+/dashboard/projects/[id]/editor               Block editor for project (ID-scoped, collapsed sidebar)
+/dashboard/projects/[id]/versions             Page version history & snapshots
+/dashboard/projects/[id]/settings/general     Project details & metadata
+/dashboard/projects/[id]/settings/visibility  Publication & audience access
+/dashboard/projects/[id]/settings/collaborators Invite & manage collaborators
+/dashboard/projects/[id]/settings/seo         Meta title & social preview card
+/dashboard/projects/[id]/settings/danger      Delete project
 ```
- 
+
 ### Admin 🟣
 ```
 /admin                     Overview stats
@@ -108,6 +107,26 @@
 /admin/settings            Platform-wide config
 /admin/logs                Audit trail
 ```
+
+---
+
+## Routing Model
+
+Showcrate enforces a deterministic, dual-state routing model:
+
+1. **Unauthenticated user flow:**
+   - Lands on `/` (landing page).
+   - Clicks the primary CTA "Open dashboard" (plain anchor, `href="/dashboard"`).
+   - Middleware responds `302` to `/auth/login?next=%2Fdashboard` (sanitized and capped at 200 characters).
+   - After authentication or OAuth callback, the user is redirected to the validated `next` destination (defaulting to `/dashboard`).
+2. **Authenticated user flow:**
+   - Lands on `/`. Never redirected automatically.
+   - Clicks the exact same CTA, which goes to `/dashboard` and renders directly.
+3. **Public vs Dashboard boundary:**
+   - `index.astro` contains only the static landing page.
+   - `/{username}/{project}/**` are public, shareable, read-only pages.
+   - All owner management and editing surfaces live strictly under `/dashboard/**`. Dashboard project routes use the immutable project `id` (UUID), NOT the slug. Slug renames do not break dashboard URLs. Legacy route files are removed without redirects.
+
  
 ---
  
@@ -186,7 +205,7 @@ Version history follows Notion's model: automatic snapshots, a read-only preview
 **Usernames:**
 - 3–39 chars, lowercase letters/numbers/hyphens only
 - Cannot start or end with hyphen, no consecutive hyphens
-- Reserved words blocked: admin, showcase, templates, new, settings, help, notifications, auth, login, logout, signup, register, forgot-password, reset-password, about, blog, docs, terms, privacy, api, status, explore, contact, editor, code, export, versions, users, projects, reports, logs, billing, account, profile, appearance, danger, domain, seo, analytics, collaborators, general, visibility, following, dorukaysor, avision, batteringram, showcrate
+- Reserved words blocked: admin, showcase, templates, new, settings, help, notifications, auth, login, logout, signup, register, forgot-password, reset-password, about, blog, docs, terms, privacy, api, status, explore, contact, editor, code, export, versions, users, projects, reports, logs, billing, account, profile, appearance, danger, domain, seo, analytics, collaborators, general, visibility, following, dorukaysor, avision, batteringram, showcrate, dashboard, dmca, copyright, legal, abuse, security, cookies, licenses, subprocessors, grievance
 **Project slugs:**
 - Auto-generated from project name (kebab-case)
 - Unique per user (not globally)
@@ -210,9 +229,9 @@ Version history follows Notion's model: automatic snapshots, a read-only preview
  
 | Person | Area |
 |---|---|
-| Lead / Backend | Architecture, DB schema, RLS and Storage policies, middleware routing, API routes, block-JSON validation, search trigger, version snapshots and pruning, auth logic, admin, deployment, unblocking |
+| Lead / Backend | Architecture, DB schema, RLS and Storage policies, middleware, guards and headers, API routes, block-JSON validation, search trigger, version snapshots and pruning, auth logic, admin, deployment, unblocking |
 | Frontend 1 | Public pages, auth UI, showcase, block renderer, landing |
-| Frontend 2 | Dashboard, block editor, page tree, settings, collaboration |
+| Frontend 2 | Dashboard shell and sidebar, block editor, page tree, settings, collaboration |
 | Helper (Assets) | Visual assets, illustrations, brand material |
 | Helper (Reports & Presentations) | Reporting, presentation decks, stakeholder materials |
  
@@ -222,7 +241,7 @@ Version history follows Notion's model: automatic snapshots, a read-only preview
  
 1. **Two Supabase clients:** `supabase.ts` (anon key, client-side) and `supabase-server.ts` (SSR cookie-based, server-side only). Never use the service role key on the client.
 2. **RLS is the security layer.** Test it manually, for tables and for Storage. If a logged-out user can see private data, or a Collaborator can write to a project, the policy is wrong — enforcement happens at the database, not the UI.
-3. **Central route resolution happens once, in middleware.** Astro middleware attaches `locals.project`, `locals.viewer`, and `locals.isOwner` once per request. Pages and API routes read from `locals` — they don't re-derive auth state independently. React islands have no access to server context and must receive what they need as props.
+3. **Central route resolution happens once, in middleware.** Astro middleware attaches `locals.project`, `locals.viewer`, and `locals.isOwner` once per request. Pages and API routes read from `locals` — they don't re-derive auth state independently. Marketing routes (`/`, `/about`, `/help`, `/terms`, `/privacy`) skip session resolution entirely to remain static-cacheable and never call `getUser()`. `/dashboard/projects/[id]/**` routes use an owner-scoped resolver that validates `id` format (UUID), queries `id = $1 AND owner_id = viewer.id AND deleted_at IS NULL`, and returns 404 (never 403) if nonexistent or unauthorized. Collaborators have no project routes and receive 404 here. React islands have no access to server context and must receive what they need as props.
 4. **Reserved usernames** must be validated at signup using the list above.
 5. **User content is data, never HTML.** Block JSON is validated with Zod against the shared schema on every save: unknown block types, unknown props, disallowed URLs, and oversized payloads are rejected. At render, all text is escaped, styling props map to a fixed class allowlist, links are limited to `http` / `https` / `mailto`, and images must point at Showcrate storage. No user-supplied string reaches `set:html` or `dangerouslySetInnerHTML`. No exceptions.
 6. **Doc pages render at request time** from stored block JSON through the first-party block renderer. There is no build step for documentation content — every save is live.
@@ -268,5 +287,6 @@ Version history follows Notion's model: automatic snapshots, a read-only preview
 - **Request-time rendering cost and caching.** Rendering block JSON and running Shiki on a serverless function adds latency per request. A cache policy (edge cache headers with invalidation on save) is needed that keeps "every save is live" true.
 - **Asset access for Private and Unlisted projects.** A public storage bucket serves images to anyone with the URL. Decide between unguessable paths in a public bucket and a private bucket with signed URLs.
 - **Page size cap.** A maximum serialized size for `doc_pages.content` is needed. Proposed: 1 MB, enforced by the save validator.
+- **Username changes are disabled in v1; requires a username redirect table before enabling.** Allowing username changes would break shared public URLs (`/{username}/{project}`) since no username redirect mechanism exists.
 - **`project_views` granular fields** (`referrer`, `country`) are collected with no v1 UI to surface them, since advanced analytics is out of scope for v1. Confirm whether to keep writing this data for a v2 analytics feature or drop it from v1 inserts.
  
