@@ -1,8 +1,10 @@
+import * as React from 'react'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+
 import {
   SidebarGroup,
   SidebarGroupLabel,

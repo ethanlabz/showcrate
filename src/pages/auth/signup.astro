@@ -1,7 +1,7 @@
 ---
 import AuthLayout from '@/layouts/AuthLayout.astro';
-import SignupForm from '@/components/pages/auth/SignupForm';
-import SocialUsernameForm from '@/components/pages/auth/SocialUsernameForm';
+import SignupForm from '@/components/pages/auth/signup-form';
+import SocialUsernameForm from '@/components/pages/auth/social-username-form';
 import { createServerClient } from '@/lib/supabase/server';
 
 const social = Astro.url.searchParams.get('social') === 'true';

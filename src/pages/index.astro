@@ -4,15 +4,13 @@ import 'lenis/dist/lenis.css';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
-import { InteractiveEditor } from '@/components/pages/home/InteractiveEditor.tsx';
+import { InteractiveEditor } from '@/components/pages/home/interactive-editor';
 import { Separator } from '@/components/ui/separator';
 
 import AppLayout from '@/layouts/AppLayout.astro';
 import Dashboard from '@/components/pages/app/Dashboard.astro';
-import Dashboard1 from '@/components/pages/app/Dashboard1.astro';
 
 // background
-import LightRays from '@/components/bg/LightRays';
 import SideRays from '@/components/bg/SideRays';
 
 const viewer = Astro.locals.user ?? Astro.locals.viewer;

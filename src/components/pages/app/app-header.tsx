@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { BookMarked, Inbox, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { UserMenu } from './UserMenu';
+import { UserMenu } from './user-menu';
 import {
   Tooltip,
   TooltipContent,

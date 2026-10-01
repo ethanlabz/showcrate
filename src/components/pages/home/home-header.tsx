@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Home, LayoutGrid, FileCode2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import MobileNav from '@/components/pages/home/MobileNav';
+import MobileNav from '@/components/pages/home/mobile-nav';
 
 const navLinks = [
   { href: '/showcase', label: 'Showcase' },

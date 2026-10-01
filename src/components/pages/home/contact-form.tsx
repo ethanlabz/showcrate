@@ -1,5 +1,5 @@
 import React from "react";
-import { GlassCard } from "./GlassCard";
+import { GlassCard } from "./glass-card";
 import { Mail, MessageSquare, Phone } from "lucide-react";
 
 export function ContactForm() {
