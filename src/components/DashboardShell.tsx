@@ -220,7 +220,7 @@ export function DashboardShell({
 
       <SidebarInset className="min-h-screen bg-background text-foreground flex flex-col flex-1">
         {/* 2. Mobile Header: Hidden on Desktop (md+) */}
-        <header className="md:hidden sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur">
+        <header className="md sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur">
           <div className="flex w-10 items-center justify-start">
             <SidebarTrigger className="text-foreground hover:bg-surface-raised h-9 w-9" />
           </div>
@@ -247,25 +247,20 @@ export function DashboardShell({
         {/* 3. Content Pane */}
         <main className="flex-1 p-6 sm:p-8 lg:p-10 w-full overflow-y-auto">
           {!hideContentHeader && (
-            <div className="mb-6">
-              <div className="flex items-center gap-3">
+            <div className="mb-8">
+              <div className="flex items-center gap-2.5">
                 {HeaderIcon && (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent border border-accent/20 shrink-0">
-                    <HeaderIcon className="h-5 w-5 text-accent" />
-                  </div>
+                  <HeaderIcon className="h-5 w-5 text-foreground/80 shrink-0" />
                 )}
-                <div>
-                  <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                    {resolvedHeaderTitle}
-                  </h1>
-                  {headerDescription && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {headerDescription}
-                    </p>
-                  )}
-                </div>
+                <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
+                  {resolvedHeaderTitle}
+                </h1>
               </div>
-              <div className="mt-6 border-b border-border/40" />
+              {headerDescription && (
+                <p className="text-xs text-muted-foreground mt-2 ml-[30px]">
+                  {headerDescription}
+                </p>
+              )}
             </div>
           )}
 

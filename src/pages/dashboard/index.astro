@@ -1,7 +1,7 @@
 ---
 import AppLayout from '@/layouts/AppLayout.astro';
 import { createServerClient } from '@/lib/supabase/server';
-import { Plus, FolderKanban, ExternalLink, Settings, FileCode2, Users } from 'lucide-react';
+import { Plus, FolderKanban, ExternalLink, Users, LayoutGrid, Rows3, List, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const viewer = Astro.locals.viewer ?? Astro.locals.user;
@@ -51,171 +51,174 @@ if (collabError) {
 // Filter out deleted projects if any
 const creditedProjects = (collaborations || [])
   .filter((c: any) => c.project && !c.project.deleted_at);
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    + ' at '
+    + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
 ---
 
 <AppLayout
   title="Projects"
-  iconName="projects"
-  headerTitle="Your Projects"
-  headerDescription="Manage documentation projects you own or collaborate on."
-  maxWidth="max-w-5xl"
+  hideContentHeader={true}
+  maxWidth="max-w-full"
 >
-  <div class="space-y-10">
-    <!-- Section: Your projects -->
-    <div>
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
-          <span>Owned projects</span>
-          <span class="text-xs font-mono font-normal text-muted-foreground px-2 py-0.5 rounded-full bg-surface-raised border border-border/40">
-            {ownedProjects?.length ?? 0}
-          </span>
-        </h2>
-        <a href="/dashboard/new">
-          <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium">
-            <Plus className="h-4 w-4 mr-1.5" />
-            New project
-          </Button>
-        </a>
-      </div>
-
-      {ownedProjects && ownedProjects.length > 0 ? (
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {ownedProjects.map((p: any) => (
-            <div class="rounded-xl border border-border/50 bg-surface/50 p-5 hover:border-accent/40 transition-colors flex flex-col justify-between">
-              <div>
-                <div class="flex items-start justify-between gap-2 mb-2">
-                  <h3 class="font-heading font-bold text-base text-foreground truncate">
-                    {p.name}
-                  </h3>
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    <span class={`text-[10px] uppercase font-mono px-2 py-0.5 rounded border ${
-                      p.published
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                        : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                    }`}>
-                      {p.published ? 'Published' : 'Draft'}
-                    </span>
-                    <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-border/60 bg-surface text-muted-foreground">
-                      {p.visibility}
-                    </span>
-                  </div>
-                </div>
-
-                {p.tagline && (
-                  <p class="text-xs text-muted-foreground line-clamp-2 mb-4">
-                    {p.tagline}
-                  </p>
-                )}
-              </div>
-
-              <div class="pt-4 border-t border-border/40 flex items-center justify-between mt-auto text-xs">
-                <div class="flex items-center gap-2">
-                  <a
-                    href={`/editor/${p.id}`}
-                    class="flex items-center gap-1 text-accent hover:underline font-medium"
-                  >
-                    <FileCode2 className="h-3.5 w-3.5" />
-                    Editor
-                  </a>
-                  <span class="text-muted-foreground/40">•</span>
-                  <a
-                    href={`/dashboard/projects/${p.id}/settings/general`}
-                    class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                    Settings
-                  </a>
-                </div>
-
-                {p.published && viewer.username && (
-                  <a
-                    href={`/${viewer.username}/${p.slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    class="flex items-center gap-1 text-muted-foreground hover:text-accent"
-                  >
-                    <span>View</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div class="rounded-xl border border-dashed border-border/60 p-8 text-center bg-surface/20">
-          <FolderKanban className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-          <h3 class="font-heading font-semibold text-foreground text-base mb-1">
-            No projects yet
-          </h3>
-          <p class="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
-            Create your first documentation project to start drafting interactive stages for your code.
-          </p>
-          <a href="/dashboard/new">
-            <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium">
-              <Plus className="h-4 w-4 mr-1.5" />
-              Create project
-            </Button>
-          </a>
-        </div>
-      )}
+  <!-- Page header: icon + title on left, action buttons on right -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-2.5">
+      <FolderKanban className="h-5 w-5 text-foreground/80" />
+      <h1 class="font-heading text-xl font-bold tracking-tight text-foreground">
+        Projects
+      </h1>
     </div>
-
-    <!-- Section: Credited on -->
-    <div>
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span>Credited on</span>
-          <span class="text-xs font-mono font-normal text-muted-foreground px-2 py-0.5 rounded-full bg-surface-raised border border-border/40">
-            {creditedProjects.length}
-          </span>
-        </h2>
-      </div>
-
-      {creditedProjects.length > 0 ? (
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {creditedProjects.map((c: any) => {
-            const project = c.project;
-            const ownerUsername = project.owner?.username;
-            const publicUrl = `/${ownerUsername}/${project.slug}`;
-            return (
-              <div class="rounded-xl border border-border/40 bg-surface/30 p-4 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center justify-between gap-2 mb-1.5">
-                    <h3 class="font-heading font-bold text-sm text-foreground truncate">
-                      {project.name}
-                    </h3>
-                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-raised text-accent border border-border/40 shrink-0">
-                      {c.display_role || 'Contributor'}
-                    </span>
-                  </div>
-                  <p class="text-xs text-muted-foreground mb-3">
-                    by @{ownerUsername}
-                  </p>
-                </div>
-
-                <div class="pt-3 border-t border-border/40 flex items-center justify-between text-xs">
-                  <span class="text-muted-foreground/60 text-[11px]">
-                    Read-only access
-                  </span>
-                  <a
-                    href={publicUrl}
-                    class="flex items-center gap-1 text-accent hover:underline font-medium"
-                  >
-                    <span>View public page</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div class="rounded-xl border border-border/30 p-6 text-center bg-surface/10 text-xs text-muted-foreground">
-          You haven't been credited on any other projects yet.
-        </div>
-      )}
+    <div class="flex items-center gap-2">
+      <a href="/dashboard/new">
+        <Button size="sm" variant="outline" className="text-xs font-medium h-8 gap-1.5 cursor-pointer">
+          <Plus className="h-3.5 w-3.5" />
+          Create
+        </Button>
+      </a>
     </div>
   </div>
+
+  <!-- Toolbar: Sort by, Filter by, View toggle -->
+  <div class="flex flex-wrap items-center justify-between mb-6 gap-3">
+    <div class="flex items-center gap-4 text-xs">
+      <div class="flex items-center gap-2 text-muted-foreground">
+        <span>Sort by</span>
+        <span class="bg-accent/10 text-accent rounded-md px-3 py-1.5 text-xs font-medium cursor-default">
+          Last Updated
+        </span>
+      </div>
+      <div class="flex items-center gap-2 text-muted-foreground">
+        <span>Filter by</span>
+        <span class="bg-surface border border-border/60 rounded-md px-3 py-1.5 text-xs text-muted-foreground cursor-default">
+          All
+        </span>
+      </div>
+    </div>
+
+    <div class="hidden sm:flex items-center border border-border/60 rounded-lg overflow-hidden text-xs">
+      <button class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-raised text-foreground cursor-default">
+        <LayoutGrid className="h-3.5 w-3.5" />
+        <span>Grid</span>
+      </button>
+      <button class="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground border-l border-border/60 transition-colors cursor-default">
+        <Rows3 className="h-3.5 w-3.5" />
+        <span>Compact</span>
+      </button>
+      <button class="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground border-l border-border/60 transition-colors cursor-default">
+        <List className="h-3.5 w-3.5" />
+        <span>List</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Project cards grid -->
+  {ownedProjects && ownedProjects.length > 0 ? (
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {ownedProjects.map((p: any) => (
+        <a href={`/dashboard/projects/${p.id}/settings/general`} class="group block">
+          <div class="relative rounded-lg overflow-hidden border border-border/30 hover:border-border/60 transition-all duration-200 aspect-[3/4] bg-surface-raised/50">
+            <!-- Document preview placeholder -->
+            <div class="absolute inset-3 rounded bg-white/[0.03] border border-white/[0.04] p-4 flex flex-col gap-2.5 overflow-hidden">
+              <!-- Title line -->
+              <div class="h-3 w-3/5 rounded-sm bg-foreground/10"></div>
+              <div class="h-0.5"></div>
+              <!-- Body lines -->
+              <div class="h-2 w-full rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-11/12 rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-full rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-4/5 rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-full rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-2/3 rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-3"></div>
+              <!-- Sub-heading -->
+              <div class="h-2.5 w-2/5 rounded-sm bg-foreground/[0.08]"></div>
+              <div class="h-2 w-full rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-5/6 rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-full rounded-sm bg-foreground/[0.06]"></div>
+              <div class="h-2 w-3/4 rounded-sm bg-foreground/[0.06]"></div>
+            </div>
+
+            <!-- Bottom gradient overlay with name + date -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
+              <h3 class="font-heading font-bold text-sm text-white truncate">
+                {p.name}
+              </h3>
+              <p class="text-[11px] text-white/50 mt-0.5 truncate">
+                Last updated on {formatDate(p.updated_at)}
+              </p>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <div class="rounded-xl border border-dashed border-border/60 p-12 text-center bg-surface/20">
+      <FolderKanban className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+      <h3 class="font-heading font-semibold text-foreground text-base mb-1">
+        No projects yet
+      </h3>
+      <p class="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
+        Create your first documentation project to get started.
+      </p>
+      <a href="/dashboard/new">
+        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium">
+          <Plus className="h-4 w-4 mr-1.5" />
+          Create project
+        </Button>
+      </a>
+    </div>
+  )}
+
+  <!-- Section: Credited on -->
+  {creditedProjects.length > 0 && (
+    <div class="mt-12">
+      <div class="flex items-center gap-2.5 mb-6">
+        <Users className="h-5 w-5 text-foreground/80" />
+        <h2 class="font-heading text-xl font-bold tracking-tight text-foreground">
+          Credited on
+        </h2>
+        <span class="text-xs font-mono text-muted-foreground px-2 py-0.5 rounded-full bg-surface-raised border border-border/40">
+          {creditedProjects.length}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {creditedProjects.map((c: any) => {
+          const project = c.project;
+          const ownerUsername = project.owner?.username;
+          const publicUrl = `/${ownerUsername}/${project.slug}`;
+          return (
+            <a href={publicUrl} target="_blank" rel="noreferrer" class="group block">
+              <div class="relative rounded-lg overflow-hidden border border-border/30 hover:border-border/60 transition-all duration-200 aspect-[3/4] bg-surface/30">
+                <!-- Document preview placeholder (dimmer for credited) -->
+                <div class="absolute inset-3 rounded bg-white/[0.02] border border-white/[0.03] p-4 flex flex-col gap-2.5 overflow-hidden">
+                  <div class="h-3 w-3/5 rounded-sm bg-foreground/[0.07]"></div>
+                  <div class="h-0.5"></div>
+                  <div class="h-2 w-full rounded-sm bg-foreground/[0.04]"></div>
+                  <div class="h-2 w-5/6 rounded-sm bg-foreground/[0.04]"></div>
+                  <div class="h-2 w-full rounded-sm bg-foreground/[0.04]"></div>
+                  <div class="h-2 w-2/3 rounded-sm bg-foreground/[0.04]"></div>
+                </div>
+
+                <!-- Bottom gradient overlay -->
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
+                  <h3 class="font-heading font-bold text-sm text-white truncate">
+                    {project.name}
+                  </h3>
+                  <p class="text-[11px] text-white/50 mt-0.5 truncate">
+                    by @{ownerUsername} · {c.display_role || 'Contributor'}
+                  </p>
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  )}
 </AppLayout>

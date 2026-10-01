@@ -14,6 +14,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -88,18 +89,18 @@ export function DashboardSidebar({
 
   return (
     <Sidebar collapsible="icon" className={className}>
-      {/* 1. Header with Showcrate Wordmark */}
-      <SidebarHeader className="flex border-b border-border/90 p-3 items-center justify-center">
+      {/* 1. Header with Icon */}
+      <SidebarHeader className="flex p-3 items-center justify-center border-b border-border">
         <a
           href="/"
           className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-foreground transition-colors"
           aria-label="Showcrate Home"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg text-accent">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 256 256"
-              className="h-5 w-5 fill-none stroke-current"
+              className="h-8 w-8 fill-none stroke-current"
             >
               <rect width="256" height="256" fill="none" />
               <line
@@ -136,11 +137,11 @@ export function DashboardSidebar({
               <SidebarMenuButton
                 onClick={onOpenSearch}
                 tooltip="Search (⌘K)"
-                className="w-full justify-between text-muted-foreground hover:text-foreground hover:bg-surface-raised border border-border/40 rounded-lg px-2.5 h-9"
+                className="w-full justify-between text-muted-foreground hover:text-foreground hover:bg-surface-raised rounded-sm transition-colors duration-300 px-2.5 h-9"
               >
                 <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 shrink-0 text-accent" />
-                  <span className="text-xs group-data-[collapsible=icon]:hidden">Search...</span>
+                  <Search className="h-4 w-4 shrink-0" />
+                  <span className="text-xs group-data-[collapsible=icon]:hidden">Search</span>
                 </div>
                 <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-surface px-1.5 font-mono text-[10px] font-medium opacity-100 group-data-[collapsible=icon]:hidden md:inline-flex">
                   ⌘K
@@ -162,6 +163,7 @@ export function DashboardSidebar({
                   isActive={currentPath === '/dashboard'}
                   tooltip="Projects"
                   render={<a href="/dashboard" />}
+                  className='hover:bg-surface-raised'
                 >
                   <FolderKanban className="h-4 w-4" />
                   <span>Projects</span>
