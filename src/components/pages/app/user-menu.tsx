@@ -121,8 +121,8 @@ export function UserMenu({ user }: UserMenuProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<a href='/settings/profile'>Settings</a>} />
-          <DropdownMenuItem render={<a href='/settings/appearance'>Appearance</a>} />
+          <DropdownMenuItem render={<a href='/dashboard/settings/profile'>Settings</a>} />
+          <DropdownMenuItem render={<a href='/dashboard/settings/appearance'>Appearance</a>} />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

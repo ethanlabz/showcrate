@@ -3,7 +3,7 @@
 
 // This is the "catch-all" route for docs pages.
 // Route            : /[username]/[project]/docs/...
-// File System      : src/pages/[username]/[project]/docs/[...slug].astro
+// File System      : src/pages/[username]/[project]/docs/[...path].astro
 // Description      : Render a single doc page, with sidebar navigation
 
 // ==============================================================================================
@@ -13,8 +13,8 @@ import { renderMarkdown } from '../../../../lib/render-markdown';
 import Layout from '../../../../layouts/Docs.astro';
 
 // 1. Pull the pieces out of the URL
-const { username, project: projectSlug, slug } = Astro.params;
-const pageSlug = slug || 'index'; // no slug = the project's docs homepage
+const { username, project: projectSlug, path: docPath } = Astro.params;
+const pageSlug = docPath || 'index'; // no path = the project's docs homepage
 
 // 2. Create the request-scoped Supabase client
 const supabase = createServerClient(Astro.cookies);

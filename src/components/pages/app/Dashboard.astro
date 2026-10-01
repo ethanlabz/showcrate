@@ -84,7 +84,7 @@ if (activityError)
   >
     <div class='flex items-center justify-between mb-3'>
       <h2 class='text-sm font-semibold text-foreground'>Top projects</h2>
-      <a href='/new'>
+      <a href='/dashboard/new'>
         <Button size='md' className='px-4 h-8'>
           <BookMarked />
           New
@@ -111,7 +111,7 @@ if (activityError)
       <main class='flex flex-col md:w-3/4'>
         <span class='text-lg lg:text-3xl mb-8'>Home</span>
         <div class='flex flex-wrap items-center gap-3 mb-8'>
-          <a href='/new'>
+          <a href='/dashboard/new'>
             <Button>
               <Plus className='w-4 h-4 mr-1.5' />
               New project
@@ -123,7 +123,7 @@ if (activityError)
               Browse templates
             </Button>
           </a>
-          <a href='/notifications'>
+          <a href='/dashboard/notifications'>
             <Button variant='outline'>
               <Bell className='w-4 h-4 mr-1.5' />
               Notifications
@@ -156,8 +156,8 @@ if (activityError)
                 </a>
               </li>
               <li>
-                <a href='/settings/collaborators' class='hover:underline'>
-                  Invite a collaborator
+                <a href='/dashboard/new' class='hover:underline'>
+                  Create a project
                 </a>
               </li>
             </ul>

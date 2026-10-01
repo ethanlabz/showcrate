@@ -88,7 +88,7 @@ export function Activities({ activities, viewer }: Props) {
               <EmptyTitle>No recent activity yet</EmptyTitle>
             </EmptyHeader>
             <EmptyContent>
-              <a href='/new'>
+              <a href='/dashboard/new'>
                 <Button>Create your first project</Button>
               </a>
             </EmptyContent>
@@ -98,7 +98,7 @@ export function Activities({ activities, viewer }: Props) {
         //   <p className='text-sm text-muted-foreground mb-3'>
         //     No recent activity yet.
         //   </p>
-        //   <a href='/new' className='text-sm text-primary hover:underline'>
+        //   <a href='/dashboard/new' className='text-sm text-primary hover:underline'>
         //     Create your first project →
         //   </a>
         // </div>

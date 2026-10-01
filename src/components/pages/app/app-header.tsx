@@ -60,7 +60,7 @@ export function AppHeader({ user }: AppHeaderProps) {
 
   return (
     <>
-      <div className='sticky md:relative top-0 z-9999 w-full pointer-events-none transition-all duration-500'>
+      <div className='sticky md:relative top-0 z-50 w-full pointer-events-none transition-all duration-500'>
         <header className='pointer-events-auto mx-auto w-full max-w-screen border-b-2 border-border bg-background/95 backdrop-blur-xl supports-backdrop-filter:bg-background/60 transition-all duration-500'>
           <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between'>
             <div className='flex items-center gap-4'>
@@ -72,7 +72,7 @@ export function AppHeader({ user }: AppHeaderProps) {
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <a href='/new'>
+                    <a href='/dashboard/new'>
                       <Button variant='outline' size='icon'>
                         <Plus className='w-4 h-4' />
                         <span className='sr-only'>New Project</span>
@@ -106,7 +106,7 @@ export function AppHeader({ user }: AppHeaderProps) {
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <a href='/notifications'>
+                    <a href='/dashboard/notifications'>
                       <Button variant='outline' size='icon'>
                         <Inbox className='h-4 w-4' />
                         <span className='sr-only'>Notifications</span>

@@ -36,11 +36,11 @@ const navMain = [
   },
   {
     title: 'Projects',
-    url: '/projects',
+    url: '/dashboard',
     icon: <FolderKanbanIcon />,
     items: [
-      { title: 'All Projects', url: '/projects' },
-      { title: 'New Project', url: '/new' },
+      { title: 'All Projects', url: '/dashboard' },
+      { title: 'New Project', url: '/dashboard/new' },
     ],
   },
   {
@@ -60,7 +60,7 @@ const navMain = [
   },
   {
     title: 'Notifications',
-    url: '/notifications',
+    url: '/dashboard/notifications',
     icon: <BellIcon />,
   },
 ];

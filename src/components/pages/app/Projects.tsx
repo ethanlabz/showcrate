@@ -50,7 +50,7 @@ export function Projects({ projects, viewer }: Props) {
       </ul>
 
       <a
-        href='/settings/profile'
+        href='/dashboard'
         className='mt-3 inline-block text-xs text-muted-foreground hover:underline'
       >
         Show all →
