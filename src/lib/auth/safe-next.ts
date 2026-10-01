@@ -47,15 +47,20 @@ export function safeNext(rawUrl: string | null | undefined): string {
     return '/dashboard';
   }
 
-  // Must start with /dashboard as a distinct path segment
-  // E.g. /dashboard, /dashboard/, /dashboard/new, /dashboard?param=1, /dashboard#section
-  // Values like /dashboardx or /dashboards resolve to /dashboard
-  if (
-    decoded !== '/dashboard' &&
-    !decoded.startsWith('/dashboard/') &&
-    !decoded.startsWith('/dashboard?') &&
-    !decoded.startsWith('/dashboard#')
-  ) {
+  // Must start with /dashboard or /editor as a distinct path segment
+  const isDashboard =
+    decoded === '/dashboard' ||
+    decoded.startsWith('/dashboard/') ||
+    decoded.startsWith('/dashboard?') ||
+    decoded.startsWith('/dashboard#');
+
+  const isEditor =
+    decoded === '/editor' ||
+    decoded.startsWith('/editor/') ||
+    decoded.startsWith('/editor?') ||
+    decoded.startsWith('/editor#');
+
+  if (!isDashboard && !isEditor) {
     return '/dashboard';
   }
 

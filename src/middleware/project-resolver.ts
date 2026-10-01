@@ -32,6 +32,10 @@ export interface ResolvedProject {
  * Returns a redirect URL string if the slug has changed.
  */
 import { isReservedUsername } from '@/lib/validators/auth.schema';
+import {
+  resolveCanonical,
+  createSupabaseCanonicalAdapter,
+} from '@/lib/routing/resolve-canonical';
 
 export async function resolveProject(
   db: SupabaseClient<Database>,
@@ -40,53 +44,41 @@ export async function resolveProject(
   currentUser: SessionUser | null,
   fullPath: string,
 ): Promise<ResolvedProject | null | { redirect: string }> {
-  // If the owner segment is reserved, return 404 immediately without DB query
-  if (isReservedUsername(ownerUsername)) {
+  // Extract remaining path after /{username}/{project}
+  const prefix = `/${ownerUsername}/${projectSlug}`;
+  const remainingPath = fullPath.startsWith(prefix) ? fullPath.slice(prefix.length) : '';
+
+  const adapter = createSupabaseCanonicalAdapter(db);
+  const canonical = await resolveCanonical(ownerUsername, projectSlug, adapter, {
+    remainingPath,
+  });
+
+  if (canonical.status === 'notfound') {
     return null;
   }
 
-  // 1. Find the owner by username (case-insensitive)
-  const { data: owner } = await db
-    .from('users')
-    .select('*')
-    .ilike('username', ownerUsername)
-    .single();
-
-  if (!owner) return null;
-
-  // 2. Find the project
-  let { data: project } = await db
-    .from('projects')
-    .select('*')
-    .eq('owner_id', owner.id)
-    .eq('slug', projectSlug)
-    .is('deleted_at', null)
-    .single();
-
-  // 3. Check redirect table if not found (slug may have changed)
-  if (!project) {
-    const { data: redirect } = await db
-      .from('project_redirects')
-      .select('new_slug')
-      .eq('owner_id', owner.id)
-      .eq('old_slug', projectSlug)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (redirect) {
-      // Build the new URL: replace old slug with new slug
-      const newPath = fullPath.replace(
-        `/${ownerUsername}/${projectSlug}`,
-        `/${ownerUsername}/${redirect.new_slug}`,
-      );
-      return { redirect: newPath };
-    }
-
-    return null;
+  if (canonical.status === 'redirect') {
+    return { redirect: canonical.location };
   }
 
-  // 4. Access check for private/unlisted projects
+  // 1. Fetch full owner and project rows
+  const [ownerRes, projectRes] = await Promise.all([
+    db.from('users').select('*').eq('id', canonical.ownerId).single(),
+    db
+      .from('projects')
+      .select('*')
+      .eq('owner_id', canonical.ownerId)
+      .eq('slug', canonical.canonicalProjectSlug!)
+      .is('deleted_at', null)
+      .single(),
+  ]);
+
+  if (!ownerRes.data || !projectRes.data) return null;
+
+  const owner = ownerRes.data;
+  const project = projectRes.data;
+
+  // 2. Access check for private/unlisted projects
   const isOwner = currentUser?.id === owner.id;
 
   let isCollaborator = false;

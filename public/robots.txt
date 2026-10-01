@@ -1,4 +1,5 @@
 User-agent: *
 Disallow: /dashboard
+Disallow: /editor
 Disallow: /auth
 Disallow: /admin

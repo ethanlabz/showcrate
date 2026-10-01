@@ -5,22 +5,37 @@ import { isReservedUsername } from '@/lib/validators/auth.schema';
 import { Button } from '@/components/ui/button';
 import { FolderKanban, Settings, ExternalLink } from 'lucide-react';
 
+import {
+  resolveCanonical,
+  createSupabaseCanonicalAdapter,
+} from '@/lib/routing/resolve-canonical';
+
 const { username } = Astro.params;
 
-// 1. Reserved usernames return 404 immediately without DB query
 if (!username || isReservedUsername(username)) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
 const supabase = createServerClient(Astro.cookies);
+const adapter = createSupabaseCanonicalAdapter(supabase);
+const canonical = await resolveCanonical(username, undefined, adapter);
+
+if (canonical.status === 'notfound') {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+if (canonical.status === 'redirect') {
+  return Astro.redirect(canonical.location, 301);
+}
+
 const viewer = Astro.locals.viewer ?? Astro.locals.user;
-const isSelf = viewer?.username?.toLowerCase() === username.toLowerCase();
+const isSelf = viewer?.id === canonical.ownerId;
 
 // 2. Query user profile
 const { data: profileUser } = await supabase
   .from('users')
   .select('id, username, display_name, avatar_url, bio, created_at')
-  .ilike('username', username)
+  .eq('id', canonical.ownerId)
   .single();
 
 if (!profileUser) {

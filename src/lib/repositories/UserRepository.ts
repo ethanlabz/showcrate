@@ -38,13 +38,22 @@ export class UserRepository {
   }
 
   async isUsernameAvailable(username: string): Promise<boolean> {
-    const { count, error } = await this.db
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .ilike('username', username);
+    const lower = username.toLowerCase();
+    const [usersResult, redirectsResult] = await Promise.all([
+      this.db
+        .from('users')
+        .select('id', { count: 'exact', head: true })
+        .ilike('username', lower),
+      this.db
+        .from('username_redirects')
+        .select('old_username', { count: 'exact', head: true })
+        .eq('old_username', lower),
+    ]);
 
-    if (error) throw error;
-    return (count ?? 0) === 0;
+    if (usersResult.error) throw usersResult.error;
+    if (redirectsResult.error) throw redirectsResult.error;
+
+    return (usersResult.count ?? 0) === 0 && (redirectsResult.count ?? 0) === 0;
   }
 
   async updateProfile(id: string, data: UpdateProfileInput): Promise<UserRow> {

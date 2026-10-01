@@ -9,7 +9,7 @@ import {
 import { z } from 'zod';
 
 describe('safeNext redirect validation', () => {
-  it('resolves valid dashboard routes', () => {
+  it('resolves valid dashboard and editor routes', () => {
     assert.strictEqual(safeNext('/dashboard'), '/dashboard');
     assert.strictEqual(safeNext('/dashboard/'), '/dashboard/');
     assert.strictEqual(safeNext('/dashboard/new'), '/dashboard/new');
@@ -20,6 +20,17 @@ describe('safeNext redirect validation', () => {
     );
     assert.strictEqual(safeNext('/dashboard?tab=projects'), '/dashboard?tab=projects');
     assert.strictEqual(safeNext('%2Fdashboard%2Fnew'), '/dashboard/new');
+
+    // /editor routes per Prompt 2
+    assert.strictEqual(safeNext('/editor'), '/editor');
+    assert.strictEqual(
+      safeNext('/editor/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
+      '/editor/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    );
+    assert.strictEqual(
+      safeNext('/editor/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'),
+      '/editor/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+    );
   });
 
   it('rejects external and malicious redirect targets per acceptance checks', () => {

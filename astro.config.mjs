@@ -18,12 +18,14 @@ export default defineConfig({
           const path = new URL(page).pathname;
           return (
             !path.startsWith('/dashboard') &&
+            !path.startsWith('/editor') &&
             !path.startsWith('/auth') &&
             !path.startsWith('/admin')
           );
         } catch {
           return (
             !page.includes('/dashboard') &&
+            !page.includes('/editor') &&
             !page.includes('/auth') &&
             !page.includes('/admin')
           );

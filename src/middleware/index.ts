@@ -98,6 +98,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         'auth',
         'admin',
         'dashboard',
+        'editor',
         'api',
         'showcase',
         'templates',
@@ -230,6 +231,59 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
+  // ── Step 7b: /editor and /editor/** guards ───────────────────────────
+  // Prompt 2 Section 0: Guarded prefixes are /dashboard/** AND /editor/**.
+  // /editor/[projectId]/[...page] is owner-only.
+  // Anonymous /editor/{id} redirects to login with validated next.
+  // Non-owner and nonexistent /editor/{id} return identical 404 (never 403).
+  if (pathname === '/editor' || pathname.startsWith('/editor/')) {
+    if (!locals.viewer) {
+      const fullTarget = pathname + url.search;
+      const cappedTarget =
+        fullTarget.length > 200 ? fullTarget.slice(0, 200) : fullTarget;
+      const res = redirect(
+        `/auth/login?next=${encodeURIComponent(cappedTarget)}`,
+        302,
+      );
+      res.headers.set('Cache-Control', 'private, no-store');
+      res.headers.set('X-Robots-Tag', 'noindex');
+      return res;
+    }
+
+    const editorMatch = pathname.match(/^\/editor\/([^/]+)(\/.*)?$/);
+    if (editorMatch) {
+      const projectId = editorMatch[1];
+      const uuidParsed = z.string().uuid().safeParse(projectId);
+      if (!uuidParsed.success) {
+        const res = new Response('Not Found', { status: 404 });
+        res.headers.set('Cache-Control', 'private, no-store');
+        res.headers.set('X-Robots-Tag', 'noindex');
+        return res;
+      }
+
+      const { data: projectRow } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .eq('owner_id', locals.viewer.id)
+        .is('deleted_at', null)
+        .single();
+
+      if (!projectRow) {
+        const res = new Response('Not Found', { status: 404 });
+        res.headers.set('Cache-Control', 'private, no-store');
+        res.headers.set('X-Robots-Tag', 'noindex');
+        return res;
+      }
+
+      locals.project = projectRow;
+      locals.isOwner = true;
+    } else {
+      // Bare /editor navigates to dashboard
+      return redirect('/dashboard', 302);
+    }
+  }
+
   // ── Step 8: /auth/login and /auth/signup redirect with viewer ──────────
   if (
     (pathname === '/auth/login' || pathname === '/auth/signup') &&
@@ -266,7 +320,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     !pathname.startsWith('/api/') &&
     !pathname.startsWith('/admin') &&
     !pathname.startsWith('/auth') &&
-    !pathname.startsWith('/dashboard')
+    !pathname.startsWith('/dashboard') &&
+    !pathname.startsWith('/editor')
   ) {
     const [, ownerUsername, projectSlug] = publicProjectMatch;
     if (!isReservedUsername(ownerUsername)) {
@@ -283,7 +338,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
 
       if ('redirect' in result) {
-        return redirect(result.redirect, 301);
+        const redirectRes = redirect(result.redirect, 301);
+        redirectRes.headers.set('Cache-Control', 'public, max-age=3600');
+        return redirectRes;
       }
 
       locals.project = result.project;
@@ -297,6 +354,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (
     pathname === '/dashboard' ||
     pathname.startsWith('/dashboard/') ||
+    pathname === '/editor' ||
+    pathname.startsWith('/editor/') ||
     pathname === '/auth' ||
     pathname.startsWith('/auth/')
   ) {
