@@ -1,0 +1,121 @@
+---
+// src/pages/editor/[projectId]/[...page].astro
+// Owner-only editor workspace route
+import EditorLayout from '@/layouts/EditorLayout.astro';
+import { EditorWorkspace } from '@/components/editor/EditorWorkspace';
+import { createServerClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+
+const { projectId, page: rawPageParam } = Astro.params;
+const project = Astro.locals.project;
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+if (!project || !viewer) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const supabase = createServerClient(Astro.cookies);
+
+// 1. Validate page param (optional single segment; absent means index page)
+let targetPageId: string | null = null;
+if (rawPageParam) {
+  const segments = rawPageParam.split('/').filter(Boolean);
+  if (segments.length > 1) {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+  const idParsed = z.string().uuid().safeParse(segments[0]);
+  if (!idParsed.success) {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+  targetPageId = idParsed.data;
+}
+
+// 2. Query initial page
+let activePage: any = null;
+
+if (targetPageId) {
+  const { data: pageRow } = await supabase
+    .from('doc_pages')
+    .select('id, title, content, is_index, slug, kind, deleted_at')
+    .eq('id', targetPageId)
+    .eq('project_id', project.id)
+    .single();
+
+  // Invalid, deleted, or folder ID means 404
+  if (!pageRow || pageRow.deleted_at !== null || pageRow.kind !== 'page') {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+  activePage = pageRow;
+} else {
+  // Absent means index page
+  const { data: indexRow } = await supabase
+    .from('doc_pages')
+    .select('id, title, content, is_index, slug, kind, deleted_at')
+    .eq('project_id', project.id)
+    .eq('is_index', true)
+    .eq('kind', 'page')
+    .is('deleted_at', null)
+    .single();
+
+  if (indexRow) {
+    activePage = indexRow;
+  } else {
+    // Fallback to first page by order_index
+    const { data: firstRow } = await supabase
+      .from('doc_pages')
+      .select('id, title, content, is_index, slug, kind, deleted_at')
+      .eq('project_id', project.id)
+      .eq('kind', 'page')
+      .is('deleted_at', null)
+      .order('order_index', { ascending: true })
+      .limit(1)
+      .single();
+
+    activePage = firstRow;
+  }
+}
+
+if (!activePage) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+// 3. Version count for concurrency control
+const { count: versionCount } = await supabase
+  .from('page_versions')
+  .select('id', { count: 'exact', head: true })
+  .eq('page_id', activePage.id);
+
+// 4. Query tree: Never select content for the tree query
+const { data: treeNodes } = await supabase
+  .from('doc_pages')
+  .select('id, parent_id, kind, title, slug, order_index, is_index')
+  .eq('project_id', project.id)
+  .is('deleted_at', null)
+  .order('order_index', { ascending: true });
+
+const treeRevision = project.tree_revision ?? 0;
+---
+
+<EditorLayout title={`Editor — ${project.name}`}>
+  <EditorWorkspace
+    client:only="react"
+    project={{
+      id: project.id,
+      name: project.name,
+      slug: project.slug,
+      username: viewer.username ?? '',
+      published: Boolean(project.published),
+    }}
+    tree={treeNodes ?? []}
+    treeRevision={treeRevision}
+    initialPage={{
+      id: activePage.id,
+      title: activePage.title,
+      content: activePage.content ?? '[]',
+      revision: versionCount ?? 0,
+      schema_version: 1,
+      is_index: Boolean(activePage.is_index),
+      slug: activePage.slug,
+    }}
+  />
+</EditorLayout>

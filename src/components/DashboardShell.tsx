@@ -136,7 +136,7 @@ export function DashboardShell({
 
     if (activeProject) {
       items.unshift(
-        { id: 'project-editor', title: `${activeProject.name} — Editor`, category: 'Active Project', href: `/dashboard/projects/${activeProject.id}/editor`, icon: FileCode2 },
+        { id: 'project-editor', title: `${activeProject.name} — Editor`, category: 'Active Project', href: `/editor/${activeProject.id}`, icon: FileCode2 },
         { id: 'project-versions', title: `${activeProject.name} — Versions`, category: 'Active Project', href: `/dashboard/projects/${activeProject.id}/versions`, icon: History },
         { id: 'project-general', title: `${activeProject.name} — General Settings`, category: 'Active Project', href: `/dashboard/projects/${activeProject.id}/settings/general`, icon: Settings },
         { id: 'project-visibility', title: `${activeProject.name} — Visibility`, category: 'Active Project', href: `/dashboard/projects/${activeProject.id}/settings/visibility`, icon: Eye },

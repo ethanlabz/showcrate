@@ -1,5 +1,7 @@
 ---
-import AppLayout from './AppLayout.astro';
+// src/layouts/EditorLayout.astro
+// Standalone editor layout: sibling of AppLayout under BaseLayout
+import BaseLayout from './BaseLayout.astro';
 
 export interface Props {
   title: string;
@@ -10,13 +12,8 @@ export interface Props {
 const { title, description, noIndex = true } = Astro.props;
 ---
 
-<AppLayout
-  title={title}
-  description={description}
-  noIndex={noIndex}
-  defaultCollapsed={true}
-  hideContentHeader={true}
-  maxWidth="w-full max-w-none"
->
-  <slot />
-</AppLayout>
+<BaseLayout title={title} description={description} noIndex={noIndex}>
+  <div class="h-screen w-screen overflow-hidden bg-[#14161B] text-foreground font-sans flex flex-col">
+    <slot />
+  </div>
+</BaseLayout>

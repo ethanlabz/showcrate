@@ -203,9 +203,9 @@ export function DashboardSidebar({
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={isPathActive(`/dashboard/projects/${activeProject.id}/editor`)}
+                    isActive={isPathActive(`/editor/${activeProject.id}`)}
                     tooltip="Editor"
-                    render={<a href={`/dashboard/projects/${activeProject.id}/editor`} />}
+                    render={<a href={`/editor/${activeProject.id}`} />}
                   >
                     <FileCode2 className="h-4 w-4" />
                     <span>Editor</span>
