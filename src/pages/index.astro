@@ -7,24 +7,10 @@ import { ChevronRight } from 'lucide-react';
 import { InteractiveEditor } from '@/components/pages/home/interactive-editor';
 import { Separator } from '@/components/ui/separator';
 
-import AppLayout from '@/layouts/AppLayout.astro';
-import Dashboard from '@/components/pages/app/Dashboard.astro';
-
 // background
 import SideRays from '@/components/bg/SideRays';
-
-const viewer = Astro.locals.user ?? Astro.locals.viewer;
-
-if (viewer && !viewer.username) {
-  return Astro.redirect('/auth/signup?social=true');
-}
 ---
 
-{viewer ? (
-  <AppLayout title=''>
-    <Dashboard viewer={viewer} />
-  </AppLayout>
-) : (
 <HomeLayout title='Welcome'>
   <div class='relative w-full'>
     <!-- ========================================== -->
@@ -75,12 +61,12 @@ if (viewer && !viewer.username) {
           <div
             class='flex flex-col sm:flex-row gap-3 sm:gap-6 w-full sm:w-auto items-center lg:items-start'
           >
-            <a href='/auth/signup' class='w-full sm:w-auto'>
+            <a href='/dashboard' class='w-full sm:w-auto'>
               <Button
                 size='lg'
                 className='h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto'
               >
-                Get Started <ChevronRight className='ml-2 h-4 w-4' />
+                Open dashboard <ChevronRight className='ml-2 h-4 w-4' />
               </Button>
             </a>
             <a href='/showcase' class='w-full sm:w-auto'>
@@ -335,12 +321,12 @@ if (viewer && !viewer.username) {
         <div
           class='cta-fade-in opacity-0 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto'
         >
-          <a href='/auth/signup' class='w-full sm:w-auto'>
+          <a href='/dashboard' class='w-full sm:w-auto'>
             <Button
               size='lg'
               className='w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 text-base sm:text-lg font-bold shadow-xl shadow-primary/25 hover:scale-105 hover:shadow-primary/40 transition-all duration-300'
             >
-              Start for free
+              Open dashboard
             </Button>
           </a>
           <a href='/docs' class='w-full sm:w-auto'>
@@ -357,7 +343,6 @@ if (viewer && !viewer.username) {
     </section>
   </div>
 </HomeLayout>
-)}
 
 <script>
   import { animate, scroll, inView, stagger } from 'framer-motion';
@@ -498,4 +483,3 @@ if (viewer && !viewer.username) {
     }
   }
 </script>
-}

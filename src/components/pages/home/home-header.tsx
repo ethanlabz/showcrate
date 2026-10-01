@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Home, LayoutGrid, FileCode2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import MobileNav from '@/components/pages/home/mobile-nav';
@@ -50,18 +48,13 @@ function Logo() {
 
 interface Props {
   currentPath: string;
-  user?: {
-    username?: string | null;
-    email: string;
-    avatarUrl?: string | null;
-  } | null;
 }
 
-export function Header({ currentPath, user }: Props) {
+export function Header({ currentPath }: Props) {
   return (
     <>
       {/* Universal Top Header (Visible everywhere) */}
-      <div className='fixed top-0 z-9999 w-full pointer-events-none transition-all duration-500'>
+      <div className='fixed top-0 z-50 w-full pointer-events-none transition-all duration-500'>
         <header className='pointer-events-auto mx-auto w-full max-w-screen border-b border-border/40 bg-background/95 backdrop-blur-xl supports-backdrop-filter:bg-background/60 transition-all duration-500'>
           <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between'>
             <div className='flex items-center gap-6'>
@@ -89,41 +82,30 @@ export function Header({ currentPath, user }: Props) {
               </nav>
             </div>
 
-            {/* Universal Global Actions */}
-            <div className='flex items-center justify-end space-x-2 sm:space-x-4'>
+            {/* Desktop Global Actions: Static Dashboard CTA + Log in + Sign up */}
+            <div className='flex items-center justify-end space-x-2 sm:space-x-3'>
               <ThemeToggle />
-              {user ? (
-                <a href='/'>
-                  <Button
-                    size='lg'
-                    variant='default'
-                  >
-                    Dashboard
-                  </Button>
-                </a>
-              ) : (
-                <>
-                  <a
-                    href='/auth/login'
-                    className='text-sm font-medium transition-colors hover:text-primary hidden sm:inline-block rounded-full'
-                  >
-                    <Button
-                      size='lg'
-                      variant='ghost'
-                    >
-                      Log in
-                    </Button>
-                  </a>
-                  <a href='/auth/signup'>
-                    <Button
-                      size='lg'
-                      variant='default'
-                    >
-                      Sign up
-                    </Button>
-                  </a>
-                </>
-              )}
+
+              <a href='/auth/login' className='hidden sm:inline-block'>
+                <Button size='sm' variant='ghost' className='text-xs font-medium'>
+                  Log in
+                </Button>
+              </a>
+
+              <a href='/auth/signup' className='hidden sm:inline-block'>
+                <Button size='sm' variant='outline' className='text-xs font-medium'>
+                  Sign up
+                </Button>
+              </a>
+
+              <a href='/dashboard'>
+                <Button
+                  size='sm'
+                  className='bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 text-xs font-semibold px-4'
+                >
+                  Dashboard
+                </Button>
+              </a>
             </div>
           </div>
         </header>
@@ -133,7 +115,6 @@ export function Header({ currentPath, user }: Props) {
       <MobileNav
         navLinks={navLinks}
         currentPath={currentPath}
-        data-lenis-prevent
       />
     </>
   );

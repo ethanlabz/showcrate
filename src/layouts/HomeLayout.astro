@@ -17,7 +17,6 @@ const {
   noIndex,
   hideFooter = false,
 } = Astro.props;
-const user = Astro.locals.user;
 ---
 
 <BaseLayout
@@ -28,7 +27,7 @@ const user = Astro.locals.user;
 >
   <div class='flex flex-col min-h-screen'>
     <div>
-      <Header client:load currentPath={Astro.url.pathname} user={user} />
+      <Header client:load currentPath={Astro.url.pathname} />
     </div>
 
     <main class='flex-1'>
