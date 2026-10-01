@@ -90,7 +90,7 @@ if (Astro.request.method === 'POST') {
           rows={3}
           maxLength={200}
           placeholder="A short summary of your project for search results..."
-          className="bg-surface border-border/60 text-foreground text-xs focus-visible:ring-[#C9A96A] resize-none"
+          className="bg-surface border-border/60 text-foreground text-xs focus-visible:ring-accent resize-none"
         />
       </div>
 
@@ -104,7 +104,7 @@ if (Astro.request.method === 'POST') {
           type="url"
           defaultValue={project.cover_url ?? ''}
           placeholder="https://example.com/og-image.png"
-          className="bg-surface border-border/60 text-foreground text-xs focus-visible:ring-[#C9A96A]"
+          className="bg-surface border-border/60 text-foreground text-xs focus-visible:ring-accent"
         />
         <p class="text-[11px] text-muted-foreground">
           Recommended resolution: 1200x630px.
@@ -115,7 +115,7 @@ if (Astro.request.method === 'POST') {
         <Button
           type="submit"
           size="sm"
-          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+          className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium"
         >
           Save SEO settings
         </Button>

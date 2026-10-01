@@ -34,7 +34,7 @@ if (Astro.request.method === 'POST') {
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-border/40">
           <div class="space-y-0.5">
             <label for="collabInvites" class="text-sm font-medium text-foreground flex items-center gap-2 cursor-pointer">
-              <Mail className="h-4 w-4 text-[#C9A96A]" />
+              <Mail className="h-4 w-4 text-accent" />
               <span>Collaborator invitations</span>
             </label>
             <p class="text-xs text-muted-foreground">
@@ -46,14 +46,14 @@ if (Astro.request.method === 'POST') {
             id="collabInvites"
             name="collabInvites"
             checked
-            class="h-4 w-4 rounded border-border text-[#C9A96A] focus:ring-[#C9A96A] mt-1 cursor-pointer"
+            class="h-4 w-4 rounded border-border text-accent focus:ring-accent mt-1 cursor-pointer"
           />
         </div>
 
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-border/40">
           <div class="space-y-0.5">
             <label for="activityUpdates" class="text-sm font-medium text-foreground flex items-center gap-2 cursor-pointer">
-              <Bell className="h-4 w-4 text-[#C9A96A]" />
+              <Bell className="h-4 w-4 text-accent" />
               <span>Project activity & versions</span>
             </label>
             <p class="text-xs text-muted-foreground">
@@ -65,7 +65,7 @@ if (Astro.request.method === 'POST') {
             id="activityUpdates"
             name="activityUpdates"
             checked
-            class="h-4 w-4 rounded border-border text-[#C9A96A] focus:ring-[#C9A96A] mt-1 cursor-pointer"
+            class="h-4 w-4 rounded border-border text-accent focus:ring-accent mt-1 cursor-pointer"
           />
         </div>
 
@@ -83,7 +83,7 @@ if (Astro.request.method === 'POST') {
             type="checkbox"
             id="productNews"
             name="productNews"
-            class="h-4 w-4 rounded border-border text-[#C9A96A] focus:ring-[#C9A96A] mt-1 cursor-pointer"
+            class="h-4 w-4 rounded border-border text-accent focus:ring-accent mt-1 cursor-pointer"
           />
         </div>
       </div>
@@ -92,7 +92,7 @@ if (Astro.request.method === 'POST') {
         <Button
           type="submit"
           size="sm"
-          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+          className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium"
         >
           Save preferences
         </Button>

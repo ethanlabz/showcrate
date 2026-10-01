@@ -28,7 +28,7 @@ if (Astro.request.method === 'POST') {
       const db = createServerClient(Astro.cookies);
       const projectService = new ProjectService(db);
       const project = await projectService.createProject(viewer.id, parsed.data);
-      return Astro.redirect(`/dashboard/projects/${project.id}/editor`);
+      return Astro.redirect(`/editor/${project.id}`);
     }
   } catch (err: any) {
     console.error('[dashboard/new] Failed to create project:', err);
@@ -54,7 +54,7 @@ if (Astro.request.method === 'POST') {
     <form method="POST" class="space-y-6">
       <div class="space-y-2">
         <Label htmlFor="name" className="text-sm font-medium text-foreground">
-          Project Name <span class="text-[#C9A96A]">*</span>
+          Project Name <span class="text-accent">*</span>
         </Label>
         <Input
           id="name"
@@ -62,7 +62,7 @@ if (Astro.request.method === 'POST') {
           placeholder="e.g. Acme API Docs"
           required
           maxLength={100}
-          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A]"
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-accent"
         />
         <p class="text-[11px] text-muted-foreground">
           A readable name for your project. A URL slug will be automatically created from this.
@@ -79,7 +79,7 @@ if (Astro.request.method === 'POST') {
           placeholder="A quick summary of what this project provides..."
           rows={3}
           maxLength={200}
-          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A] resize-none"
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-accent resize-none"
         />
         <p class="text-[11px] text-muted-foreground">
           Optional short description (up to 200 characters).
@@ -95,7 +95,7 @@ if (Astro.request.method === 'POST') {
         <Button
           type="submit"
           size="sm"
-          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+          className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium"
         >
           Create Project
         </Button>

@@ -67,7 +67,7 @@ if (Astro.request.method === 'POST') {
       <div class="flex items-start justify-between gap-4">
         <div>
           <h3 class="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[#C9A96A]" />
+            <Globe className="h-4 w-4 text-accent" />
             <span>Publication Status</span>
           </h3>
           <p class="text-xs text-muted-foreground mt-1 max-w-md">
@@ -84,7 +84,7 @@ if (Astro.request.method === 'POST') {
             type="submit"
             size="sm"
             variant={project.published ? 'outline' : 'default'}
-            className={project.published ? '' : 'bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium'}
+            className={project.published ? '' : 'bg-accent text-accent-foreground hover:bg-accent-hover font-medium'}
           >
             {project.published ? 'Unpublish to draft' : 'Publish live'}
           </Button>
@@ -95,7 +95,7 @@ if (Astro.request.method === 'POST') {
     <!-- Access visibility -->
     <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
       <h3 class="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-        <Eye className="h-4 w-4 text-[#C9A96A]" />
+        <Eye className="h-4 w-4 text-accent" />
         <span>Audience Access</span>
       </h3>
 
@@ -109,7 +109,7 @@ if (Astro.request.method === 'POST') {
               name="visibility"
               value="public"
               checked={project.visibility === 'public'}
-              class="mt-1 text-[#C9A96A] focus:ring-[#C9A96A]"
+              class="mt-1 text-accent focus:ring-accent accent-accent"
             />
             <div class="text-xs">
               <span class="font-semibold text-foreground block">Public</span>
@@ -123,7 +123,7 @@ if (Astro.request.method === 'POST') {
               name="visibility"
               value="unlisted"
               checked={project.visibility === 'unlisted'}
-              class="mt-1 text-[#C9A96A] focus:ring-[#C9A96A]"
+              class="mt-1 text-accent focus:ring-accent accent-accent"
             />
             <div class="text-xs">
               <span class="font-semibold text-foreground block">Unlisted</span>
@@ -137,7 +137,7 @@ if (Astro.request.method === 'POST') {
               name="visibility"
               value="private"
               checked={project.visibility === 'private'}
-              class="mt-1 text-[#C9A96A] focus:ring-[#C9A96A]"
+              class="mt-1 text-accent focus:ring-accent accent-accent"
             />
             <div class="text-xs">
               <span class="font-semibold text-foreground block">Private</span>
@@ -150,7 +150,7 @@ if (Astro.request.method === 'POST') {
           <Button
             type="submit"
             size="sm"
-            className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+            className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium"
           >
             Save visibility
           </Button>

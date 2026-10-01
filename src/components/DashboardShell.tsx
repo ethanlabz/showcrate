@@ -200,15 +200,15 @@ export function DashboardShell({
       defaultOpen={!defaultCollapsed}
       style={
         {
-          '--sidebar': '#14161B',
-          '--sidebar-foreground': '#EDEDED',
-          '--sidebar-border': 'rgba(255, 255, 255, 0.08)',
-          '--sidebar-accent': 'rgba(255, 255, 255, 0.06)',
-          '--sidebar-accent-foreground': '#C9A96A',
-          '--sidebar-ring': '#C9A96A',
+          '--sidebar': 'var(--surface)',
+          '--sidebar-foreground': 'var(--foreground)',
+          '--sidebar-border': 'var(--border)',
+          '--sidebar-accent': 'var(--surface-raised)',
+          '--sidebar-accent-foreground': 'var(--accent)',
+          '--sidebar-ring': 'var(--focus-ring)',
         } as React.CSSProperties
       }
-      className="min-h-screen bg-[#14161B] text-foreground font-sans"
+      className="min-h-screen bg-background text-foreground font-sans"
     >
       {/* 1. Persistent Left Sidebar on Desktop / Offcanvas on Mobile */}
       <DashboardSidebar
@@ -218,15 +218,15 @@ export function DashboardShell({
         onOpenSearch={() => setSearchOpen(true)}
       />
 
-      <SidebarInset className="min-h-screen bg-[#14161B] text-foreground flex flex-col flex-1">
+      <SidebarInset className="min-h-screen bg-background text-foreground flex flex-col flex-1">
         {/* 2. Mobile Header: Hidden on Desktop (md+) */}
-        <header className="md:hidden sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border/40 bg-[#14161B]/95 px-4 backdrop-blur">
+        <header className="md:hidden sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur">
           <div className="flex w-10 items-center justify-start">
             <SidebarTrigger className="text-foreground hover:bg-surface-raised h-9 w-9" />
           </div>
 
           <div className="flex-1 text-center px-2 truncate">
-            <span className="font-serif font-semibold text-sm tracking-tight text-foreground truncate block">
+            <span className="font-heading font-semibold text-sm tracking-tight text-foreground truncate block">
               {pageTitle}
             </span>
           </div>
@@ -250,12 +250,12 @@ export function DashboardShell({
             <div className="mb-6">
               <div className="flex items-center gap-3">
                 {HeaderIcon && (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#C9A96A]/10 text-[#C9A96A] border border-[#C9A96A]/20 shrink-0">
-                    <HeaderIcon className="h-5 w-5 text-[#C9A96A]" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent border border-accent/20 shrink-0">
+                    <HeaderIcon className="h-5 w-5 text-accent" />
                   </div>
                 )}
                 <div>
-                  <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                  <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                     {resolvedHeaderTitle}
                   </h1>
                   {headerDescription && (
@@ -282,12 +282,12 @@ export function DashboardShell({
           onClick={() => setSearchOpen(false)}
         >
           <div
-            className="relative w-full max-w-lg rounded-xl border border-border/60 bg-[#14161B] text-foreground shadow-2xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150"
+            className="relative w-full max-w-lg rounded-xl border border-border/60 bg-surface text-foreground shadow-2xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleSearchKeyDown}
           >
             <div className="flex items-center border-b border-border/40 px-3 py-2.5">
-              <Search className="h-4 w-4 text-[#C9A96A] shrink-0 mr-2" />
+              <Search className="h-4 w-4 text-accent shrink-0 mr-2" />
               <input
                 ref={inputRef}
                 type="text"
@@ -324,12 +324,12 @@ export function DashboardShell({
                       onMouseEnter={() => setSelectedIndex(index)}
                       className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isSelected
-                          ? 'bg-surface-raised text-[#C9A96A]'
+                          ? 'bg-surface-raised text-accent'
                           : 'text-foreground hover:bg-surface-raised/50'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
-                        <Icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-[#C9A96A]' : 'text-muted-foreground'}`} />
+                        <Icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-accent' : 'text-muted-foreground'}`} />
                         <span className="truncate">{item.title}</span>
                       </div>
                       <span className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground/70 shrink-0">

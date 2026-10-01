@@ -64,14 +64,14 @@ const creditedProjects = (collaborations || [])
     <!-- Section: Your projects -->
     <div>
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+        <h2 class="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
           <span>Owned projects</span>
           <span class="text-xs font-mono font-normal text-muted-foreground px-2 py-0.5 rounded-full bg-surface-raised border border-border/40">
             {ownedProjects?.length ?? 0}
           </span>
         </h2>
         <a href="/dashboard/new">
-          <Button size="sm" className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium">
+          <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium">
             <Plus className="h-4 w-4 mr-1.5" />
             New project
           </Button>
@@ -81,10 +81,10 @@ const creditedProjects = (collaborations || [])
       {ownedProjects && ownedProjects.length > 0 ? (
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           {ownedProjects.map((p: any) => (
-            <div class="rounded-xl border border-border/50 bg-surface/50 p-5 hover:border-[#C9A96A]/40 transition-colors flex flex-col justify-between">
+            <div class="rounded-xl border border-border/50 bg-surface/50 p-5 hover:border-accent/40 transition-colors flex flex-col justify-between">
               <div>
                 <div class="flex items-start justify-between gap-2 mb-2">
-                  <h3 class="font-serif font-bold text-base text-foreground truncate">
+                  <h3 class="font-heading font-bold text-base text-foreground truncate">
                     {p.name}
                   </h3>
                   <div class="flex items-center gap-1.5 shrink-0">
@@ -112,7 +112,7 @@ const creditedProjects = (collaborations || [])
                 <div class="flex items-center gap-2">
                   <a
                     href={`/editor/${p.id}`}
-                    class="flex items-center gap-1 text-[#C9A96A] hover:underline font-medium"
+                    class="flex items-center gap-1 text-accent hover:underline font-medium"
                   >
                     <FileCode2 className="h-3.5 w-3.5" />
                     Editor
@@ -132,7 +132,7 @@ const creditedProjects = (collaborations || [])
                     href={`/${viewer.username}/${p.slug}`}
                     target="_blank"
                     rel="noreferrer"
-                    class="flex items-center gap-1 text-muted-foreground hover:text-[#C9A96A]"
+                    class="flex items-center gap-1 text-muted-foreground hover:text-accent"
                   >
                     <span>View</span>
                     <ExternalLink className="h-3 w-3" />
@@ -145,14 +145,14 @@ const creditedProjects = (collaborations || [])
       ) : (
         <div class="rounded-xl border border-dashed border-border/60 p-8 text-center bg-surface/20">
           <FolderKanban className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-          <h3 class="font-serif font-semibold text-foreground text-base mb-1">
+          <h3 class="font-heading font-semibold text-foreground text-base mb-1">
             No projects yet
           </h3>
           <p class="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
             Create your first documentation project to start drafting interactive stages for your code.
           </p>
           <a href="/dashboard/new">
-            <Button size="sm" className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium">
+            <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium">
               <Plus className="h-4 w-4 mr-1.5" />
               Create project
             </Button>
@@ -164,7 +164,7 @@ const creditedProjects = (collaborations || [])
     <!-- Section: Credited on -->
     <div>
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+        <h2 class="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" />
           <span>Credited on</span>
           <span class="text-xs font-mono font-normal text-muted-foreground px-2 py-0.5 rounded-full bg-surface-raised border border-border/40">
@@ -183,10 +183,10 @@ const creditedProjects = (collaborations || [])
               <div class="rounded-xl border border-border/40 bg-surface/30 p-4 flex flex-col justify-between">
                 <div>
                   <div class="flex items-center justify-between gap-2 mb-1.5">
-                    <h3 class="font-serif font-bold text-sm text-foreground truncate">
+                    <h3 class="font-heading font-bold text-sm text-foreground truncate">
                       {project.name}
                     </h3>
-                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-raised text-[#C9A96A] border border-border/40 shrink-0">
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-raised text-accent border border-border/40 shrink-0">
                       {c.display_role || 'Contributor'}
                     </span>
                   </div>
@@ -201,7 +201,7 @@ const creditedProjects = (collaborations || [])
                   </span>
                   <a
                     href={publicUrl}
-                    class="flex items-center gap-1 text-[#C9A96A] hover:underline font-medium"
+                    class="flex items-center gap-1 text-accent hover:underline font-medium"
                   >
                     <span>View public page</span>
                     <ExternalLink className="h-3 w-3" />

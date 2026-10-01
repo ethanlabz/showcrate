@@ -163,7 +163,7 @@ export function UsernameSettingsSection({
             type="button"
             size="sm"
             onClick={() => setConfirmOpen(true)}
-            className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 text-xs font-semibold h-7 px-2.5"
+            className="bg-accent text-accent-foreground hover:bg-accent-hover text-xs font-semibold h-7 px-2.5"
           >
             Change username
           </Button>
@@ -206,12 +206,12 @@ export function UsernameSettingsSection({
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
               maxLength={39}
               placeholder="username"
-              className="pl-7 pr-28 bg-surface border-border/60 text-foreground font-mono text-sm focus-visible:ring-[#C9A96A]"
+              className="pl-7 pr-28 bg-surface border-border/60 text-foreground font-mono text-sm focus-visible:ring-accent"
             />
             <div className="absolute inset-y-0 right-3 flex items-center gap-1.5">
               {status === 'checking' && (
                 <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#C9A96A]" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
                   Checking
                 </span>
               )}
@@ -259,7 +259,7 @@ export function UsernameSettingsSection({
               <button
                 type="button"
                 onClick={() => setConfirmOpen(true)}
-                className="text-[#C9A96A] hover:underline font-medium cursor-pointer"
+                className="text-accent hover:underline font-medium cursor-pointer"
               >
                 Review & Confirm →
               </button>
@@ -271,10 +271,10 @@ export function UsernameSettingsSection({
       {/* Confirmation Dialog */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs px-4">
-          <div className="bg-[#14161B] border border-border/70 rounded-xl p-5 w-full max-w-md shadow-2xl space-y-4">
+          <div className="bg-surface border border-border/70 rounded-xl p-5 w-full max-w-md shadow-2xl space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-serif font-bold text-base text-foreground">
+                <h3 className="font-heading font-bold text-base text-foreground">
                   Change username to @{username.trim().toLowerCase()}?
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -293,7 +293,7 @@ export function UsernameSettingsSection({
 
             <div className="rounded-lg bg-surface-raised/60 border border-border/50 p-3.5 text-xs text-muted-foreground space-y-2.5">
               <p className="text-foreground leading-relaxed">
-                Your old profile and project links will keep redirecting. You can change your username again after <span className="font-semibold text-[#C9A96A]">{nextAllowedDateString}</span>.
+                Your old profile and project links will keep redirecting. You can change your username again after <span className="font-semibold text-accent">{nextAllowedDateString}</span>.
               </p>
               <div className="border-t border-border/30 pt-2 text-[11px] text-muted-foreground/80 space-y-1">
                 <div>• Your previous handle <span className="font-mono text-foreground">@{initialUsername}</span> will be permanently reserved for you.</div>
@@ -323,7 +323,7 @@ export function UsernameSettingsSection({
                 size="sm"
                 disabled={submitting}
                 onClick={handleConfirmChange}
-                className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+                className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium"
               >
                 {submitting ? (
                   <>

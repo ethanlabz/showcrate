@@ -80,7 +80,7 @@ if (Astro.request.method === 'POST') {
           defaultValue={project.name}
           required
           maxLength={100}
-          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A]"
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-accent"
         />
       </div>
 
@@ -110,7 +110,7 @@ if (Astro.request.method === 'POST') {
           defaultValue={project.tagline ?? ''}
           rows={3}
           maxLength={200}
-          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A] resize-none"
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-accent resize-none"
         />
       </div>
 
@@ -118,7 +118,7 @@ if (Astro.request.method === 'POST') {
         <Button
           type="submit"
           size="sm"
-          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+          className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium"
         >
           Save changes
         </Button>

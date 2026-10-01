@@ -86,7 +86,7 @@ if (Astro.request.method === 'POST') {
           defaultValue={displayName}
           maxLength={60}
           placeholder="Your full name or display handle"
-          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A]"
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-accent"
         />
         <p class="text-[11px] text-muted-foreground">
           This is the name displayed publicly on your projects and profile.
@@ -135,7 +135,7 @@ if (Astro.request.method === 'POST') {
           rows={3}
           maxLength={300}
           placeholder="Brief intro about yourself or what you build..."
-          className="bg-surface border-border/60 text-foreground focus-visible:ring-[#C9A96A] resize-none"
+          className="bg-surface border-border/60 text-foreground focus-visible:ring-accent resize-none"
         />
         <p class="text-[11px] text-muted-foreground">
           Up to 300 characters shown on your public profile.
@@ -146,7 +146,7 @@ if (Astro.request.method === 'POST') {
         <Button
           type="submit"
           size="sm"
-          className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium"
+          className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium"
         >
           Save changes
         </Button>

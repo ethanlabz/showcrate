@@ -116,7 +116,7 @@ const { data: collaborators } = await supabase
     <!-- Invite form -->
     <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
       <h3 class="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-        <UserPlus className="h-4 w-4 text-[#C9A96A]" />
+        <UserPlus className="h-4 w-4 text-accent" />
         <span>Invite Contributor</span>
       </h3>
 
@@ -126,7 +126,7 @@ const { data: collaborators } = await supabase
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="space-y-2">
             <Label htmlFor="username" className="text-xs font-medium text-foreground">
-              Username <span class="text-[#C9A96A]">*</span>
+              Username <span class="text-accent">*</span>
             </Label>
             <Input
               id="username"
@@ -155,7 +155,7 @@ const { data: collaborators } = await supabase
           <Button
             type="submit"
             size="sm"
-            className="bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 font-medium text-xs"
+            className="bg-accent text-accent-foreground hover:bg-accent-hover font-medium text-xs"
           >
             Send invite
           </Button>
@@ -166,7 +166,7 @@ const { data: collaborators } = await supabase
     <!-- Collaborator list -->
     <div class="rounded-xl border border-border/50 bg-surface/30 p-6 sm:p-8">
       <h3 class="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-        <Users className="h-4 w-4 text-[#C9A96A]" />
+        <Users className="h-4 w-4 text-accent" />
         <span>Project Team</span>
       </h3>
 
@@ -174,7 +174,7 @@ const { data: collaborators } = await supabase
         <!-- Owner row -->
         <div class="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-surface/50 text-xs">
           <div class="flex items-center gap-2.5">
-            <div class="h-8 w-8 rounded-full bg-[#C9A96A]/20 border border-[#C9A96A]/40 text-[#C9A96A] flex items-center justify-center font-bold">
+            <div class="h-8 w-8 rounded-full bg-accent/20 border border-accent/40 text-accent flex items-center justify-center font-bold">
               {(viewer.username?.[0] || 'O').toUpperCase()}
             </div>
             <div>
@@ -182,7 +182,7 @@ const { data: collaborators } = await supabase
               <span class="text-muted-foreground block text-[11px]">Owner (You)</span>
             </div>
           </div>
-          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#C9A96A]/10 text-[#C9A96A] border border-[#C9A96A]/30">
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/30">
             Owner
           </span>
         </div>

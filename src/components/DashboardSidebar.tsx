@@ -89,13 +89,13 @@ export function DashboardSidebar({
   return (
     <Sidebar collapsible="icon" className={className}>
       {/* 1. Header with Showcrate Wordmark */}
-      <SidebarHeader className="border-b border-border/40 p-3">
+      <SidebarHeader className="flex border-b border-border/90 p-3 items-center justify-center">
         <a
           href="/"
-          className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-foreground transition-colors hover:bg-surface-raised"
+          className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-foreground transition-colors"
           aria-label="Showcrate Home"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#C9A96A]/10 text-[#C9A96A] border border-[#C9A96A]/30">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 256 256"
@@ -122,9 +122,9 @@ export function DashboardSidebar({
               />
             </svg>
           </div>
-          <span className="font-serif font-bold text-lg tracking-tight text-[#C9A96A] group-data-[collapsible=icon]:hidden">
+          {/* <span className="font-heading font-bold text-lg tracking-tight text-accent group-data-[collapsible=icon]:hidden">
             Showcrate
-          </span>
+          </span> */}
         </a>
       </SidebarHeader>
 
@@ -139,7 +139,7 @@ export function DashboardSidebar({
                 className="w-full justify-between text-muted-foreground hover:text-foreground hover:bg-surface-raised border border-border/40 rounded-lg px-2.5 h-9"
               >
                 <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 shrink-0 text-[#C9A96A]" />
+                  <Search className="h-4 w-4 shrink-0 text-accent" />
                   <span className="text-xs group-data-[collapsible=icon]:hidden">Search...</span>
                 </div>
                 <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-surface px-1.5 font-mono text-[10px] font-medium opacity-100 group-data-[collapsible=icon]:hidden md:inline-flex">
@@ -196,7 +196,7 @@ export function DashboardSidebar({
         {/* 4. Group Project: Only shown on /dashboard/projects/[id]/** */}
         {activeProject && (
           <SidebarGroup className="p-0">
-            <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider text-[#C9A96A] uppercase px-2.5 truncate">
+            <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider text-accent uppercase px-2.5 truncate">
               {activeProject.name}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -404,7 +404,7 @@ export function DashboardSidebar({
         {/* 6. Admin link: Rendered only when admin or developer */}
         {isPlatformStaff && (
           <SidebarGroup className="p-0">
-            <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider text-[#C9A96A] uppercase px-2.5">
+            <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider text-accent uppercase px-2.5">
               Admin
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -415,7 +415,7 @@ export function DashboardSidebar({
                     tooltip="Admin panel"
                     render={<a href="/admin" />}
                   >
-                    <ShieldAlert className="h-4 w-4 text-[#C9A96A]" />
+                    <ShieldAlert className="h-4 w-4 text-accent" />
                     <span>Admin panel</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -465,7 +465,7 @@ export function DashboardSidebar({
                       />
                     }
                   >
-                    <UserIcon className="h-4 w-4 text-[#C9A96A]" />
+                    <UserIcon className="h-4 w-4 text-accent" />
                     <span>Public profile</span>
                   </DropdownMenuItem>
                 )}
