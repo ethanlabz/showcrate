@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Lock } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
+import { UsernameSettingsSection } from '@/components/pages/settings/UsernameSettingsSection';
 
 const viewer = Astro.locals.viewer ?? Astro.locals.user;
 if (!viewer) {
@@ -24,6 +25,7 @@ const userRepo = new UserRepository(supabase);
 const userRecord = await userRepo.findById(viewer.id);
 const displayName = userRecord?.display_name ?? viewer.displayName ?? '';
 const username = userRecord?.username ?? viewer.username ?? '';
+const usernameChangedAt = userRecord?.username_changed_at ?? null;
 const email = viewer.email ?? '';
 const bio = userRecord?.bio ?? '';
 
@@ -91,25 +93,12 @@ if (Astro.request.method === 'POST') {
         </p>
       </div>
 
-      {/* 2. Username (read-only with helper text) */}
-      <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <Label htmlFor="username" className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            <span>Username</span>
-            <Lock className="h-3 w-3 text-muted-foreground" />
-          </Label>
-        </div>
-        <Input
-          id="username"
-          value={username}
-          readOnly
-          disabled
-          className="bg-surface-raised/40 border-border/40 text-muted-foreground cursor-not-allowed select-none"
-        />
-        <p class="text-[11px] text-muted-foreground/80">
-          Usernames can't be changed yet
-        </p>
-      </div>
+      {/* 2. Username (live availability, cooldown, confirmation modal) */}
+      <UsernameSettingsSection
+        client:load
+        initialUsername={username}
+        usernameChangedAt={usernameChangedAt}
+      />
 
       {/* 3. Email (read-only with verified indicator) */}
       <div class="space-y-2">
