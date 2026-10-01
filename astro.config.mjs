@@ -12,7 +12,24 @@ export default defineConfig({
   site: process.env.SITE_URL ?? 'http://localhost:4321',
   integrations: [
     react(),
-    sitemap(),
+    sitemap({
+      filter: (page) => {
+        try {
+          const path = new URL(page).pathname;
+          return (
+            !path.startsWith('/dashboard') &&
+            !path.startsWith('/auth') &&
+            !path.startsWith('/admin')
+          );
+        } catch {
+          return (
+            !page.includes('/dashboard') &&
+            !page.includes('/auth') &&
+            !page.includes('/admin')
+          );
+        }
+      },
+    }),
   ],
   vite: {
     plugins: [tailwindcss()],
