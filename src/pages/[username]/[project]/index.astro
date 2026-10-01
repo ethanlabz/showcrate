@@ -100,7 +100,7 @@ const readDocsUrl = indexPage
         <div class="flex items-center gap-3 shrink-0 pt-2 sm:pt-0">
           {/* Owner Edit Button — rendered ONLY when locals.isOwner is true */}
           {isOwner && (
-            <a href={`/dashboard/projects/${project.id}/editor`}>
+            <a href={`/editor/${project.id}`}>
               <Button size="sm" variant="outline" className="gap-1.5 text-xs font-medium border-[#C9A96A]/40 text-[#C9A96A] hover:bg-[#C9A96A]/10">
                 <Edit3 className="h-3.5 w-3.5" />
                 <span>Edit project</span>

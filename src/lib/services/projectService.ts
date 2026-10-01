@@ -137,29 +137,75 @@ export class ProjectService {
       .eq('id', templateId)
       .single();
 
-    if (!template?.structure) {
-      // Fallback to default page if template not found
-      await this.docPageRepo.create({
-        projectId,
-        slug: 'index',
+    if (!template?.structure || !Array.isArray(template.structure) || template.structure.length === 0) {
+      // Fallback to default index page if template has no structure
+      await this.db.from('doc_pages').insert({
+        id: crypto.randomUUID(),
+        project_id: projectId,
+        parent_id: null,
+        kind: 'page',
         title: 'Getting Started',
+        slug: 'index',
         content: '# Getting Started\n\nWelcome to your new project!\n',
-        orderIndex: 0,
-        isIndex: true,
+        order_index: 0,
+        is_index: true,
       });
       return;
     }
 
-    const pages = (template.structure as any[]).sort((a, b) => a.order_index - b.order_index);
-    for (const page of pages) {
-      await this.docPageRepo.create({
-        projectId,
-        slug: page.slug,
-        title: page.title,
-        content: page.content ?? '',
-        orderIndex: page.order_index,
-        isIndex: page.is_index ?? false,
-      });
-    }
+    const existingSlugs = new Set<string>();
+    let isFirstPage = true;
+
+    const insertNodes = async (nodes: any[], parentId: string | null): Promise<void> => {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const nodeId = crypto.randomUUID();
+        const kind = node.kind === 'folder' ? 'folder' : 'page';
+        let slug: string | null = null;
+        let isIndex = false;
+
+        if (kind === 'page') {
+          if (isFirstPage && parentId === null) {
+            slug = 'index';
+            isIndex = true;
+            isFirstPage = false;
+            existingSlugs.add('index');
+          } else {
+            const rawTitle = node.title || 'Untitled';
+            let candidate = rawTitle
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '') || 'page';
+            let suffix = 2;
+            let finalSlug = candidate;
+            while (existingSlugs.has(finalSlug)) {
+              finalSlug = `${candidate}-${suffix}`;
+              suffix++;
+            }
+            slug = finalSlug;
+            existingSlugs.add(slug);
+          }
+        }
+
+        await this.db.from('doc_pages').insert({
+          id: nodeId,
+          project_id: projectId,
+          parent_id: parentId,
+          kind,
+          title: node.title || (kind === 'folder' ? 'New Folder' : 'Untitled'),
+          slug,
+          content: kind === 'page' ? (node.content ?? '[]') : null,
+          order_index: i,
+          is_index: isIndex,
+        });
+
+        if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+          await insertNodes(node.children, nodeId);
+        }
+      }
+    };
+
+    await insertNodes(template.structure, null);
   }
 }
