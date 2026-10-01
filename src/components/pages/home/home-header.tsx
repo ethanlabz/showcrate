@@ -85,27 +85,29 @@ export function Header({ currentPath }: Props) {
             {/* Desktop Global Actions: Static Dashboard CTA + Log in + Sign up */}
             <div className='flex items-center justify-end space-x-2 sm:space-x-3'>
               <ThemeToggle />
-
-              <a href='/auth/login' className='hidden sm:inline-block'>
-                <Button size='sm' variant='ghost' className='text-xs font-medium'>
+              
+              {/* Login/Signup CTA buttons removed */}
+              {/* <a href='/auth/login' className='hidden sm:inline-block'>
+                <Button size='lg' variant='ghost' className='text-xs font-medium'>
                   Log in
                 </Button>
               </a>
 
               <a href='/auth/signup' className='hidden sm:inline-block'>
-                <Button size='sm' variant='outline' className='text-xs font-medium'>
+                <Button size='lg' variant='outline' className='text-xs font-medium'>
                   Sign up
                 </Button>
-              </a>
-
-              <a href='/dashboard'>
+              </a> */}
+              
+              {/* Dashboard CTA button removed */}
+              {/* <a href='/dashboard'>
                 <Button
                   size='sm'
                   className='bg-[#C9A96A] text-[#14161B] hover:bg-[#C9A96A]/90 text-xs font-semibold px-4'
                 >
                   Dashboard
                 </Button>
-              </a>
+              </a> */}
             </div>
           </div>
         </header>
