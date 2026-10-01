@@ -74,7 +74,7 @@
 /auth/reset-password       Password reset form
 /{username}                Public user profile
 /{username}/{project}      Public project overview page
-/{username}/{project}/docs/[...path] Documentation pages
+/{username}/{project}/docs/{slug} Documentation pages (flat URL)
 ```
 
 ### Authenticated 🔵
@@ -82,12 +82,12 @@
 /dashboard                                    Dashboard homepage (Your projects + Credited on)
 /dashboard/new                                Project creation wizard
 /dashboard/notifications                      Notification center
-/dashboard/settings/profile                   Profile settings (Name, read-only Username & Email)
+/dashboard/settings/profile                   Profile settings (Name, editable Username with 30-day cooldown, read-only Email)
 /dashboard/settings/account                   Password, authentication & session info
 /dashboard/settings/notifications             Notification preferences
 /dashboard/settings/appearance                Theme & appearance
 /dashboard/settings/danger                    Account deletion & danger zone
-/dashboard/projects/[id]/editor               Block editor for project (ID-scoped, collapsed sidebar)
+/editor/[projectId]/[pageId?]                 Block editor workspace (standalone layout, dnd explorer, native scroll)
 /dashboard/projects/[id]/versions             Page version history & snapshots
 /dashboard/projects/[id]/settings/general     Project details & metadata
 /dashboard/projects/[id]/settings/visibility  Publication & audience access
@@ -157,12 +157,13 @@ The renderer has one Astro component per block type and ships no client JavaScri
 ---
  
 ## Database Schema (core tables)
- 
+
 ```sql
-users (id, username, display_name, avatar_url, bio, platform_role, created_at)
-projects (id, owner_id, slug, name, tagline, cover_url, visibility, published, featured, view_count, deleted_at)
-project_redirects (id, owner_id, old_slug, new_slug)
-doc_pages (id, project_id, slug, title, content JSONB, schema_version, revision, content_text, content_tsv, order_index, is_index, updated_at)
+users (id, username, display_name, avatar_url, bio, platform_role, username_changed_at, created_at, updated_at)
+projects (id, owner_id, slug, name, tagline, cover_url, visibility, published, featured, view_count, tree_revision, deleted_at, created_at, updated_at)
+project_redirects (id, owner_id, old_slug, new_slug, created_at)
+username_redirects (id, user_id, old_username, created_at)
+doc_pages (id, project_id, parent_id, kind, slug, title, content JSONB, schema_version, revision, content_text, content_tsv, order_index, is_index, deleted_at, created_at, updated_at)
 page_versions (id, page_id, title, content JSONB, schema_version, saved_by, created_at)
 project_collaborators (id, project_id, user_id, display_role, visible, accepted_at)
 templates (id, name, description, category, structure JSONB, featured)
@@ -171,45 +172,55 @@ notifications (id, user_id, type, payload JSONB, read)
 reports (id, reporter_id, project_id, reason, status)
 admin_audit_log (id, actor_id, action, target_type, target_id, metadata)
 ```
- 
-**`doc_pages.content`** holds the BlockNote block array. `schema_version` records the shape of the stored JSON so content can be migrated when the block schema changes. `revision` is an integer incremented on every save and used for concurrency control.
- 
-**Docs search.** `content_text` is plain text extracted from the block JSON (inline text nodes across all blocks, including nested blocks, list items, and table cells). `content_tsv` is a weighted `tsvector` built from `title` + `content_text`, backed by a GIN index. Both are maintained by a `BEFORE INSERT OR UPDATE` trigger on `doc_pages`; the application never writes them. Extraction walks text nodes only, so block types, prop values, and IDs are not indexed.
- 
-**Templates.** `templates.structure` is a page tree whose pages carry block JSON that conforms to the shared block schema, and it is validated by the same Zod schema when an Admin saves it.
- 
-RLS is enabled on all tables and on Storage. Public can only read published + public projects and their doc pages. Owners have full access to their own data. Collaborators have read visibility into projects they're credited on and no write access — attribution carries no permission. Service role key is server-only — never in client-side code.
- 
+
+**`doc_pages.content`** holds the BlockNote block array. `kind` is either `'page'` or `'folder'`. `parent_id` points to the containing folder node (or `null` at root). `schema_version` records the shape of the stored JSON. `revision` is an integer incremented on every page save. `deleted_at` tracks soft deletion.
+
+**`projects.tree_revision`** is an integer incremented atomically on every structural tree mutation (create, rename, move, delete, restore) to guarantee tree concurrency across sessions.
+
+**`username_redirects`** holds historical usernames owned by users (`old_username`, `user_id`), allowing permanent link preservation without chains.
+
+**Docs search.** `content_text` is plain text extracted from the block JSON (inline text nodes across all blocks, including nested blocks, list items, and table cells). `content_tsv` is a weighted `tsvector` built from `title` + `content_text`, backed by a GIN index. Both are maintained by a `BEFORE INSERT OR UPDATE` trigger on `doc_pages`; the application never writes them. Extraction walks text nodes only, so block types, prop values, and IDs are not indexed. Soft-deleted pages (`deleted_at IS NOT NULL`) are omitted from search results.
+
+**Templates.** `templates.structure` is a page tree with recursive nodes (max depth 5, max 500 nodes) whose pages carry block JSON conforming to the shared block schema. Fresh UUIDs and unique slugs are generated when applied.
+
+RLS is enabled on all tables and on Storage. Public can only read published + public projects and their active doc pages. Owners have full access to their own data. Collaborators have attribution-only visibility into projects they're credited on and zero access to doc pages or tree RPCs. The service role key is server-only — never in client-side code.
+
 ---
- 
+
+## Docs Tree
+
+Showcrate organizes project documentation into a hierarchical tree with flat public URLs:
+
+- **Folders and Pages:** Nodes have `kind = 'page' | 'folder'`. Folders serve as organizational parents and hold no content in v1.
+- **Flat Public URLs:** Every page is addressed at `/{username}/{project}/docs/{slug}` regardless of folder hierarchy or folder renaming. Page slugs are unique per project among live pages.
+- **Hierarchy Limits:** Maximum folder depth is 5 levels. A single project may contain at most 500 nodes.
+- **Soft Deletion & 30-Day Purge:** Deleting a page or folder sets `deleted_at = now()`. Soft-deleted nodes return 404 publicly and are excluded from search. Descendants of a soft-deleted folder are cascades in queries. A scheduled job permanently purges nodes soft-deleted for over 30 days.
+- **Trash & Restore:** Deleted items appear in the editor Trash drawer. Restoring a node moves it back into its original parent if still alive, or falls back to project root if the parent was deleted.
+- **Index Page Invariant:** Exactly one page per project has `is_index = true`. The index page lives at root (`parent_id IS NULL`), cannot be soft-deleted, cannot be moved inside a folder, and serves `/{username}/{project}/docs`.
+
+---
+
 ## Saving & Concurrency
- 
-- Every save request carries the `base_revision` it was made against.
-- The API applies the save only if `base_revision` equals the stored `revision`, then increments `revision` atomically.
-- A stale save is rejected with `409`. The editor tells the Owner the page changed elsewhere and reloads the current content. Two tabs never silently overwrite each other.
-- Every save is validated against the shared block schema before it is written.
-## Version History
- 
-Version history follows Notion's model: automatic snapshots, a read-only preview of any past version, and one-click restore.
- 
-- **Snapshots are automatic.** When a save lands and the newest snapshot for that page is older than the snapshot interval, a snapshot of the saved content is written to `page_versions`. Unchanged content is not snapshotted again. A snapshot is also written immediately before any restore.
-- **History is per page.** `/{username}/{project}/versions` shows a page selector and, for the selected page, a list of snapshots grouped by day, newest first, each with its timestamp and the name of the person who saved it.
-- **Preview is read-only.** Selecting a snapshot renders it through the same block renderer as the public site.
-- **Restore is reversible.** The Owner can restore any snapshot. Restoring snapshots the current content first, then replaces the live content and increments `revision`.
-- **Retention is a time window.** Snapshots older than the retention window are pruned by a scheduled job.
-- **No diff view in v1.**
+
+- **Page Content Concurrency:** Every save request carries the `base_revision` it was made against. The API applies the save only if `base_revision` equals stored `revision`, then increments `revision` atomically. A stale save is rejected with `409 Conflict`.
+- **Tree Structural Concurrency:** Structural tree operations (create, rename, move, delete, restore) pass `base_tree_revision`. The database compares this against `projects.tree_revision` in an atomic transaction. Stale requests raise error `P0009` (HTTP `409`), returning the fresh tree and current revision so the editor can roll back optimistic changes.
+- **Payload Validation:** Every save is validated against the shared block schema and capped at 1 MB before writing.
+
 ---
- 
+
 ## URL & Username Rules
- 
+
 **Usernames:**
-- 3–39 chars, lowercase letters/numbers/hyphens only
-- Cannot start or end with hyphen, no consecutive hyphens
-- Reserved words blocked: admin, showcase, templates, new, settings, help, notifications, auth, login, logout, signup, register, forgot-password, reset-password, about, blog, docs, terms, privacy, api, status, explore, contact, editor, code, export, versions, users, projects, reports, logs, billing, account, profile, appearance, danger, domain, seo, analytics, collaborators, general, visibility, following, dorukaysor, avision, batteringram, showcrate, dashboard, dmca, copyright, legal, abuse, security, cookies, licenses, subprocessors, grievance
+- 3–39 chars, lowercase letters/numbers/hyphens only. Cannot start or end with hyphen, no consecutive hyphens.
+- **Changeable with 30-day cooldown:** Users can change their username via the `change_username` RPC (`POST /api/account/username`). Allowed once every 30 days (`users.username_changed_at`).
+- **Permanent reservation & Single 301 hop:** Previous usernames are inserted into `username_redirects` and permanently held for that user. They cannot be claimed by others at signup or rename. `resolveCanonical` resolves old usernames and old project slugs in a single 301 redirect hop (no chains) with `Cache-Control: public, max-age=3600`.
+- **Live availability:** `GET /api/account/username/available?name=` checks live availability without revealing whether a held name belongs to an active user or a redirect.
+- Reserved words blocked: admin, showcase, templates, new, settings, help, notifications, auth, login, logout, signup, register, forgot-password, reset-password, about, blog, docs, terms, privacy, api, status, explore, contact, editor, code, export, versions, users, projects, reports, logs, billing, account, profile, appearance, danger, domain, seo, analytics, collaborators, general, visibility, following, dorukaysor, avision, batteringram, showcrate, dashboard, dmca, copyright, legal, abuse, security, cookies, licenses, subprocessors, grievance.
+
 **Project slugs:**
 - Auto-generated from project name (kebab-case)
 - Unique per user (not globally)
-- Renaming triggers a 301 redirect entry in project_redirects
+- Renaming triggers a 301 redirect entry in `project_redirects`
 ---
  
 ## Build Phases (8 weeks)
@@ -241,7 +252,7 @@ Version history follows Notion's model: automatic snapshots, a read-only preview
  
 1. **Two Supabase clients:** `supabase.ts` (anon key, client-side) and `supabase-server.ts` (SSR cookie-based, server-side only). Never use the service role key on the client.
 2. **RLS is the security layer.** Test it manually, for tables and for Storage. If a logged-out user can see private data, or a Collaborator can write to a project, the policy is wrong — enforcement happens at the database, not the UI.
-3. **Central route resolution happens once, in middleware.** Astro middleware attaches `locals.project`, `locals.viewer`, and `locals.isOwner` once per request. Pages and API routes read from `locals` — they don't re-derive auth state independently. Marketing routes (`/`, `/about`, `/help`, `/terms`, `/privacy`) skip session resolution entirely to remain static-cacheable and never call `getUser()`. `/dashboard/projects/[id]/**` routes use an owner-scoped resolver that validates `id` format (UUID), queries `id = $1 AND owner_id = viewer.id AND deleted_at IS NULL`, and returns 404 (never 403) if nonexistent or unauthorized. Collaborators have no project routes and receive 404 here. React islands have no access to server context and must receive what they need as props.
+3. **Central route resolution happens once, in middleware.** Astro middleware attaches `locals.project`, `locals.viewer`, and `locals.isOwner` once per request. Pages and API routes read from `locals` — they don't re-derive auth state independently. Marketing routes (`/`, `/about`, `/help`, `/terms`, `/privacy`) skip session resolution entirely to remain static-cacheable and never call `getUser()`. `/dashboard/**` and `/editor/**` require an active viewer, redirecting unauthenticated visitors to `/auth/login?next=...` (validated and capped at 200 chars), and carry `Cache-Control: private, no-store` and `X-Robots-Tag: noindex`. `/dashboard/projects/[id]/**` and `/editor/[projectId]/**` routes use an owner-scoped resolver that validates `id` format (UUID), queries `id = $1 AND owner_id = viewer.id AND deleted_at IS NULL`, and returns 404 (never 403) if nonexistent or unauthorized. Collaborators have no project or editor routes and receive 404 here. React islands have no access to server context and must receive what they need as props.
 4. **Reserved usernames** must be validated at signup using the list above.
 5. **User content is data, never HTML.** Block JSON is validated with Zod against the shared schema on every save: unknown block types, unknown props, disallowed URLs, and oversized payloads are rejected. At render, all text is escaped, styling props map to a fixed class allowlist, links are limited to `http` / `https` / `mailto`, and images must point at Showcrate storage. No user-supplied string reaches `set:html` or `dangerouslySetInnerHTML`. No exceptions.
 6. **Doc pages render at request time** from stored block JSON through the first-party block renderer. There is no build step for documentation content — every save is live.
@@ -250,13 +261,16 @@ Version history follows Notion's model: automatic snapshots, a read-only preview
 9. **Every save carries `base_revision`.** The API rejects stale saves with `409`. Never write page content without the revision check.
 10. **BlockNote versions are pinned.** All `@blocknote/*` packages stay on one exact version. Upgrades are deliberate PRs that include a check of existing stored content against the new version. `@blocknote/xl-*` packages are licensed GPL-3.0 and are not used.
 11. **`@dnd-kit/core` + `@dnd-kit/sortable`** for page tree reorder, pinned versions. Do not upgrade to `@dnd-kit/dom`. Native HTML5 drag-and-drop does not work on mobile.
-12. **Project rename = 301 redirect entry.** Never break existing URLs.
+12. **Project rename = 301 redirect entry in `project_redirects`. Username rename = 301 redirect entry in `username_redirects`.** Never break existing URLs; resolve canonical destinations in a single 301 hop with `Cache-Control: public, max-age=3600`.
 13. **Collaborators are attribution-only.** Zero write permissions, zero settings access, zero ability to invite others. Only the project Owner can perform any action on a project.
 14. **`main` branch is always deployable.** Feature branches only. PR to merge. Review within 24 hours.
+15. **All tree mutations must execute through `doc_tree_*` database functions.** Structure operations (`doc_tree_create_node`, `doc_tree_rename_node`, `doc_tree_move_node`, `doc_tree_soft_delete_node`, `doc_tree_restore_node`) enforce hierarchy, depth limits, and atomic `tree_revision` concurrency at the database layer.
 ---
  
 ## What Is NOT in v1 (deferred to v2)
  
+- Page slug renaming
+- Right-hand configuration panel
 - PDF export
 - ZIP / HTML export
 - Markdown import / export
@@ -287,6 +301,5 @@ Version history follows Notion's model: automatic snapshots, a read-only preview
 - **Request-time rendering cost and caching.** Rendering block JSON and running Shiki on a serverless function adds latency per request. A cache policy (edge cache headers with invalidation on save) is needed that keeps "every save is live" true.
 - **Asset access for Private and Unlisted projects.** A public storage bucket serves images to anyone with the URL. Decide between unguessable paths in a public bucket and a private bucket with signed URLs.
 - **Page size cap.** A maximum serialized size for `doc_pages.content` is needed. Proposed: 1 MB, enforced by the save validator.
-- **Username changes are disabled in v1; requires a username redirect table before enabling.** Allowing username changes would break shared public URLs (`/{username}/{project}`) since no username redirect mechanism exists.
 - **`project_views` granular fields** (`referrer`, `country`) are collected with no v1 UI to surface them, since advanced analytics is out of scope for v1. Confirm whether to keep writing this data for a v2 analytics feature or drop it from v1 inserts.
  
