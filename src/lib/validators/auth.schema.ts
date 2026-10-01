@@ -3,17 +3,25 @@
  */
 import { z } from 'zod';
 
-// Reserved usernames — sourced from overview.new.md
-const RESERVED_USERNAMES = new Set([
+// Reserved usernames — sourced from overview.new.md and routing specifications
+export const RESERVED_USERNAMES = new Set([
   'admin', 'showcase', 'templates', 'new', 'settings', 'help', 'notifications',
   'auth', 'login', 'logout', 'signup', 'register', 'forgot-password', 'reset-password',
   'about', 'blog', 'docs', 'terms', 'privacy', 'api', 'status', 'explore', 'contact',
   'editor', 'code', 'export', 'versions', 'users', 'projects', 'reports', 'logs',
   'billing', 'account', 'profile', 'appearance', 'danger', 'domain', 'seo',
   'analytics', 'collaborators', 'general', 'visibility', 'following',
+  // Newly reserved system, legal, and compliance routes
+  'dashboard', 'dmca', 'copyright', 'legal', 'abuse', 'security', 'cookies',
+  'licenses', 'subprocessors', 'grievance',
   // Reserved developer / brand usernames
-  'avision', 'batteringram', 'showcrate',
+  'avision', 'batteringram', 'showcrate', 'dorukaysor',
 ]);
+
+export function isReservedUsername(username: string | null | undefined): boolean {
+  if (!username) return false;
+  return RESERVED_USERNAMES.has(username.toLowerCase());
+}
 
 export const usernameSchema = z
   .string()
@@ -23,7 +31,7 @@ export const usernameSchema = z
   .refine((v) => !v.startsWith('-'), 'Username cannot start with a hyphen')
   .refine((v) => !v.endsWith('-'), 'Username cannot end with a hyphen')
   .refine((v) => !v.includes('--'), 'Username cannot contain consecutive hyphens')
-  .refine((v) => !RESERVED_USERNAMES.has(v), 'This username is reserved');
+  .refine((v) => !isReservedUsername(v), 'This username is reserved');
 
 export const signupSchema = z.object({
   email: z.email('Invalid email address'),

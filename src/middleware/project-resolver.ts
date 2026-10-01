@@ -31,6 +31,8 @@ export interface ResolvedProject {
  * Returns null if the project doesn't exist or isn't accessible.
  * Returns a redirect URL string if the slug has changed.
  */
+import { isReservedUsername } from '@/lib/validators/auth.schema';
+
 export async function resolveProject(
   db: SupabaseClient<Database>,
   ownerUsername: string,
@@ -38,6 +40,11 @@ export async function resolveProject(
   currentUser: SessionUser | null,
   fullPath: string,
 ): Promise<ResolvedProject | null | { redirect: string }> {
+  // If the owner segment is reserved, return 404 immediately without DB query
+  if (isReservedUsername(ownerUsername)) {
+    return null;
+  }
+
   // 1. Find the owner by username (case-insensitive)
   const { data: owner } = await db
     .from('users')
@@ -95,13 +102,13 @@ export async function resolveProject(
     isCollaborator = !!collab;
   }
 
-  // Private projects: only owner/collaborator can see
-  if (project.visibility === 'private' && !isOwner && !isCollaborator) {
+  // Private projects: only the owner can see (returns 404 to everyone else)
+  if (project.visibility === 'private' && !isOwner) {
     return null;
   }
 
-  // Unpublished projects: only owner/collaborator can see
-  if (!project.published && !isOwner && !isCollaborator) {
+  // Unpublished projects: only owner can see
+  if (!project.published && !isOwner) {
     return null;
   }
 

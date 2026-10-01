@@ -4,10 +4,10 @@
  * Called from the main middleware after session resolution.
  * Returns null if access is permitted, or a redirect/Response if denied.
  *
- * Role matrix (from overview.new.md):
- *   /admin/**       → developer OR moderator
- *   authenticated/* → any authenticated user (not banned)
- *   editor/settings → owner only (checked at route level)
+ * Role matrix (from overview.md):
+ *   /admin/**       → developer OR admin
+ *   /dashboard/**   → any authenticated user (not banned)
+ *   /{username}/{project}/** → public read-only (owner-facing pages are under /dashboard/**)
  */
 import type { SessionUser } from '@/types/auth';
 import { isAdmin } from '@/types/auth';
@@ -16,12 +16,6 @@ export type GuardResult =
   | { allowed: true }
   | { allowed: false; redirectTo: string }
   | { allowed: false; status: 401 | 403 };
-
-const AUTHENTICATED_PREFIXES = [
-  '/new',
-  '/notifications',
-  '/settings',
-];
 
 const ADMIN_PREFIX = '/admin';
 
@@ -36,12 +30,16 @@ export function checkRouteAccess(
     return { allowed: true };
   }
 
-  // Authenticated-only routes
-  const isAuthRequired = AUTHENTICATED_PREFIXES.some((p) => pathname.startsWith(p));
-  if (isAuthRequired) {
-    if (!user) return { allowed: false, redirectTo: `/auth/login?next=${encodeURIComponent(pathname)}` };
+  // Authenticated-only routes: /dashboard and /dashboard/**
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    if (!user) {
+      return {
+        allowed: false,
+        redirectTo: `/auth/login?next=${encodeURIComponent(pathname)}`,
+      };
+    }
 
-    // Banned users can only access the appeal page (not implemented in v1 — block all)
+    // Banned users can only access appeal page (not implemented in v1 — block all)
     if (user.platformRole === 'banned') return { allowed: false, status: 403 };
 
     return { allowed: true };
@@ -49,13 +47,4 @@ export function checkRouteAccess(
 
   // Public routes — always permitted
   return { allowed: true };
-}
-
-/**
- * Dynamic project-scoped route guard.
- * Checks if a path like /{username}/{project}/editor or /settings/* requires auth.
- */
-export function isProjectAuthRequired(pathname: string): boolean {
-  // Match /{username}/{project}/editor, /settings/*, /versions
-  return /^\/[^/]+\/[^/]+\/(editor|settings|versions)/.test(pathname);
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { signupSchema } from '@/lib/validators/auth.schema';
 import type { SignupInput } from '@/lib/validators/auth.schema';
 import { createClient } from '@/lib/supabase/client';
+import { safeNext } from '@/lib/auth/safe-next';
 
 type FieldErrors = Partial<Record<keyof SignupInput, string>>;
 
@@ -63,11 +64,13 @@ export default function SignupForm() {
     setServerError('');
     setOauthLoading(provider);
     try {
+      const next = new URLSearchParams(window.location.search).get('next');
+      const target = safeNext(next);
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(target)}`,
           ...(provider === 'github' && { scopes: 'read:user user:email' }),
           ...(provider === 'google' && { scopes: 'openid email profile' }),
         },

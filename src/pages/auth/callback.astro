@@ -8,11 +8,12 @@
  * 3. Client-side hash token recovery (#access_token=...) / hash error recovery
  */
 import { createServerClient, createAdminClient } from '@/lib/supabase/server';
+import { safeNext } from '@/lib/auth/safe-next';
 
 const supabase = createServerClient(Astro.cookies);
 
 const code = Astro.url.searchParams.get('code');
-const next = Astro.url.searchParams.get('next') || '/';
+const next = safeNext(Astro.url.searchParams.get('next'));
 const error = Astro.url.searchParams.get('error');
 const errorDescription =
   Astro.url.searchParams.get('error_description') ||
@@ -106,6 +107,7 @@ if (code) {
 
     <script>
       import { createClient } from '@/lib/supabase/client';
+      import { safeNext } from '@/lib/auth/safe-next';
 
       async function handleClientCallback() {
         const hash = window.location.hash;
@@ -126,7 +128,7 @@ if (code) {
         }
 
         const supabase = createClient();
-        const next = searchParams.get('next') || '/';
+        const next = safeNext(searchParams.get('next') || hashParams.get('next'));
 
         // Check if access_token is in hash (Implicit Grant)
         const accessToken = hashParams.get('access_token');

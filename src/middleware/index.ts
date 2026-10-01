@@ -3,53 +3,56 @@
  *
  * Execution order per request:
  * 1. Rate limiting (IP-based, by tier)
- * 2. Session resolution → Astro.locals.user
- * 3. Route guard → redirect or 403 if access denied
- * 4. Project resolution → Astro.locals.project (for project-scoped routes)
- * 5. next() → continue to page/route handler
- *
- * ─── LOCALS SHAPE NOTE ─────────────────────────────────────────────────────
- * Overview.md Critical Rule #3 specifies locals.viewer / locals.isOwner.
- * This middleware currently sets locals.USER (not locals.viewer).
- * THE MISMATCH IS INTENTIONAL HERE PENDING A TEAM DECISION:
- *   - locals.user  → the authenticated SessionUser (set here)
- *   - locals.viewer → ALIAS for locals.user (added for forward-compat)
- *   - locals.isOwner is resolved per-project inside project-resolver.ts
- *     and exposed via locals.project.isOwner — not as a top-level local.
- * TODO: Decide on canonical name (user vs viewer) and update both here and
- * all consuming pages/routes. Until then, locals.user is the real shape.
- * ────────────────────────────────────────────────────────────────────────────
+ * 2. Static asset bypass
+ * 3. Marketing route bypass (skip session resolution entirely; never call getUser())
+ * 4. Reserved username route rejection (404 without DB query)
+ * 5. Session resolution → Astro.locals.viewer (& locals.user alias)
+ * 6. Strict username completion gate
+ * 7. /dashboard and /dashboard/** guards & project scoping
+ * 8. /auth/login & /auth/signup redirect for authenticated users
+ * 9. /admin route guard
+ * 10. Public project resolution (/{username}/{project}/**)
+ * 11. next() → apply Cache-Control and X-Robots-Tag headers for /dashboard and /auth
  */
 import { defineMiddleware } from 'astro:middleware';
+import { z } from 'zod';
 import { createServerClient } from '@/lib/supabase/server';
 import { checkRateLimit, getTier } from './rate-limit';
-import { checkRouteAccess, isProjectAuthRequired } from './auth-guard';
+import { isAdmin } from '@/types/auth';
 import { resolveProject } from './project-resolver';
+import { safeNext } from '@/lib/auth/safe-next';
+import { isReservedUsername } from '@/lib/validators/auth.schema';
 import type { SessionUser } from '@/types/auth';
-import type { ResolvedProject } from './project-resolver';
+import type { ProjectRow } from '@/types/database';
 import { tooManyRequests, forbidden } from '@/lib/api/response';
 
 // Extend Astro.locals type
 declare global {
   namespace App {
     interface Locals {
-      /** Authenticated user. Canonical name. See LOCALS SHAPE NOTE above. */
-      user: SessionUser | null;
-      /** Alias for locals.user — matches Overview.md Critical Rule #3 naming */
+      /** Authenticated user (Rule 3) */
       viewer: SessionUser | null;
-      project: ResolvedProject | null;
+      /** Alias for locals.viewer — backwards compatibility for existing API routes */
+      user: SessionUser | null;
+      /** Resolved project (ProjectRow or ResolvedProject) */
+      project: ProjectRow | any | null;
+      /** True if current viewer is the project owner */
+      isOwner: boolean;
     }
   }
 }
+
+const MARKETING_ROUTES = new Set(['/', '/about', '/help', '/terms', '/privacy']);
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, cookies, url, redirect, locals } = context;
   const pathname = url.pathname;
 
   // Initialize locals
-  locals.user = null;
   locals.viewer = null;
+  locals.user = null;
   locals.project = null;
+  locals.isOwner = false;
 
   // ── Step 1: Rate limiting ─────────────────────────────────────────────
   const ip =
@@ -67,7 +70,53 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return new Response('Too many requests. Please wait a moment.', { status: 429 });
   }
 
-  // ── Step 2: Session resolution ────────────────────────────────────────
+  // ── Step 2: Static assets and Vite client bundles bypass ───────────────
+  const isStaticAsset =
+    pathname.startsWith('/_astro/') ||
+    pathname.startsWith('/@') ||
+    pathname.startsWith('/favicon') ||
+    /\.(svg|png|jpg|jpeg|webp|gif|css|js|woff2?|ico|txt)$/i.test(pathname);
+
+  if (isStaticAsset) {
+    return next();
+  }
+
+  // ── Step 3: Marketing routes skip session resolution entirely ──────────
+  // Rule 3 exception: '/', '/about', '/help', '/terms', '/privacy' must remain
+  // static-cacheable and must NEVER call getUser().
+  if (MARKETING_ROUTES.has(pathname)) {
+    return next();
+  }
+
+  // ── Step 4: Reserved username check for top-level routes ───────────────
+  // Return 404 immediately, without a DB query, when segment is in reserved list.
+  const pathSegments = pathname.split('/').filter(Boolean);
+  if (pathSegments.length >= 1) {
+    const firstSegment = pathSegments[0].toLowerCase();
+    if (isReservedUsername(firstSegment)) {
+      const allowedTopLevel = [
+        'auth',
+        'admin',
+        'dashboard',
+        'api',
+        'showcase',
+        'templates',
+        'contact',
+        'community',
+        'blog',
+        'changelog',
+        'features',
+        'guides',
+        'playground',
+        'security',
+      ];
+      if (!allowedTopLevel.includes(firstSegment)) {
+        return new Response('Not Found', { status: 404 });
+      }
+    }
+  }
+
+  // ── Step 5: Session resolution ─────────────────────────────────────────
   const supabase = createServerClient(cookies);
   const {
     data: { user: authUser },
@@ -88,42 +137,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
       avatarUrl: profile?.avatar_url ?? null,
       platformRole: profile?.platform_role ?? 'user',
     };
-    locals.user = sessionUser;
-    locals.viewer = sessionUser; // keep both names in sync
+    locals.viewer = sessionUser;
+    locals.user = sessionUser; // keep alias in sync
   }
 
-  // ── Step 2b: Strict username completion gate ──────────────────────────────
-  // If an authenticated user has NO username, they MUST NOT proceed anywhere
-  // in the application until they set one up (or log out).
-  if (locals.user && !locals.user.username) {
-    // 1. Allow the onboarding page: /auth/signup?social=true
+  // ── Step 6: Strict username completion gate ────────────────────────────
+  if (locals.viewer && !locals.viewer.username) {
     const isSocialSignupPage =
       pathname === '/auth/signup' && url.searchParams.get('social') === 'true';
-
-    // 2. Allow OAuth callback to complete initial exchange
     const isAuthCallback = pathname === '/auth/callback';
-
-    // 3. Allow setting the username API
     const isSetUsernameApi = pathname === '/api/auth/set-username';
-
-    // 4. Allow logging out (both page and API) so the user is never trapped
     const isLogout =
-      pathname === '/api/auth/logout' ||
-      pathname === '/auth/logout';
-
-    // 5. Allow static assets and Vite client bundles
-    const isStaticAsset =
-      pathname.startsWith('/_astro/') ||
-      pathname.startsWith('/@') ||
-      pathname.startsWith('/favicon') ||
-      /\.(svg|png|jpg|jpeg|webp|gif|css|js|woff2?|ico)$/i.test(pathname);
+      pathname === '/api/auth/logout' || pathname === '/auth/logout';
 
     const isAllowed =
-      isSocialSignupPage ||
-      isAuthCallback ||
-      isSetUsernameApi ||
-      isLogout ||
-      isStaticAsset;
+      isSocialSignupPage || isAuthCallback || isSetUsernameApi || isLogout;
 
     if (!isAllowed) {
       if (pathname.startsWith('/api/')) {
@@ -141,7 +169,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
         );
       }
 
-      // Preserve next destination if navigating to a specific target page
       const nextParam =
         pathname !== '/' && !pathname.startsWith('/auth/')
           ? `&next=${encodeURIComponent(url.pathname + url.search)}`
@@ -151,56 +178,131 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // ── Step 3: Route guard ────────────────────────────────────────────────
-  const guardResult = checkRouteAccess(pathname, locals.user);
-  if (!guardResult.allowed) {
-    if ('redirectTo' in guardResult) {
-      return redirect(guardResult.redirectTo, 302);
+  // ── Step 7: /dashboard and /dashboard/** guards ────────────────────────
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    if (!locals.viewer) {
+      const fullTarget = pathname + url.search;
+      const cappedTarget =
+        fullTarget.length > 200 ? fullTarget.slice(0, 200) : fullTarget;
+      const res = redirect(
+        `/auth/login?next=${encodeURIComponent(cappedTarget)}`,
+        302,
+      );
+      res.headers.set('Cache-Control', 'private, no-store');
+      res.headers.set('X-Robots-Tag', 'noindex');
+      return res;
     }
-    if (pathname.startsWith('/api/')) {
-      return guardResult.status === 403 ? forbidden() : new Response('Unauthorized', { status: 401 });
+
+    // TODO(legal-age-gate)
+
+    // Check project routes: /dashboard/projects/[id]/**
+    const dashProjectMatch = pathname.match(
+      /^\/dashboard\/projects\/([^/]+)(\/.*)?$/,
+    );
+    if (dashProjectMatch) {
+      const projectId = dashProjectMatch[1];
+      const uuidParsed = z.string().uuid().safeParse(projectId);
+      if (!uuidParsed.success) {
+        const res = new Response('Not Found', { status: 404 });
+        res.headers.set('Cache-Control', 'private, no-store');
+        res.headers.set('X-Robots-Tag', 'noindex');
+        return res;
+      }
+
+      const { data: projectRow } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .eq('owner_id', locals.viewer.id)
+        .is('deleted_at', null)
+        .single();
+
+      if (!projectRow) {
+        // Return 404 with identical status and body as nonexistent id. Never 403.
+        const res = new Response('Not Found', { status: 404 });
+        res.headers.set('Cache-Control', 'private, no-store');
+        res.headers.set('X-Robots-Tag', 'noindex');
+        return res;
+      }
+
+      locals.project = projectRow;
+      locals.isOwner = true;
     }
-    return redirect('/auth/login', 302);
   }
 
-  // ── Step 4: Project resolution ─────────────────────────────────────────
-  const projectRouteMatch = pathname.match(/^\/([^/]+)\/([^/]+)(\/.*)?$/);
+  // ── Step 8: /auth/login and /auth/signup redirect with viewer ──────────
   if (
-    projectRouteMatch &&
+    (pathname === '/auth/login' || pathname === '/auth/signup') &&
+    locals.viewer &&
+    locals.viewer.username &&
+    url.searchParams.get('social') !== 'true'
+  ) {
+    const rawNext = url.searchParams.get('next');
+    const target = safeNext(rawNext);
+    const res = redirect(target, 302);
+    res.headers.set('Cache-Control', 'private, no-store');
+    res.headers.set('X-Robots-Tag', 'noindex');
+    return res;
+  }
+
+  // ── Step 9: /admin route guard ─────────────────────────────────────────
+  if (pathname.startsWith('/admin')) {
+    if (!locals.viewer) {
+      const res = redirect('/auth/login', 302);
+      res.headers.set('Cache-Control', 'private, no-store');
+      res.headers.set('X-Robots-Tag', 'noindex');
+      return res;
+    }
+    if (!isAdmin(locals.viewer)) {
+      if (pathname.startsWith('/api/')) return forbidden();
+      return new Response('Forbidden', { status: 403 });
+    }
+  }
+
+  // ── Step 10: Public project resolution (/{username}/{project}/**) ───────
+  const publicProjectMatch = pathname.match(/^\/([^/]+)\/([^/]+)(\/.*)?$/);
+  if (
+    publicProjectMatch &&
     !pathname.startsWith('/api/') &&
     !pathname.startsWith('/admin') &&
     !pathname.startsWith('/auth') &&
-    !pathname.startsWith('/settings') &&
-    !pathname.startsWith('/new') &&
-    !pathname.startsWith('/notifications') &&
-    !pathname.startsWith('/showcase') &&
-    !pathname.startsWith('/templates')
+    !pathname.startsWith('/dashboard')
   ) {
-    const [, ownerUsername, projectSlug] = projectRouteMatch;
+    const [, ownerUsername, projectSlug] = publicProjectMatch;
+    if (!isReservedUsername(ownerUsername)) {
+      const result = await resolveProject(
+        supabase,
+        ownerUsername!,
+        projectSlug!,
+        locals.viewer,
+        pathname,
+      );
 
-    const result = await resolveProject(
-      supabase,
-      ownerUsername!,
-      projectSlug!,
-      locals.user,
-      pathname,
-    );
+      if (result === null) {
+        return new Response('Not Found', { status: 404 });
+      }
 
-    if (result === null) {
-      return new Response('Not Found', { status: 404 });
+      if ('redirect' in result) {
+        return redirect(result.redirect, 301);
+      }
+
+      locals.project = result.project;
+      locals.isOwner = result.isOwner;
     }
-
-    if ('redirect' in result) {
-      return redirect(result.redirect, 301);
-    }
-
-    if (isProjectAuthRequired(pathname) && !result.canWrite) {
-      if (!locals.user) return redirect(`/auth/login?next=${encodeURIComponent(pathname)}`, 302);
-      return new Response('Forbidden', { status: 403 });
-    }
-
-    locals.project = result;
   }
 
-  return next();
+  // ── Step 11: Call next() and attach security / cache headers ───────────
+  const response = await next();
+
+  if (
+    pathname === '/dashboard' ||
+    pathname.startsWith('/dashboard/') ||
+    pathname === '/auth' ||
+    pathname.startsWith('/auth/')
+  ) {
+    response.headers.set('Cache-Control', 'private, no-store');
+    response.headers.set('X-Robots-Tag', 'noindex');
+  }
+
+  return response;
 });

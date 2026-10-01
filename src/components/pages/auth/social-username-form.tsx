@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usernameSchema } from '@/lib/validators/auth.schema';
+import { safeNext } from '@/lib/auth/safe-next';
 
 interface Props {
   suggested: string;
@@ -49,9 +50,8 @@ export default function SocialUsernameForm({ suggested, next }: Props) {
         return;
       }
 
-      // Redirect to destination or their profile page
-      const target = next && next !== '/' ? next : `/${json.data.username}`;
-      window.location.href = target;
+      // Redirect to validated next destination, defaulting to /dashboard
+      window.location.href = safeNext(next);
     } catch {
       setServerError('Network error. Please check your connection.');
     } finally {

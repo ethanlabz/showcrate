@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { loginSchema } from '@/lib/validators/auth.schema';
 import type { LoginInput } from '@/lib/validators/auth.schema';
 import { createClient } from '@/lib/supabase/client';
+import { safeNext } from '@/lib/auth/safe-next';
 
 type FieldErrors = Partial<Record<keyof LoginInput, string>>;
 
@@ -72,8 +73,7 @@ export default function LoginForm() {
       }
 
       const next = new URLSearchParams(window.location.search).get('next');
-      // Prefer an explicit ?next redirect, then fall back to /{username}, then /
-      window.location.href = next ?? (json.data.username ? `/${json.data.username}` : '/');
+      window.location.href = safeNext(next);
     } catch {
       setServerError('Network error. Please check your connection.');
     } finally {
@@ -86,11 +86,12 @@ export default function LoginForm() {
     setOauthLoading(provider);
     try {
       const next = new URLSearchParams(window.location.search).get('next');
+      const target = safeNext(next);
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next ?? '/')}`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(target)}`,
           ...(provider === 'github' && { scopes: 'read:user user:email' }),
           ...(provider === 'google' && { scopes: 'openid email profile' }),
         },
