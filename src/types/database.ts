@@ -39,6 +39,7 @@ export interface UserRow {
   avatar_url: string | null;
   bio: string | null;
   platform_role: PlatformRole;
+  username_changed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,6 +55,7 @@ export interface ProjectRow {
   published: boolean;
   featured: boolean;
   view_count: number;
+  tree_revision: number;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
@@ -67,14 +69,25 @@ export interface ProjectRedirectRow {
   created_at: string;
 }
 
+export interface UsernameRedirectRow {
+  old_username: string;
+  user_id: string;
+  created_at: string;
+}
+
+export type DocPageKind = 'page' | 'folder';
+
 export interface DocPageRow {
   id: string;
   project_id: string;
-  slug: string;
+  parent_id: string | null;
+  kind: DocPageKind;
+  slug: string | null;
   title: string;
-  content: string;
+  content: string | null;
   order_index: number;
   is_index: boolean;
+  deleted_at: string | null;
   // content_tsv is generated — never write to it
   created_at: string;
   updated_at: string;
@@ -110,11 +123,13 @@ export interface TemplateRow {
 }
 
 export interface TemplatePageStructure {
-  slug: string;
+  kind: DocPageKind;
   title: string;
-  content: string;
-  order_index: number;
+  slug?: string | null;
+  content?: string | null;
+  order_index?: number;
   is_index?: boolean;
+  children?: TemplatePageStructure[];
 }
 
 export interface ProjectViewRow {
