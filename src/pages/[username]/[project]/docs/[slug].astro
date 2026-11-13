@@ -1,0 +1,87 @@
+---
+// src/pages/[username]/[project]/docs/[slug].astro
+// Serves individual documentation pages at /[username]/[project]/docs/[slug]
+import DocsLayout from '@/layouts/Docs.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { renderMarkdown } from '@/lib/render-markdown';
+
+const { username, project: projectSlug, slug } = Astro.params;
+
+if (!username || !projectSlug || !slug) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const supabase = createServerClient(Astro.cookies);
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+
+// 1. Resolve project
+let project = Astro.locals.project;
+let isOwner = Boolean(Astro.locals.isOwner);
+
+if (!project) {
+  const { data: ownerUser } = await supabase
+    .from('users')
+    .select('id, username')
+    .ilike('username', username)
+    .single();
+
+  if (!ownerUser) {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+
+  const { data: projectRow } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('owner_id', ownerUser.id)
+    .eq('slug', projectSlug)
+    .is('deleted_at', null)
+    .single();
+
+  if (!projectRow) {
+    return new Response(null, { status: 404, statusText: 'Not Found' });
+  }
+
+  project = projectRow;
+  isOwner = viewer?.id === project.owner_id;
+}
+
+// Access check: private or draft projects return 404 to non-owners
+if ((project.visibility === 'private' || !project.published) && !isOwner) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+// 2. Query target page: kind='page' AND deleted_at IS NULL
+const { data: page } = await supabase
+  .from('doc_pages')
+  .select('id, title, content, is_index, slug')
+  .eq('project_id', project.id)
+  .eq('slug', slug)
+  .eq('kind', 'page')
+  .is('deleted_at', null)
+  .single();
+
+if (!page) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+// 3. Query tree: Never select content for the tree query
+const { data: treeNodes } = await supabase
+  .from('doc_pages')
+  .select('id, parent_id, kind, title, slug, order_index, is_index')
+  .eq('project_id', project.id)
+  .is('deleted_at', null)
+  .order('order_index', { ascending: true });
+
+// 4. Render markdown content
+const html = await renderMarkdown(page.content ?? '');
+---
+
+<DocsLayout
+  project={project}
+  owner={{ username }}
+  currentPage={page}
+  treeNodes={treeNodes ?? []}
+  isOwner={isOwner}
+>
+  <div set:html={html} />
+</DocsLayout>

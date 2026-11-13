@@ -1,0 +1,78 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { DashboardShell } from '@/components/DashboardShell';
+
+export interface Props {
+  title: string;
+  description?: string;
+  noIndex?: boolean;
+  iconName?: string;
+  headerTitle?: string;
+  headerDescription?: string;
+  hideContentHeader?: boolean;
+  defaultCollapsed?: boolean;
+  maxWidth?: string;
+}
+
+const {
+  title,
+  description,
+  noIndex = true,
+  iconName,
+  headerTitle,
+  headerDescription,
+  hideContentHeader = false,
+  defaultCollapsed = false,
+  maxWidth = 'max-w-screen',
+} = Astro.props;
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+const activeProject = Astro.locals.project;
+
+if (viewer && !viewer.username) {
+  return Astro.redirect('/auth/signup?social=true');
+}
+
+const sidebarViewer = viewer
+  ? {
+      displayName: viewer.displayName ?? viewer.username,
+      email: viewer.email ?? '',
+      avatarUrl: viewer.avatarUrl ?? null,
+      username: viewer.username ?? null,
+      platformRole: viewer.platformRole ?? 'user',
+    }
+  : {
+      displayName: 'User',
+      email: '',
+      avatarUrl: null,
+      username: null,
+      platformRole: 'user',
+    };
+
+const sidebarProject = activeProject
+  ? {
+      id: activeProject.id,
+      name: activeProject.name,
+      slug: activeProject.slug,
+      published: Boolean(activeProject.published),
+    }
+  : null;
+---
+
+<BaseLayout title={title} description={description} noIndex={noIndex}>
+  <DashboardShell
+    client:load
+    viewer={sidebarViewer}
+    activeProject={sidebarProject}
+    currentPath={Astro.url.pathname}
+    pageTitle={title}
+    headerTitle={headerTitle ?? title}
+    headerDescription={headerDescription}
+    iconName={iconName}
+    hideContentHeader={hideContentHeader}
+    defaultCollapsed={defaultCollapsed}
+    maxWidth={maxWidth}
+  >
+    <slot />
+  </DashboardShell>
+</BaseLayout>

@@ -1,0 +1,13 @@
+---
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import { PlaygroundEditor } from '@/components/pages/playground/playground-editor';
+import { Button } from '@/components/ui/button';
+
+const STORAGE_KEY = 'showcrate-playground-data';
+---
+
+<HomeLayout title='Playground' noIndex={true} hideFooter={true}>
+  <div class='min-h-[calc(100vh-8rem)] w-full flex flex-col pt-20 pb-12'>
+    <PlaygroundEditor client:only='react' />
+  </div>
+</HomeLayout>

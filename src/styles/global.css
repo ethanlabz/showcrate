@@ -1,0 +1,228 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource-variable/syne';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #faf9fe;
+  --surface: #ffffff;
+  --surface-raised: #f3f2fa;
+  --border: #e4e3ed;
+  --border-strong: #cac8d8;
+
+  --accent: #7c44c3;
+  --accent-hover: #6b30af;
+  --accent-active: #582493;
+  --accent-foreground: #ffffff;
+
+  --secondary: #485572;
+  --secondary-hover: #2f3a52;
+  --secondary-active: #192133;
+  --secondary-foreground: #ffffff;
+
+  --text: #262738;
+  --text-secondary: #4a4c5e;
+  --text-muted: #838592;
+  --text-inverse: #faf9fe;
+
+  --success: #05893e;
+  --success-bg: #d5f5da;
+  --warning: #aa5b00;
+  --warning-bg: #ffe5c0;
+  --error: #cc272e;
+  --error-bg: #ffd8d7;
+  --info: #0069ca;
+  --info-bg: #cce8ff;
+
+  --focus-ring: #7c44c3;
+  --link: #6f3bb2;
+  --link-hover: #582493;
+
+  --font-heading: 'Outfit Variable', system-ui, sans;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.06);
+  --shadow-md: 0 4px 8px oklch(0% 0 0 / 0.08);
+  --shadow-lg: 0 8px 24px oklch(0% 0 0 / 0.12);
+  --shadow-glow-accent: 0 0 24px oklch(52% 0.19 300 / 0.16);
+
+  --popover: oklch(97.5% 0.008 290);
+  --popover-foreground: oklch(24% 0.03 280);
+
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 320ms ease;
+}
+
+.dark {
+  --background: #0d0d0d;
+  --surface: #181818;
+  --surface-raised: #262626;
+  --border: #2e2e2e;
+  --border-strong: #4d4d4d;
+
+  --accent: #a4a4a4;
+  --accent-hover: #b7b7b7;
+  --accent-active: #929292;
+  --accent-foreground: #0d0d0d;
+
+  --secondary: #989898;
+  --secondary-hover: #b7b7b7;
+  --secondary-active: #717171;
+  --secondary-foreground: #0d0d0d;
+
+  --text: #f2f2f2;
+  --text-secondary: #b7b7b7;
+  --text-muted: #7a7a7a;
+  --text-inverse: #0d0d0d;
+
+  --success: #4bcb71;
+  --success-bg: #0c2e16;
+  --warning: #f2a618;
+  --warning-bg: #3c2200;
+  --error: #ff696d;
+  --error-bg: #4c1718;
+  --info: #50b0ff;
+  --info-bg: #042847;
+
+  --focus-ring: #a4a4a4;
+  --link: #b1b1b1;
+  --link-hover: #cacaca;
+
+  --shadow-sm: 0 1px 2px #00000066;
+  --shadow-md: 0 4px 8px #00000080;
+  --shadow-lg: 0 8px 24px #00000099;
+  --shadow-glow-accent: 0 0 24px #a4a4a424;
+
+  --popover: #181818;
+  --popover-foreground: #f2f2f2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-active: var(--secondary-active);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+
+  --color-focus-ring: var(--focus-ring);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+
+  --color-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--text-inverse);
+  --color-muted: var(--surface-raised);
+  --color-muted-foreground: var(--text-muted);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-input: var(--border-strong);
+  --color-ring: var(--focus-ring);
+
+  --font-heading: var(--font-heading);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: var(--radius-full);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-focus-ring/50;
+  }
+  body {
+    @apply bg-background text-text;
+  }
+  html {
+    @apply font-mono;
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Important CSS */
+html {
+  scrollbar-gutter: stable;
+}
+/* BlockNote editor harmonization with project theme & typography */
+.bn-container {
+  font-family: var(--font-sans) !important;
+  background-color: transparent !important;
+}
+
+.bn-container .bn-editor {
+  background-color: transparent !important;
+  color: var(--color-foreground) !important;
+  padding-inline: 0 !important;
+}
+
+.bn-container h1,
+.bn-container h2,
+.bn-container h3,
+.bn-container .bn-heading {
+  font-family: var(--font-heading) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--color-foreground) !important;
+}
+
+.bn-container pre,
+.bn-container code {
+  font-family: var(--font-mono) !important;
+}

@@ -1,0 +1,5 @@
+---
+const { tab } = Astro.params;
+const target = tab ? `/dashboard/settings/${tab}` : '/dashboard/settings/profile';
+return Astro.redirect(target, 302);
+---

@@ -1,0 +1,87 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { createServerClient } from '@/lib/supabase/server';
+import { Plus, FolderKanban } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ProjectDashboardView } from '@/components/pages/app/ProjectDashboardView';
+
+const viewer = Astro.locals.viewer ?? Astro.locals.user;
+if (!viewer) {
+  return Astro.redirect('/auth/login?next=%2Fdashboard');
+}
+
+const supabase = createServerClient(Astro.cookies);
+
+// 1. Owned projects
+const { data: ownedProjects, error: ownedError } = await supabase
+  .from('projects')
+  .select('id, name, slug, tagline, visibility, published, updated_at')
+  .eq('owner_id', viewer.id)
+  .is('deleted_at', null)
+  .order('updated_at', { ascending: false });
+
+if (ownedError) {
+  console.error('[Dashboard] Error fetching owned projects:', ownedError);
+}
+
+// 2. Credited on (accepted collaborator invites, read-only)
+const { data: collaborations, error: collabError } = await supabase
+  .from('project_collaborators')
+  .select(`
+    id,
+    display_role,
+    accepted_at,
+    project:project_id (
+      id,
+      name,
+      slug,
+      tagline,
+      visibility,
+      published,
+      deleted_at,
+      owner:owner_id ( username )
+    )
+  `)
+  .eq('user_id', viewer.id)
+  .not('accepted_at', 'is', null);
+
+if (collabError) {
+  console.error('[Dashboard] Error fetching collaborations:', collabError);
+}
+
+// Filter out deleted projects if any
+const creditedProjects = (collaborations || [])
+  .filter((c: any) => c.project && !c.project.deleted_at);
+---
+
+<AppLayout
+  title="Projects"
+  hideContentHeader={true}
+  maxWidth="max-w-full"
+>
+  {/* Page header: icon + title on left, action buttons on right */}
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-2.5">
+      <FolderKanban className="h-5 w-5 text-foreground/80" />
+      <h1 class="font-heading text-xl font-bold tracking-tight text-foreground">
+        Projects
+      </h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/dashboard/new">
+        <Button size="sm" variant="outline" className="text-xs font-medium h-8 gap-1.5 cursor-pointer">
+          <Plus className="h-3.5 w-3.5" />
+          Create
+        </Button>
+      </a>
+    </div>
+  </div>
+
+  {/* Interactive Project View: Sort by, Filter by, Grid / Compact / List */}
+  <ProjectDashboardView
+    client:load
+    ownedProjects={ownedProjects || []}
+    creditedProjects={creditedProjects || []}
+    viewerUsername={viewer.username || ''}
+  />
+</AppLayout>
