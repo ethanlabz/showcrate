@@ -1,9 +1,3 @@
-<div align="center">
+# Showcrate
 
-# ♠️ Showcrate ♠️
-
-</div>
-
-```md
-Every project deserves a stage.
-```
+A self-serve platform for developers to **build**, **share** and **showcase** the documentation of their projects.
