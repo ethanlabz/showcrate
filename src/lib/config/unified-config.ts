@@ -25,7 +25,7 @@ const configSchema = z.object({
   // Email (Resend)
   email: z.object({
     resendApiKey: z.string().min(1, 'RESEND_API_KEY is required'),
-    fromEmail: z.email('RESEND_FROM_EMAIL must be valid').default('noreply@showcrate.io'),
+    fromEmail: z.email('RESEND_FROM_EMAIL must be valid').default('onboarding@resend.dev '),
   }),
 
   // Sentry
@@ -78,7 +78,7 @@ function loadConfig(): Config {
       fromEmail:
         (typeof process !== 'undefined' ? process.env.RESEND_FROM_EMAIL : undefined) ??
         import.meta.env.RESEND_FROM_EMAIL ??
-        'noreply@showcrate.tech',
+        'onboarding@resend.dev',
     },
     sentry: {
       dsn:

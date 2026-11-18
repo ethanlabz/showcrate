@@ -2,8 +2,11 @@
 
 import * as React from 'react';
 import { useCreateBlockNote } from '@blocknote/react';
-import { BlockNoteView } from '@blocknote/shadcn';
 import '@blocknote/shadcn/style.css';
+
+const BlockNoteView = React.lazy(() =>
+  import('@blocknote/shadcn').then((mod) => ({ default: mod.BlockNoteView }))
+);
 
 import {
   Folder,
@@ -629,7 +632,7 @@ export function EditorWorkspace({
           </a>
 
           <div className="flex items-center gap-2 truncate">
-            <span className="font-heading font-bold text-sm text-foreground truncate">
+            <span className="font-display font-bold text-sm text-foreground truncate">
               {projectName}
             </span>
             <span className="text-muted-foreground/30">•</span>
@@ -926,13 +929,24 @@ export function EditorWorkspace({
                   if (dirtyRef.current) flushSave();
                 }}
                 placeholder="Page Title"
-                className="w-full bg-transparent font-heading text-3xl sm:text-4xl font-bold tracking-tight text-foreground placeholder:text-muted-foreground/30 focus:outline-none border-b border-transparent focus:border-border/40 pb-2 transition-colors"
+                className="w-full bg-transparent font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground placeholder:text-muted-foreground/30 focus:outline-none border-b border-transparent focus:border-border/40 pb-2 transition-colors"
               />
             </div>
 
             {/* BlockNote editor container without heavy borders */}
             <div className="min-h-[500px] py-2">
-              <BlockNoteView editor={editor} theme={editorTheme} />
+              <React.Suspense
+                fallback={
+                  <div className="flex flex-col gap-3.5 py-6 animate-pulse opacity-60">
+                    <div className="h-4 bg-surface-raised rounded w-3/4" />
+                    <div className="h-4 bg-surface-raised rounded w-full" />
+                    <div className="h-4 bg-surface-raised rounded w-5/6" />
+                    <div className="h-4 bg-surface-raised rounded w-2/3" />
+                  </div>
+                }
+              >
+                <BlockNoteView editor={editor} theme={editorTheme} />
+              </React.Suspense>
             </div>
           </div>
         </main>
@@ -956,7 +970,7 @@ export function EditorWorkspace({
                   ) : (
                     <Settings className="h-4 w-4 text-accent" />
                   )}
-                  <h2 className="font-heading font-bold text-sm text-foreground">
+                  <h2 className="font-display font-bold text-sm text-foreground">
                     {activePanel === 'versions' ? 'Version History' : 'Project Settings'}
                   </h2>
                 </div>
@@ -988,7 +1002,7 @@ export function EditorWorkspace({
                     ) : versions.length === 0 ? (
                       <div className="rounded-xl border border-dashed border-border/60 p-8 text-center bg-surface/20">
                         <History className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                        <h4 className="font-heading font-semibold text-foreground text-xs mb-1">
+                        <h4 className="font-display font-semibold text-foreground text-xs mb-1">
                           No version history yet
                         </h4>
                         <p className="text-[11px] text-muted-foreground max-w-xs mx-auto">
@@ -1007,7 +1021,7 @@ export function EditorWorkspace({
                                 <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent font-semibold">
                                   #{v.revision ?? versions.length - idx}
                                 </span>
-                                <span className="font-heading font-semibold text-xs text-foreground truncate">
+                                <span className="font-display font-semibold text-xs text-foreground truncate">
                                   {v.title || pageTitle}
                                 </span>
                               </div>
@@ -1218,7 +1232,7 @@ export function EditorWorkspace({
       {createModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs px-4">
           <div className="bg-surface border border-border/60 rounded-xl p-5 w-full max-w-sm shadow-2xl">
-            <h3 className="font-heading font-bold text-base text-foreground mb-3">
+            <h3 className="font-display font-bold text-base text-foreground mb-3">
               New {createModal.kind === 'page' ? 'Page' : 'Folder'}
             </h3>
             <input
@@ -1275,7 +1289,7 @@ export function EditorWorkspace({
       {renameModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs px-4">
           <div className="bg-surface border border-border/60 rounded-xl p-5 w-full max-w-sm shadow-2xl">
-            <h3 className="font-heading font-bold text-base text-foreground mb-3">
+            <h3 className="font-display font-bold text-base text-foreground mb-3">
               Rename Item
             </h3>
             <input
@@ -1329,7 +1343,7 @@ export function EditorWorkspace({
       {moveToModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs px-4">
           <div className="bg-surface border border-border/60 rounded-xl p-5 w-full max-w-sm shadow-2xl">
-            <h3 className="font-heading font-bold text-base text-foreground mb-3">
+            <h3 className="font-display font-bold text-base text-foreground mb-3">
               Move to Folder
             </h3>
             <div className="max-h-60 overflow-y-auto mb-4 space-y-1">
@@ -1395,7 +1409,7 @@ export function EditorWorkspace({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs px-4">
           <div className="bg-surface border border-border/60 rounded-xl p-5 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
             <div className="flex items-center justify-between mb-3 border-b border-border/40 pb-2">
-              <div className="flex items-center gap-2 text-foreground font-heading font-bold text-base">
+              <div className="flex items-center gap-2 text-foreground font-display font-bold text-base">
                 <Trash2 className="h-4 w-4 text-destructive" />
                 <span>Project Trash</span>
               </div>
@@ -1476,7 +1490,7 @@ export function EditorWorkspace({
       {conflictModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs px-4">
           <div className="bg-surface border border-destructive/50 rounded-xl p-6 w-full max-w-lg shadow-2xl">
-            <div className="flex items-center gap-2 text-destructive font-heading font-bold text-base mb-2">
+            <div className="flex items-center gap-2 text-destructive font-display font-bold text-base mb-2">
               <AlertCircle className="h-5 w-5" />
               <span>Version Conflict (409)</span>
             </div>

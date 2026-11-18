@@ -4,7 +4,6 @@
 @import '@fontsource-variable/outfit';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
-@import '@fontsource-variable/syne';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -42,10 +41,6 @@
   --focus-ring: #7c44c3;
   --link: #6f3bb2;
   --link-hover: #582493;
-
-  --font-heading: 'Outfit Variable', system-ui, sans;
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
@@ -159,10 +154,6 @@
   --color-input: var(--border-strong);
   --color-ring: var(--focus-ring);
 
-  --font-heading: var(--font-heading);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
@@ -172,6 +163,13 @@
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
+}
+
+@theme inline {
+  --font-display: var(--font-playfair-display), system-ui, 'Georgia', serif;
+  --font-sans: var(--font-outfit-sans), 'system-ui', sans-serif;
+  --font-serif: var(--font-instrument-serif), 'Gerogia', serif;
+  --font-mono: var(--font-jetbrains-mono), 'ui-monospace', monospace;
 }
 
 @layer base {
@@ -197,7 +195,8 @@
 }
 
 /* Important CSS */
-html {
+html, body {
+  overflow-x: clip;
   scrollbar-gutter: stable;
 }
 /* BlockNote editor harmonization with project theme & typography */
@@ -216,7 +215,7 @@ html {
 .bn-container h2,
 .bn-container h3,
 .bn-container .bn-heading {
-  font-family: var(--font-heading) !important;
+  font-family: var(--font-display) !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
   color: var(--color-foreground) !important;

@@ -226,7 +226,7 @@ export function DashboardShell({
           </div>
 
           <div className="flex-1 text-center px-2 truncate">
-            <span className="font-heading font-semibold text-sm tracking-tight text-foreground truncate block">
+            <span className="font-display font-semibold text-sm tracking-tight text-foreground truncate block">
               {pageTitle}
             </span>
           </div>
@@ -255,7 +255,7 @@ export function DashboardShell({
                   {HeaderIcon && (
                     <HeaderIcon className="h-5 w-5 text-foreground/80 shrink-0" />
                   )}
-                  <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
+                  <h1 className="font-display text-xl font-bold tracking-tight text-foreground">
                     {resolvedHeaderTitle}
                   </h1>
                 </div>

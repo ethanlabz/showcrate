@@ -50,7 +50,7 @@ function Logo() {
           strokeWidth='16'
         ></line>
       </svg>
-      <span className='font-normal font-heading tracking-tight'>Dashboard</span>
+      <span className='font-normal font-display tracking-tight'>Dashboard</span>
     </a>
   );
 }

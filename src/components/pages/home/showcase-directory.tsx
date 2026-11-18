@@ -1,113 +1,242 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, LayoutGrid, List, ArrowRight, ExternalLink, ChevronDown, Star } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { LayoutGrid, List, Search, Star, X, ArrowUpRight } from 'lucide-react';
+import ScrollReveal from '@/components/animations/ScrollReveal';
 
-// Expanded Mock Data
-const projects = [
+// ====================================================================================================
+// SAMPLE DATA - fictional projects for demonstration. Replace with real data
+// (Supabase, etc.) later. Set `href` on a project to make its card clickable.
+// ====================================================================================================
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  addedDate: string;
+  featured: boolean;
+  href?: string;
+}
+
+const projects: Project[] = [
   {
-    id: "vite",
-    title: "Vite",
-    description: "The next generation frontend tooling. Built their interactive component playground with Showcrate.",
-    image: "bg-gradient-to-br from-[#646cff]/20 to-[#bd34fe]/20",
-    border: "border-[#646cff]/30",
-    hover: "hover:border-[#646cff] hover:shadow-[0_0_40px_rgba(100,108,255,0.3)]",
-    logo: "bg-[#646cff]",
-    tags: ["Frontend Tooling", "Interactive"],
-    addedDate: "2026-08-15",
+    id: 'smart-attendance',
+    title: 'Smart Attendance',
+    description:
+      'RFID-based attendance tracking on an ESP32, with a realtime dashboard for faculty.',
+    tags: ['IoT', 'Dashboard'],
+    addedDate: '2026-09-12',
     featured: true,
   },
   {
-    id: "tailwindcss",
-    title: "Tailwind CSS",
-    description: "A utility-first CSS framework. Utilizing Showcrate to demonstrate complex CSS animations live.",
-    image: "bg-gradient-to-br from-[#38bdf8]/20 to-[#0ea5e9]/20",
-    border: "border-[#38bdf8]/30",
-    hover: "hover:border-[#38bdf8] hover:shadow-[0_0_40px_rgba(56,189,248,0.3)]",
-    logo: "bg-[#38bdf8]",
-    tags: ["CSS Framework", "Live Preview"],
-    addedDate: "2026-07-20",
+    id: 'campus-navigator',
+    title: 'Campus Navigator',
+    description:
+      'An interactive campus map that helps new students find classrooms, labs and offices.',
+    tags: ['Web App', 'Maps'],
+    addedDate: '2026-08-30',
     featured: true,
   },
   {
-    id: "react-query",
-    title: "React Query",
-    description: "Powerful asynchronous state management. Interactive examples powered by Showcrate WebContainers.",
-    image: "bg-gradient-to-br from-[#ff4154]/20 to-[#ff4154]/5",
-    border: "border-[#ff4154]/30",
-    hover: "hover:border-[#ff4154] hover:shadow-[0_0_40px_rgba(255,65,84,0.3)]",
-    logo: "bg-[#ff4154]",
-    tags: ["Data Fetching", "WebContainers"],
-    addedDate: "2026-08-01",
+    id: 'plant-monitor',
+    title: 'Plant Monitor',
+    description:
+      'Soil moisture and light sensors that report to a live chart and send watering alerts.',
+    tags: ['IoT', 'Sensors'],
+    addedDate: '2026-08-04',
     featured: false,
   },
   {
-    id: "framer-motion",
-    title: "Framer Motion",
-    description: "Production-ready animation library for React. Interactive animation builder made with Showcrate.",
-    image: "bg-gradient-to-br from-[#ff008c]/20 to-[#d309e1]/20",
-    border: "border-[#ff008c]/30",
-    hover: "hover:border-[#ff008c] hover:shadow-[0_0_40px_rgba(255,0,140,0.3)]",
-    logo: "bg-[#ff008c]",
-    tags: ["Animation", "React"],
-    addedDate: "2026-09-01",
+    id: 'notes-exchange',
+    title: 'Notes Exchange',
+    description:
+      'A peer-to-peer platform for sharing and organizing semester notes by subject.',
+    tags: ['Web App', 'Education'],
+    addedDate: '2026-10-02',
     featured: true,
   },
   {
-    id: "astro",
-    title: "Astro",
-    description: "The web framework for content-driven websites. Interactive island architecture demonstrations.",
-    image: "bg-gradient-to-br from-[#ff5d01]/20 to-[#ff5d01]/5",
-    border: "border-[#ff5d01]/30",
-    hover: "hover:border-[#ff5d01] hover:shadow-[0_0_40px_rgba(255,93,1,0.3)]",
-    logo: "bg-[#ff5d01]",
-    tags: ["Frontend Tooling", "Framework"],
-    addedDate: "2026-08-25",
+    id: 'library-queue',
+    title: 'Library Queue',
+    description:
+      'Shows live seat availability and book reservation status for the college library.',
+    tags: ['Dashboard', 'Education'],
+    addedDate: '2026-07-18',
     featured: false,
   },
   {
-    id: "prisma",
-    title: "Prisma",
-    description: "Next-generation Node.js and TypeScript ORM. Live database schema visualizer in docs.",
-    image: "bg-gradient-to-br from-[#0c344b]/40 to-[#0c344b]/10",
-    border: "border-[#0c344b]/50",
-    hover: "hover:border-[#0c344b] hover:shadow-[0_0_40px_rgba(12,52,75,0.4)]",
-    logo: "bg-[#0c344b]",
-    tags: ["Database", "TypeScript"],
-    addedDate: "2026-06-10",
+    id: 'weather-station',
+    title: 'Weather Station',
+    description:
+      'A rooftop sensor node that logs temperature, humidity and pressure to a public page.',
+    tags: ['IoT', 'Sensors'],
+    addedDate: '2026-06-22',
     featured: false,
   },
   {
-    id: "trpc",
-    title: "tRPC",
-    description: "End-to-end typesafe APIs made easy. Interactive client-server type inference playgrounds.",
-    image: "bg-gradient-to-br from-[#398ccb]/20 to-[#398ccb]/5",
-    border: "border-[#398ccb]/30",
-    hover: "hover:border-[#398ccb] hover:shadow-[0_0_40px_rgba(57,140,203,0.3)]",
-    logo: "bg-[#398ccb]",
-    tags: ["Data Fetching", "TypeScript"],
-    addedDate: "2026-05-15",
+    id: 'portfolio-kit',
+    title: 'Portfolio Kit',
+    description:
+      'A starter template for student developers to publish a clean personal portfolio.',
+    tags: ['Web App', 'Templates'],
+    addedDate: '2026-09-25',
     featured: false,
-  }
+  },
 ];
 
-// Extract unique tags
-const allTags = Array.from(new Set(projects.flatMap(p => p.tags))).sort();
+const allTags = Array.from(new Set(projects.flatMap((p) => p.tags))).sort();
 
-type SortOption = "featured" | "newest" | "az";
+type SortOption = 'featured' | 'newest' | 'az';
+type ViewMode = 'grid' | 'list';
+
+const sortOptions: { value: SortOption; label: string }[] = [
+  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'az', label: 'A-Z' },
+];
+
+function formatDate(iso: string) {
+  // Fixed locale + UTC so server and client render identically (no hydration mismatch).
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+// ====================================================================================================
+
+function Monogram({ title }: { title: string }) {
+  return (
+    <div
+      aria-hidden='true'
+      className='flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 font-sans text-lg font-semibold text-primary'
+    >
+      {title.charAt(0)}
+    </div>
+  );
+}
+
+function TagList({ tags }: { tags: string[] }) {
+  return (
+    <ul className='flex flex-wrap gap-1.5'>
+      {tags.map((tag) => (
+        <li
+          key={tag}
+          className='rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
+        >
+          {tag}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ProjectCard({
+  project,
+  viewMode,
+}: {
+  project: Project;
+  viewMode: ViewMode;
+}) {
+  const reduceMotion = useReducedMotion();
+  const isList = viewMode === 'list';
+
+  const title = project.href ? (
+    <a
+      href={project.href}
+      className='after:absolute after:inset-0 focus-visible:outline-none'
+    >
+      {project.title}
+    </a>
+  ) : (
+    project.title
+  );
+
+  return (
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+      whileHover={reduceMotion ? undefined : { y: -3 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card/50 transition-colors duration-500 hover:border-primary/40 focus-within:border-primary/60 ${
+        isList ? 'flex items-center gap-5 p-5' : 'flex flex-col p-6 sm:p-7'
+      }`}
+    >
+      <div
+        aria-hidden='true'
+        className='pointer-events-none absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100'
+      />
+
+      <div
+        className={`relative flex items-start ${
+          isList ? 'shrink-0' : 'mb-6 justify-between'
+        }`}
+      >
+        <Monogram title={project.title} />
+        {!isList && project.featured && (
+          <span className='inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary'>
+            <Star className='h-3 w-3 fill-current' />
+            Featured
+          </span>
+        )}
+      </div>
+
+      <div className={`relative ${isList ? 'min-w-0 flex-1' : 'flex-1'}`}>
+        <div
+          className={`flex gap-x-3 gap-y-2 ${
+            isList ? 'flex-wrap items-center' : 'flex-col'
+          }`}
+        >
+          <h3 className='font-sans text-lg font-semibold tracking-tight'>
+            {title}
+          </h3>
+          <TagList tags={project.tags} />
+        </div>
+        <p
+          className={`mt-3 leading-relaxed text-muted-foreground ${
+            isList ? 'line-clamp-2 text-sm' : 'text-[15px]'
+          }`}
+        >
+          {project.description}
+        </p>
+      </div>
+
+      <div
+        className={`relative flex items-center text-xs text-muted-foreground ${
+          isList ? 'shrink-0 gap-4' : 'mt-6 justify-between border-t border-border/50 pt-4'
+        }`}
+      >
+        <span>{formatDate(project.addedDate)}</span>
+        <ArrowUpRight
+          aria-hidden='true'
+          className={`h-4 w-4 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary ${
+            project.href ? 'opacity-100' : 'opacity-30'
+          }`}
+        />
+      </div>
+    </motion.article>
+  );
+}
+
+// ====================================================================================================
 
 export function ShowcaseDirectory() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeTags, setActiveTags] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<SortOption>("featured");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  
+  const [sortOption, setSortOption] = useState<SortOption>('featured');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [modKey, setModKey] = useState('Ctrl');
+
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Ctrl+K Shortcut
   useEffect(() => {
+    if (/Mac|iPhone|iPad/.test(navigator.platform)) setModKey('\u2318');
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
@@ -116,250 +245,235 @@ export function ShowcaseDirectory() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const toggleTag = (tag: string) => {
-    setActiveTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+  const toggleTag = (tag: string) =>
+    setActiveTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setActiveTags([]);
   };
 
-  // Filter and Sort Logic
-  const filteredAndSortedProjects = useMemo(() => {
-    let result = projects.filter(project => {
-      const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            project.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesTags = activeTags.length === 0 || activeTags.every(tag => project.tags.includes(tag));
+  const visible = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const result = projects.filter((p) => {
+      const matchesSearch =
+        !q ||
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q);
+      const matchesTags =
+        activeTags.length === 0 || activeTags.every((t) => p.tags.includes(t));
       return matchesSearch && matchesTags;
     });
 
-    result.sort((a, b) => {
-      if (sortOption === "featured") {
-        if (a.featured && !b.featured) return -1;
-        if (!a.featured && b.featured) return 1;
-        return 0; // fallback to original order
-      } else if (sortOption === "newest") {
-        return new Date(b.addedDate).getTime() - new Date(a.addedDate).getTime();
-      } else if (sortOption === "az") {
-        return a.title.localeCompare(b.title);
+    return [...result].sort((a, b) => {
+      if (sortOption === 'featured') {
+        return Number(b.featured) - Number(a.featured);
       }
-      return 0;
+      if (sortOption === 'newest') {
+        return (
+          new Date(b.addedDate).getTime() - new Date(a.addedDate).getTime()
+        );
+      }
+      return a.title.localeCompare(b.title);
     });
-
-    return result;
   }, [searchQuery, activeTags, sortOption]);
 
+  const hasFilters = searchQuery !== '' || activeTags.length > 0;
+
   return (
-    <div className="w-full">
-      {/* Hero Section with Search */}
-      <div className="text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-16 pt-32 lg:pt-40">
-        
-        {/* Centered Search Bar */}
-        <div className="relative w-full max-w-lg mx-auto mb-8 z-20">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search projects..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-12 pr-16 py-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-full text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all shadow-xl placeholder:text-muted-foreground/60"
-          />
-          <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded border border-border bg-muted/80 text-[10px] font-mono text-muted-foreground shadow-sm">
-              <span className="text-xs">⌘</span>K
-            </kbd>
+    <div className='w-full'>
+      {/* Header */}
+      <ScrollReveal
+        duration={0.8}
+        className='mx-auto max-w-3xl pt-32 pb-12 text-center lg:pt-40'
+      >
+        <p className='mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
+          The Showcase
+        </p>
+        <h1 className='font-display text-4xl font-bold leading-[1.1] tracking-tight text-balance pb-1 sm:text-5xl lg:text-6xl bg-linear-to-b from-foreground to-foreground/60 bg-clip-text text-transparent'>
+          Built with Showcrate
+        </h1>
+        <p className='mx-auto mt-5 max-w-2xl text-muted-foreground text-balance sm:text-lg'>
+          Browse projects documented and presented on Showcrate.
+        </p>
+        <span className='mt-5 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-md'>
+          <span className='h-1.5 w-1.5 rounded-full bg-primary' />
+          Sample data for demonstration
+        </span>
+      </ScrollReveal>
+
+      {/* Search */}
+      <ScrollReveal
+        delay={0.1}
+        duration={0.8}
+        className='relative z-20 mx-auto mb-10 w-full max-w-xl'
+      >
+        <Search
+          aria-hidden='true'
+          className='pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground'
+        />
+        <input
+          ref={searchInputRef}
+          type='search'
+          aria-label='Search projects'
+          placeholder='Search projects...'
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setSearchQuery('');
+              e.currentTarget.blur();
+            }
+          }}
+          className='block w-full rounded-xl border border-border/70 bg-card/80 py-3 pl-12 pr-20 text-base shadow-lg shadow-black/5 outline-none backdrop-blur-xl transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/30 [&::-webkit-search-cancel-button]:appearance-none'
+        />
+        <kbd className='pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-md border border-border bg-muted/80 px-2 py-1 font-mono text-[11px] text-muted-foreground sm:inline-flex'>
+          {modKey} K
+        </kbd>
+      </ScrollReveal>
+
+      {/* Toolbar */}
+      <div className='mb-8 flex flex-col gap-4 border-y border-border/50 py-4'>
+        <div className='flex flex-wrap items-center justify-between gap-3'>
+          <p
+            aria-live='polite'
+            className='text-sm font-medium text-muted-foreground'
+          >
+            {visible.length} {visible.length === 1 ? 'project' : 'projects'}
+          </p>
+
+          <div className='flex items-center gap-3'>
+            <div
+              role='group'
+              aria-label='Sort projects'
+              className='flex items-center rounded-lg border border-border/60 bg-card/50 p-0.5'
+            >
+              {sortOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type='button'
+                  aria-pressed={sortOption === opt.value}
+                  onClick={() => setSortOption(opt.value)}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    sortOption === opt.value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <div
+              role='group'
+              aria-label='View mode'
+              className='flex items-center rounded-lg border border-border/60 bg-card/50 p-0.5'
+            >
+              <button
+                type='button'
+                aria-label='Grid view'
+                aria-pressed={viewMode === 'grid'}
+                onClick={() => setViewMode('grid')}
+                className={`rounded-md p-1.5 transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <LayoutGrid className='h-4 w-4' />
+              </button>
+              <button
+                type='button'
+                aria-label='List view'
+                aria-pressed={viewMode === 'list'}
+                onClick={() => setViewMode('list')}
+                className={`rounded-md p-1.5 transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <List className='h-4 w-4' />
+              </button>
+            </div>
           </div>
         </div>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl 2xl:text-8xl font-extrabold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
-          Built with Showcrate
-        </h1>
-        <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-          Discover how the best teams in the world are transforming their static docs into interactive learning experiences.
-        </p>
-      </div>
-
-      {/* Toolbar */}
-      <div className="bg-card/80 backdrop-blur-xl border-b border-border/50 pb-6 pt-4 mb-12 shadow-sm">
-        <div className="flex flex-col gap-4">
-          
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
-            {/* Left side empty or could have total count */}
-            <div className="text-sm text-muted-foreground font-medium hidden sm:block">
-              {filteredAndSortedProjects.length} projects found
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-              
-              {/* Sort Dropdown */}
-              <div className="relative">
-                <button 
-                  onClick={() => setIsSortOpen(!isSortOpen)}
-                  onBlur={() => setTimeout(() => setIsSortOpen(false), 200)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-card/50 border border-border/50 rounded-full text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
-                >
-                  Sort: {sortOption === 'featured' ? 'Featured' : sortOption === 'newest' ? 'Newest' : 'A-Z'}
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <AnimatePresence>
-                  {isSortOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-40 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
-                    >
-                      <div className="flex flex-col p-1">
-                        <button onClick={() => { setSortOption('featured'); setIsSortOpen(false); }} className={`px-3 py-2 text-left text-sm rounded-lg hover:bg-muted ${sortOption === 'featured' ? 'bg-primary/10 text-primary font-medium' : ''}`}>Featured</button>
-                        <button onClick={() => { setSortOption('newest'); setIsSortOpen(false); }} className={`px-3 py-2 text-left text-sm rounded-lg hover:bg-muted ${sortOption === 'newest' ? 'bg-primary/10 text-primary font-medium' : ''}`}>Newest</button>
-                        <button onClick={() => { setSortOption('az'); setIsSortOpen(false); }} className={`px-3 py-2 text-left text-sm rounded-lg hover:bg-muted ${sortOption === 'az' ? 'bg-primary/10 text-primary font-medium' : ''}`}>Alphabetical</button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* View Toggle */}
-              <div className="flex items-center bg-card/50 border border-border/50 rounded-full p-1 shrink-0">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-2 shrink-0">Filter:</span>
-            {allTags.map(tag => (
+        <div className='flex flex-wrap items-center gap-2'>
+          {allTags.map((tag) => {
+            const active = activeTags.includes(tag);
+            return (
               <button
                 key={tag}
+                type='button'
+                aria-pressed={active}
                 onClick={() => toggleTag(tag)}
-                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  activeTags.includes(tag) 
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
-                    : 'bg-card/50 text-muted-foreground border-border/50 hover:bg-muted'
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border/60 bg-card/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 {tag}
               </button>
-            ))}
-            {activeTags.length > 0 && (
-              <button 
-                onClick={() => setActiveTags([])}
-                className="shrink-0 px-2 py-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 ml-2"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+            );
+          })}
+          {hasFilters && (
+            <button
+              type='button'
+              onClick={clearFilters}
+              className='ml-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline'
+            >
+              <X className='h-3 w-3' />
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Results Grid/List */}
-      <motion.div layout className={`w-full ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8 2xl:gap-10' : 'flex flex-col gap-4'}`}>
-        <AnimatePresence mode="popLayout">
-          {filteredAndSortedProjects.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="col-span-full py-20 text-center"
-            >
-              <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="w-8 h-8 text-muted-foreground/50" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">No projects found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or filters to find what you're looking for.</p>
-              <button 
-                onClick={() => { setSearchQuery(""); setActiveTags([]); }}
-                className="mt-6 text-primary hover:underline font-medium"
-              >
-                Clear all filters
-              </button>
-            </motion.div>
-          ) : (
-            filteredAndSortedProjects.map((project) => (
-              <motion.div 
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.3 }}
-                key={project.id}
-                className={`group relative rounded-3xl border bg-card/40 backdrop-blur-sm overflow-hidden transition-colors duration-500 ${project.border} ${project.hover} ${viewMode === 'list' ? 'flex flex-row p-6' : 'flex flex-col'}`}
-              >
-                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${project.image}`}></div>
-                
-                {/* Logo & Header */}
-                <div className={`${viewMode === 'list' ? 'mr-6 shrink-0' : 'p-6 lg:p-8 pb-0'} relative z-10 flex flex-col`}>
-                  <div className={`flex items-start ${viewMode === 'list' ? 'flex-col gap-4' : 'justify-between mb-8'}`}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl shadow-lg flex items-center justify-center ${project.logo}`}>
-                        <div className="w-6 h-6 bg-white/20 rounded-sm"></div>
-                      </div>
-                      <div className={viewMode === 'list' ? 'hidden' : 'block'}>
-                        <h3 className="text-2xl font-bold text-foreground">{project.title}</h3>
-                        <div className="flex gap-2 mt-1 flex-wrap">
-                          {project.tags.map(tag => (
-                            <span key={tag} className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-sm">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    {viewMode === 'grid' && (
-                      <button className="rounded-full w-10 h-10 flex items-center justify-center hover:bg-background/50 group-hover:text-primary transition-colors text-muted-foreground shrink-0">
-                        <ExternalLink className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Content */}
-                <div className={`${viewMode === 'list' ? 'flex-1 flex flex-col justify-center' : 'px-6 lg:px-8 pb-6 lg:pb-8 flex-1'} relative z-10`}>
-                  {viewMode === 'list' && (
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-bold text-foreground">{project.title}</h3>
-                      <div className="flex gap-2">
-                        {project.tags.map(tag => (
-                          <span key={tag} className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-sm">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-muted-foreground text-lg leading-relaxed">
-                    {project.description}
-                  </p>
-                </div>
-                
-
-                
-                {/* List View Arrow */}
-                {viewMode === 'list' && (
-                  <div className="flex items-center justify-center pr-6 text-muted-foreground/30 group-hover:text-primary transition-colors group-hover:translate-x-1 duration-300 relative z-10">
-                    <ExternalLink className="w-5 h-5" />
-                  </div>
-                )}
-              </motion.div>
-            ))
-          )}
+      {/* Results */}
+      <motion.div
+        layout
+        className={
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6 xl:grid-cols-3'
+            : 'flex flex-col gap-3'
+        }
+      >
+        <AnimatePresence mode='popLayout'>
+          {visible.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              viewMode={viewMode}
+            />
+          ))}
         </AnimatePresence>
       </motion.div>
+
+      {visible.length === 0 && (
+        <div className='py-20 text-center'>
+          <div className='mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-border/60 bg-muted/40'>
+            <Search className='h-6 w-6 text-muted-foreground/60' />
+          </div>
+          <h3 className='mb-2 font-display text-xl font-semibold'>
+            No projects found
+          </h3>
+          <p className='text-muted-foreground'>
+            Try adjusting your search or filters.
+          </p>
+          <button
+            type='button'
+            onClick={clearFilters}
+            className='mt-6 text-sm font-medium text-primary hover:underline'
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
     </div>
   );
 }

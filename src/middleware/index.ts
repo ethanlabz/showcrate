@@ -9,10 +9,11 @@
  * 5. Session resolution → Astro.locals.viewer (& locals.user alias)
  * 6. Strict username completion gate
  * 7. /dashboard and /dashboard/** guards & project scoping
+ * 7b. /editor and /editor/** guards & project scoping
  * 8. /auth/login & /auth/signup redirect for authenticated users
- * 9. /admin route guard
+ * 9. /admin & /api/admin route guards
  * 10. Public project resolution (/{username}/{project}/**)
- * 11. next() → apply Cache-Control and X-Robots-Tag headers for /dashboard and /auth
+ * 11. next() → apply Cache-Control and X-Robots-Tag headers for /dashboard, /editor, /auth, /admin
  */
 import { defineMiddleware } from 'astro:middleware';
 import { z } from 'zod';
@@ -24,7 +25,7 @@ import { safeNext } from '@/lib/auth/safe-next';
 import { isReservedUsername } from '@/lib/validators/auth.schema';
 import type { SessionUser } from '@/types/auth';
 import type { ProjectRow } from '@/types/database';
-import { tooManyRequests, forbidden } from '@/lib/api/response';
+import { tooManyRequests, forbidden, unauthorized } from '@/lib/api/response';
 
 // Extend Astro.locals type
 declare global {
@@ -47,6 +48,8 @@ const MARKETING_ROUTES = new Set(['/', '/about', '/help', '/terms', '/privacy'])
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, cookies, url, redirect, locals } = context;
   const pathname = url.pathname;
+  const normalizedPath =
+    pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
 
   // Initialize locals
   locals.viewer = null;
@@ -73,9 +76,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // ── Step 2: Static assets and Vite client bundles bypass ───────────────
   const isStaticAsset =
     pathname.startsWith('/_astro/') ||
+    pathname.startsWith('/_image') ||
     pathname.startsWith('/@') ||
     pathname.startsWith('/favicon') ||
-    /\.(svg|png|jpg|jpeg|webp|gif|css|js|woff2?|ico|txt)$/i.test(pathname);
+    /\.(svg|png|jpg|jpeg|webp|gif|css|js|woff2?|ico|txt|xml)$/i.test(pathname);
 
   if (isStaticAsset) {
     return next();
@@ -84,13 +88,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // ── Step 3: Marketing routes skip session resolution entirely ──────────
   // Rule 3 exception: '/', '/about', '/help', '/terms', '/privacy' must remain
   // static-cacheable and must NEVER call getUser().
-  if (MARKETING_ROUTES.has(pathname)) {
+  if (MARKETING_ROUTES.has(normalizedPath)) {
     return next();
   }
 
   // ── Step 4: Reserved username check for top-level routes ───────────────
   // Return 404 immediately, without a DB query, when segment is in reserved list.
-  const pathSegments = pathname.split('/').filter(Boolean);
+  const pathSegments = normalizedPath.split('/').filter(Boolean);
   if (pathSegments.length >= 1) {
     const firstSegment = pathSegments[0].toLowerCase();
     if (isReservedUsername(firstSegment)) {
@@ -110,6 +114,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
         'guides',
         'playground',
         'security',
+        'about',
+        'help',
+        'terms',
+        'privacy',
       ];
       if (!allowedTopLevel.includes(firstSegment)) {
         return new Response('Not Found', { status: 404 });
@@ -119,43 +127,56 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // ── Step 5: Session resolution ─────────────────────────────────────────
   const supabase = createServerClient(cookies);
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
 
-  if (authUser) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('username, display_name, avatar_url, platform_role')
-      .eq('id', authUser.id)
-      .single();
+  // Fast check: If no Supabase auth cookies exist, skip remote auth call for guests
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  const hasAuthCookie = cookieHeader.includes('sb-') || cookieHeader.includes('supabase');
 
-    const sessionUser: SessionUser = {
-      id: authUser.id,
-      email: authUser.email ?? '',
-      username: profile?.username ?? null,
-      displayName: profile?.display_name ?? null,
-      avatarUrl: profile?.avatar_url ?? null,
-      platformRole: profile?.platform_role ?? 'user',
-    };
-    locals.viewer = sessionUser;
-    locals.user = sessionUser; // keep alias in sync
+  if (hasAuthCookie) {
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (authUser) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('username, display_name, avatar_url, platform_role')
+          .eq('id', authUser.id)
+          .single();
+
+        const sessionUser: SessionUser = {
+          id: authUser.id,
+          email: authUser.email ?? '',
+          username: profile?.username ?? null,
+          displayName: profile?.display_name ?? null,
+          avatarUrl: profile?.avatar_url ?? null,
+          platformRole: profile?.platform_role ?? 'user',
+        };
+        locals.viewer = sessionUser;
+        locals.user = sessionUser; // keep alias in sync
+      }
+    } catch {
+      locals.viewer = null;
+      locals.user = null;
+    }
   }
 
   // ── Step 6: Strict username completion gate ────────────────────────────
   if (locals.viewer && !locals.viewer.username) {
     const isSocialSignupPage =
-      pathname === '/auth/signup' && url.searchParams.get('social') === 'true';
-    const isAuthCallback = pathname === '/auth/callback';
-    const isSetUsernameApi = pathname === '/api/auth/set-username';
+      normalizedPath === '/auth/signup' && url.searchParams.get('social') === 'true';
+    const isAuthCallback = normalizedPath === '/auth/callback';
+    const isSetUsernameApi = normalizedPath === '/api/auth/set-username';
+    const isAvailableUsernameApi = normalizedPath === '/api/account/username/available';
     const isLogout =
-      pathname === '/api/auth/logout' || pathname === '/auth/logout';
+      normalizedPath === '/api/auth/logout' || normalizedPath === '/auth/logout';
 
     const isAllowed =
-      isSocialSignupPage || isAuthCallback || isSetUsernameApi || isLogout;
+      isSocialSignupPage || isAuthCallback || isSetUsernameApi || isAvailableUsernameApi || isLogout;
 
     if (!isAllowed) {
-      if (pathname.startsWith('/api/')) {
+      if (normalizedPath.startsWith('/api/')) {
         return new Response(
           JSON.stringify({
             error: {
@@ -171,22 +192,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
 
       const nextParam =
-        pathname !== '/' && !pathname.startsWith('/auth/')
+        normalizedPath !== '/' && !normalizedPath.startsWith('/auth/')
           ? `&next=${encodeURIComponent(url.pathname + url.search)}`
           : '';
 
-      return redirect(`/auth/signup?social=true${nextParam}`, 302);
+      const res = redirect(`/auth/signup?social=true${nextParam}`, 302);
+      res.headers.set('Cache-Control', 'private, no-store');
+      res.headers.set('X-Robots-Tag', 'noindex');
+      return res;
     }
   }
 
   // ── Step 7: /dashboard and /dashboard/** guards ────────────────────────
-  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+  if (normalizedPath === '/dashboard' || normalizedPath.startsWith('/dashboard/')) {
     if (!locals.viewer) {
       const fullTarget = pathname + url.search;
       const cappedTarget =
         fullTarget.length > 200 ? fullTarget.slice(0, 200) : fullTarget;
+      const target = safeNext(cappedTarget);
       const res = redirect(
-        `/auth/login?next=${encodeURIComponent(cappedTarget)}`,
+        `/auth/login?next=${encodeURIComponent(target)}`,
         302,
       );
       res.headers.set('Cache-Control', 'private, no-store');
@@ -194,10 +219,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       return res;
     }
 
-    // TODO(legal-age-gate)
-
     // Check project routes: /dashboard/projects/[id]/**
-    const dashProjectMatch = pathname.match(
+    const dashProjectMatch = normalizedPath.match(
       /^\/dashboard\/projects\/([^/]+)(\/.*)?$/,
     );
     if (dashProjectMatch) {
@@ -236,13 +259,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // /editor/[projectId]/[...page] is owner-only.
   // Anonymous /editor/{id} redirects to login with validated next.
   // Non-owner and nonexistent /editor/{id} return identical 404 (never 403).
-  if (pathname === '/editor' || pathname.startsWith('/editor/')) {
+  if (normalizedPath === '/editor' || normalizedPath.startsWith('/editor/')) {
     if (!locals.viewer) {
       const fullTarget = pathname + url.search;
       const cappedTarget =
         fullTarget.length > 200 ? fullTarget.slice(0, 200) : fullTarget;
+      const target = safeNext(cappedTarget);
       const res = redirect(
-        `/auth/login?next=${encodeURIComponent(cappedTarget)}`,
+        `/auth/login?next=${encodeURIComponent(target)}`,
         302,
       );
       res.headers.set('Cache-Control', 'private, no-store');
@@ -250,7 +274,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       return res;
     }
 
-    const editorMatch = pathname.match(/^\/editor\/([^/]+)(\/.*)?$/);
+    const editorMatch = normalizedPath.match(/^\/editor\/([^/]+)(\/.*)?$/);
     if (editorMatch) {
       const projectId = editorMatch[1];
       const uuidParsed = z.string().uuid().safeParse(projectId);
@@ -286,7 +310,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // ── Step 8: /auth/login and /auth/signup redirect with viewer ──────────
   if (
-    (pathname === '/auth/login' || pathname === '/auth/signup') &&
+    (normalizedPath === '/auth/login' || normalizedPath === '/auth/signup') &&
     locals.viewer &&
     locals.viewer.username &&
     url.searchParams.get('social') !== 'true'
@@ -299,32 +323,39 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return res;
   }
 
-  // ── Step 9: /admin route guard ─────────────────────────────────────────
-  if (pathname.startsWith('/admin')) {
+  // ── Step 9: /admin and /api/admin route guards ─────────────────────────
+  const isAdminPage = normalizedPath === '/admin' || normalizedPath.startsWith('/admin/');
+  const isAdminApi = normalizedPath === '/api/admin' || normalizedPath.startsWith('/api/admin/');
+
+  if (isAdminPage || isAdminApi) {
     if (!locals.viewer) {
+      if (isAdminApi) return unauthorized();
       const res = redirect('/auth/login', 302);
       res.headers.set('Cache-Control', 'private, no-store');
       res.headers.set('X-Robots-Tag', 'noindex');
       return res;
     }
     if (!isAdmin(locals.viewer)) {
-      if (pathname.startsWith('/api/')) return forbidden();
-      return new Response('Forbidden', { status: 403 });
+      if (isAdminApi) return forbidden();
+      const res = new Response('Forbidden', { status: 403 });
+      res.headers.set('Cache-Control', 'private, no-store');
+      res.headers.set('X-Robots-Tag', 'noindex');
+      return res;
     }
   }
 
   // ── Step 10: Public project resolution (/{username}/{project}/**) ───────
-  const publicProjectMatch = pathname.match(/^\/([^/]+)\/([^/]+)(\/.*)?$/);
-  if (
-    publicProjectMatch &&
-    !pathname.startsWith('/api/') &&
-    !pathname.startsWith('/admin') &&
-    !pathname.startsWith('/auth') &&
-    !pathname.startsWith('/dashboard') &&
-    !pathname.startsWith('/editor')
-  ) {
+  const publicProjectMatch = normalizedPath.match(/^\/([^/]+)\/([^/]+)(\/.*)?$/);
+  if (publicProjectMatch) {
     const [, ownerUsername, projectSlug] = publicProjectMatch;
-    if (!isReservedUsername(ownerUsername)) {
+    const lowerOwner = ownerUsername.toLowerCase();
+    const systemPrefixes = new Set(['api', 'admin', 'auth', 'dashboard', 'editor']);
+
+    if (
+      !systemPrefixes.has(lowerOwner) &&
+      !isReservedUsername(lowerOwner) &&
+      projectSlug !== 'settings'
+    ) {
       const result = await resolveProject(
         supabase,
         ownerUsername!,
@@ -352,12 +383,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
 
   if (
-    pathname === '/dashboard' ||
-    pathname.startsWith('/dashboard/') ||
-    pathname === '/editor' ||
-    pathname.startsWith('/editor/') ||
-    pathname === '/auth' ||
-    pathname.startsWith('/auth/')
+    normalizedPath === '/dashboard' ||
+    normalizedPath.startsWith('/dashboard/') ||
+    normalizedPath === '/editor' ||
+    normalizedPath.startsWith('/editor/') ||
+    normalizedPath === '/auth' ||
+    normalizedPath.startsWith('/auth/') ||
+    normalizedPath === '/admin' ||
+    normalizedPath.startsWith('/admin/')
   ) {
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('X-Robots-Tag', 'noindex');

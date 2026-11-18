@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, fontProviders } from 'astro/config';
 import netlify from '@astrojs/netlify';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
@@ -9,11 +9,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   output: 'server',
   adapter: netlify({
-    devFeatures: {
-      edgeFunctions: false,
-      environmentVariables: false,
-      images: true,
-    },
+    devFeatures: false,
   }),
   site: process.env.SITE_URL ?? 'http://localhost:4321',
   integrations: [
@@ -39,11 +35,49 @@ export default defineConfig({
       },
     }),
   ],
+  fonts: [
+    {
+      provider: fontProviders.google(),
+      name: 'Playfair Display',
+      cssVariable: '--font-playfair-display',
+      fallbacks: ['Georgia', 'serif'],
+    },
+    {
+      provider: fontProviders.google(),
+      name: 'Outfit',
+      cssVariable: '--font-outfit-sans',
+      fallbacks: ['system-ui', 'sans-serif'],
+    },
+    {
+      provider: fontProviders.google(),
+      name: 'Instrument Serif',
+      cssVariable: '--font-instrument-serif',
+      weights: [400],
+      styles: ['normal', 'italic'],
+      fallbacks: ['Georgia', 'serif'],
+    },
+    {
+      provider: fontProviders.google(),
+      name: 'JetBrains Mono',
+      cssVariable: '--font-jetbrains-mono',
+      fallbacks: ['ui-monospace', 'monospace'],
+    },
+  ],
   vite: {
     plugins: [tailwindcss()],
     resolve: {
       alias: {
         '@': '/src',
+      },
+    },
+    optimizeDeps: {
+      exclude: ['ffmpeg-static', 'shiki', 'jsdom', 'dompurify'],
+      include: ['react', 'react-dom', 'lucide-react', 'motion/react'],
+    },
+    server: {
+      watch: {
+        usePolling: true,
+        ignored: ['**/.netlify/**', '**/.astro/**', '**/dist/**'],
       },
     },
   },

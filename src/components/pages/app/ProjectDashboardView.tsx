@@ -294,7 +294,7 @@ export function ProjectDashboardView({
       {ownedProjects.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border/60 p-12 text-center bg-surface/20">
           <FolderKanban className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-          <h3 className="font-heading font-semibold text-foreground text-base mb-1">
+          <h3 className="font-display font-semibold text-foreground text-base mb-1">
             No projects yet
           </h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto mb-4">
@@ -352,7 +352,7 @@ export function ProjectDashboardView({
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
                   <div className="flex items-end justify-between gap-2">
                     <div className="min-w-0">
-                      <h3 className="font-heading font-bold text-sm text-white truncate group-hover:text-accent transition-colors">
+                      <h3 className="font-display font-bold text-sm text-white truncate group-hover:text-accent transition-colors">
                         {p.name}
                       </h3>
                       <p className="text-[11px] text-white/50 mt-0.5 truncate">
@@ -391,7 +391,7 @@ export function ProjectDashboardView({
                     <FolderKanban className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-heading font-semibold text-sm text-foreground truncate group-hover:text-accent transition-colors">
+                    <h3 className="font-display font-semibold text-sm text-foreground truncate group-hover:text-accent transition-colors">
                       {p.name}
                     </h3>
                     <p className="text-[11px] font-mono text-muted-foreground truncate">
@@ -449,7 +449,7 @@ export function ProjectDashboardView({
                 <div className="min-w-0">
                   <a
                     href={`/editor/${p.id}`}
-                    className="font-heading font-semibold text-sm text-foreground hover:text-accent truncate block transition-colors"
+                    className="font-display font-semibold text-sm text-foreground hover:text-accent truncate block transition-colors"
                   >
                     {p.name}
                   </a>
@@ -507,7 +507,7 @@ export function ProjectDashboardView({
         <div className="mt-12">
           <div className="flex items-center gap-2.5 mb-6">
             <Users className="h-5 w-5 text-foreground/80" />
-            <h2 className="font-heading text-xl font-bold tracking-tight text-foreground">
+            <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
               Credited on
             </h2>
             <span className="text-xs font-mono text-muted-foreground px-2 py-0.5 rounded-full bg-surface-raised border border-border/40">
@@ -539,7 +539,7 @@ export function ProjectDashboardView({
                     </div>
 
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
-                      <h3 className="font-heading font-bold text-sm text-white truncate">
+                      <h3 className="font-display font-bold text-sm text-white truncate">
                         {project.name}
                       </h3>
                       <p className="text-[11px] text-white/50 mt-0.5 truncate">

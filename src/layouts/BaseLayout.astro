@@ -1,7 +1,10 @@
 ---
 // src/layouts/BaseLayout.astro
+import SmoothScroll from '@/components/ui/smooth-scroll';
 import '../styles/global.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Font } from 'astro:assets';
+import { ClientRouter } from 'astro:transitions';
 
 export interface Props {
   title?: string;
@@ -26,6 +29,13 @@ const resolvedOgImage =
 <!doctype html>
 <html lang='en'>
   <head>
+    <!-- Fonts Preloading -->
+    <Font cssVariable="--font-playfair-display" preload />
+    <Font cssVariable="--font-outfit-sans" preload />
+    <Font cssVariable="--font-instrument-serif" />
+    <Font cssVariable="--font-jetbrains-mono" />
+    
+    <!-- Theme-sense -->
     <script is:inline>
       const getThemePreference = () => {
         if (
@@ -52,8 +62,18 @@ const resolvedOgImage =
               );
             }
           });
+
+        document.addEventListener('astro:after-swap', () => {
+          const isDark = getThemePreference() === 'dark';
+          document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
+        });
       }
     </script>
+
+    <!-- Client Router -->
+    <ClientRouter />
+
+    <!-- Metadata -->
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <link rel='icon' type='image/svg+xml' href='/favicon.svg' />
@@ -81,8 +101,7 @@ const resolvedOgImage =
   <body
     class='bg-background text-foreground antialiased min-h-screen min-w-screen'
   >
-    <TooltipProvider>
-      <slot />
-    </TooltipProvider>
+    <SmoothScroll />
+    <slot />
   </body>
 </html>

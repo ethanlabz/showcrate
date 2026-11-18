@@ -12,41 +12,43 @@ if (!viewer) {
 
 const supabase = createServerClient(Astro.cookies);
 
-// 1. Owned projects
-const { data: ownedProjects, error: ownedError } = await supabase
-  .from('projects')
-  .select('id, name, slug, tagline, visibility, published, updated_at')
-  .eq('owner_id', viewer.id)
-  .is('deleted_at', null)
-  .order('updated_at', { ascending: false });
+// Parallelize database queries to cut TTFB in half
+const [ownedResult, collabResult] = await Promise.all([
+  supabase
+    .from('projects')
+    .select('id, name, slug, tagline, visibility, published, updated_at')
+    .eq('owner_id', viewer.id)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false }),
+  supabase
+    .from('project_collaborators')
+    .select(`
+      id,
+      display_role,
+      accepted_at,
+      project:project_id (
+        id,
+        name,
+        slug,
+        tagline,
+        visibility,
+        published,
+        deleted_at,
+        owner:owner_id ( username )
+      )
+    `)
+    .eq('user_id', viewer.id)
+    .not('accepted_at', 'is', null),
+]);
 
-if (ownedError) {
-  console.error('[Dashboard] Error fetching owned projects:', ownedError);
+const ownedProjects = ownedResult.data;
+if (ownedResult.error) {
+  console.error('[Dashboard] Error fetching owned projects:', ownedResult.error);
 }
 
-// 2. Credited on (accepted collaborator invites, read-only)
-const { data: collaborations, error: collabError } = await supabase
-  .from('project_collaborators')
-  .select(`
-    id,
-    display_role,
-    accepted_at,
-    project:project_id (
-      id,
-      name,
-      slug,
-      tagline,
-      visibility,
-      published,
-      deleted_at,
-      owner:owner_id ( username )
-    )
-  `)
-  .eq('user_id', viewer.id)
-  .not('accepted_at', 'is', null);
-
-if (collabError) {
-  console.error('[Dashboard] Error fetching collaborations:', collabError);
+const collaborations = collabResult.data;
+if (collabResult.error) {
+  console.error('[Dashboard] Error fetching collaborations:', collabResult.error);
 }
 
 // Filter out deleted projects if any
@@ -63,7 +65,7 @@ const creditedProjects = (collaborations || [])
   <div class="flex items-center justify-between mb-6">
     <div class="flex items-center gap-2.5">
       <FolderKanban className="h-5 w-5 text-foreground/80" />
-      <h1 class="font-heading text-xl font-bold tracking-tight text-foreground">
+      <h1 class="font-display text-xl font-bold tracking-tight text-foreground">
         Projects
       </h1>
     </div>
@@ -79,7 +81,7 @@ const creditedProjects = (collaborations || [])
 
   {/* Interactive Project View: Sort by, Filter by, Grid / Compact / List */}
   <ProjectDashboardView
-    client:load
+    client:idle
     ownedProjects={ownedProjects || []}
     creditedProjects={creditedProjects || []}
     viewerUsername={viewer.username || ''}

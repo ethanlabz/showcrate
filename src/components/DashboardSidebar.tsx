@@ -113,7 +113,7 @@ export function DashboardSidebar({
               />
             </svg>
           </div>
-          {/* <span className="font-heading font-bold text-lg tracking-tight text-accent group-data-[collapsible=icon]:hidden">
+          {/* <span className="font-display font-bold text-lg tracking-tight text-accent group-data-[collapsible=icon]:hidden">
             Showcrate
           </span> */}
         </a>

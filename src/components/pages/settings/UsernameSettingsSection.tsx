@@ -274,7 +274,7 @@ export function UsernameSettingsSection({
           <div className="bg-surface border border-border/70 rounded-xl p-5 w-full max-w-md shadow-2xl space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-heading font-bold text-base text-foreground">
+                <h3 className="font-display font-bold text-base text-foreground">
                   Change username to @{username.trim().toLowerCase()}?
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
