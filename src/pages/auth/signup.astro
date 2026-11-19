@@ -9,10 +9,6 @@ const social = Astro.url.searchParams.get('social') === 'true';
 const suggested = Astro.url.searchParams.get('suggested') ?? '';
 const next = safeNext(Astro.url.searchParams.get('next'));
 
-const social = Astro.url.searchParams.get('social') === 'true';
-const suggested = Astro.url.searchParams.get('suggested') ?? '';
-const next = Astro.url.searchParams.get('next') ?? '/';
-
 if (social) {
   // Must have a valid session — user just came back from OAuth callback.
   // We check the JWT directly (not locals.user) because new OAuth users
