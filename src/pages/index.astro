@@ -11,6 +11,11 @@ import {
   StepList,
 } from '@/components/pages/home/landing-content';
 import { TopographyBackground } from '@/components/backgrounds/topography';
+
+// Authenticated users never see the landing page — go to dashboard
+if (Astro.locals.user?.username) {
+  return Astro.redirect('/dashboard', 302);
+}
 ---
 
 <HomeLayout title='Welcome'>

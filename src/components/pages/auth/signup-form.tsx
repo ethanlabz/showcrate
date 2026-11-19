@@ -49,7 +49,7 @@ export default function SignupForm() {
 
       const json = await res.json();
       if (!res.ok) {
-        setServerError(json.error ?? 'Registration failed. Please try again.');
+        setServerError(json.error?.message ?? json.error ?? 'Registration failed. Please try again.');
         return;
       }
 

@@ -22,10 +22,10 @@ const configSchema = z.object({
     nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
   }),
 
-  // Email (Resend)
+  // Email (Resend) — optional: missing key means emails won't send but the app still works
   email: z.object({
-    resendApiKey: z.string().min(1, 'RESEND_API_KEY is required'),
-    fromEmail: z.email('RESEND_FROM_EMAIL must be valid').default('onboarding@resend.dev '),
+    resendApiKey: z.string().min(1).optional(),
+    fromEmail: z.string().email().default('onboarding@resend.dev'),
   }),
 
   // Sentry
@@ -38,10 +38,7 @@ type Config = z.infer<typeof configSchema>;
 
 function loadConfig(): Config {
   const isDev = import.meta.env.NODE_ENV !== 'production';
-  
-  // In development with missing vars, use safe placeholder defaults so the
-  // dev server starts without all env vars set. API calls will fail at runtime
-  // but the server itself will not crash on import.
+
   const raw = {
     supabase: {
       url:
@@ -71,10 +68,11 @@ function loadConfig(): Config {
         'development',
     },
     email: {
+      // Optional — app functions without it; only email sending breaks
       resendApiKey:
         (typeof process !== 'undefined' ? process.env.RESEND_API_KEY : undefined) ??
         import.meta.env.RESEND_API_KEY ??
-        (isDev ? 'dev-resend-key' : undefined),
+        undefined,
       fromEmail:
         (typeof process !== 'undefined' ? process.env.RESEND_FROM_EMAIL : undefined) ??
         import.meta.env.RESEND_FROM_EMAIL ??
@@ -91,13 +89,15 @@ function loadConfig(): Config {
 
   if (!result.success) {
     const issues = result.error.issues.map((i) => `  • ${i.path.join('.')}: ${i.message}`).join('\n');
-    if (!isDev) {
-      throw new Error(`[showcrate] Invalid configuration:\n${issues}`);
+    // Only throw for Supabase vars — those are truly required. Everything else
+    // degrades gracefully (email → no emails sent, Sentry → no error reporting).
+    const criticalIssues = result.error.issues.filter((i) => i.path[0] === 'supabase');
+    if (!isDev && criticalIssues.length > 0) {
+      throw new Error(`[showcrate] Missing required configuration:\n${criticalIssues.map((i) => `  • ${i.path.join('.')}: ${i.message}`).join('\n')}`);
     }
-    // In dev, warn but don't crash
-    console.warn(`[showcrate] ⚠️  Missing env vars (dev mode — set real values in .env for full functionality):\n${issues}`);
-    // Return a partial config for dev
-    return {} as unknown as Config;
+    console.warn(`[showcrate] ⚠️  Missing env vars:\n${issues}`);
+    // Return best-effort config
+    return (result.data ?? raw) as unknown as Config;
   }
 
   return result.data;

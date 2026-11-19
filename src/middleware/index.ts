@@ -5,8 +5,10 @@
  * 1. Rate limiting (IP-based, by tier)
  * 2. Static asset bypass
  * 3. Marketing route bypass (skip session resolution entirely; never call getUser())
+ *    NOTE: '/' is NOT in the bypass list — authenticated users are redirected to /dashboard
  * 4. Reserved username route rejection (404 without DB query)
  * 5. Session resolution → Astro.locals.viewer (& locals.user alias)
+ * 5b. '/' redirect — authenticated users always go to /dashboard
  * 6. Strict username completion gate
  * 7. /dashboard and /dashboard/** guards & project scoping
  * 7b. /editor and /editor/** guards & project scoping
@@ -43,7 +45,7 @@ declare global {
   }
 }
 
-const MARKETING_ROUTES = new Set(['/', '/about', '/help', '/terms', '/privacy']);
+const MARKETING_ROUTES = new Set(['/about', '/help', '/terms', '/privacy']);
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, cookies, url, redirect, locals } = context;
@@ -159,6 +161,27 @@ export const onRequest = defineMiddleware(async (context, next) => {
     } catch {
       locals.viewer = null;
       locals.user = null;
+    }
+  }
+
+  // ── Step 5b: Homepage redirect for authenticated users ────────────────
+  // Authenticated users must never land on '/'. Send them to /dashboard.
+  // Also forward any stray OAuth ?code= on '/' to the callback handler.
+  if (normalizedPath === '/') {
+    const oauthCode = url.searchParams.get('code');
+    if (oauthCode) {
+      // OAuth callback landed on homepage instead of /auth/callback
+      // (happens when Supabase Site URL is set but allow-list is missing).
+      // Forward to the proper callback handler preserving all params.
+      const callbackUrl = new URL('/auth/callback', url.origin);
+      url.searchParams.forEach((value, key) => callbackUrl.searchParams.set(key, value));
+      return redirect(callbackUrl.toString(), 302);
+    }
+
+    if (locals.viewer?.username) {
+      const res = redirect('/dashboard', 302);
+      res.headers.set('Cache-Control', 'private, no-store');
+      return res;
     }
   }
 

@@ -68,7 +68,7 @@ export default function LoginForm() {
 
       const json = await res.json();
       if (!res.ok) {
-        setServerError(json.error ?? 'Login failed. Please try again.');
+        setServerError(json.error?.message ?? json.error ?? 'Login failed. Please try again.');
         return;
       }
 
