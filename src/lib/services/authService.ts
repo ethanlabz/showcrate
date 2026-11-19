@@ -111,8 +111,12 @@ export class AuthService {
 
     if (!userId) throw new Error('User creation failed');
 
-    // 3. Send welcome & confirmation email via Resend (non-blocking)
-    sendWelcomeEmail(input.email, input.username, confirmUrl).catch(() => {/* logged inside */});
+    // 3. Send welcome & confirmation email via Resend (awaited so serverless container doesn't freeze before sending)
+    try {
+      await sendWelcomeEmail(input.email, input.username, confirmUrl);
+    } catch (e) {
+      console.error('[AuthService] Failed to send welcome email:', e);
+    }
 
     return { userId };
   }
