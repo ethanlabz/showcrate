@@ -9,6 +9,7 @@
  */
 import { createServerClient, createAdminClient } from '@/lib/supabase/server';
 import { safeNext } from '@/lib/auth/safe-next';
+import { UserRepository } from '@/lib/repositories/UserRepository';
 
 const supabase = createServerClient(Astro.cookies);
 
@@ -60,19 +61,11 @@ if (code) {
   const displayName = meta.full_name || meta.name || meta.preferred_username || null;
   const avatarUrl = meta.avatar_url || meta.picture || null;
 
-  // Upsert skeleton profile row using admin client so RLS doesn't block insert
-  // and middleware can resolve locals.user
-  const adminClient = createAdminClient();
-  await adminClient
-    .from('users')
-    .upsert(
-      { id: user.id, display_name: displayName, avatar_url: avatarUrl },
-      { onConflict: 'id' },
-    );
-
+  // Build the GitHub username suggestion (prefer login/username fields)
   let rawSuggestion =
     meta.preferred_username ||
     meta.user_name ||
+    meta.login ||
     (meta.full_name || meta.name || '')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -85,6 +78,36 @@ if (code) {
   }
   const suggested = rawSuggestion.slice(0, 39);
 
+  // Upsert skeleton profile row using admin client so RLS doesn't block insert
+  const adminClient = createAdminClient();
+  await adminClient
+    .from('users')
+    .upsert(
+      { id: user.id, display_name: displayName, avatar_url: avatarUrl },
+      { onConflict: 'id' },
+    );
+
+  // ── Try to auto-claim the GitHub username ─────────────────────────────────────
+  // Use the same server client (user is now authenticated) to check availability
+  const userRepo = new UserRepository(supabase as any);
+  const isAvailable = await userRepo.isUsernameAvailable(suggested);
+
+  if (isAvailable) {
+    // Auto-set the username — user won't be asked
+    const { error: updateError } = await adminClient
+      .from('users')
+      .update({ username: suggested })
+      .eq('id', user.id);
+
+    if (!updateError) {
+      // Username claimed — go straight to destination
+      return Astro.redirect(next);
+    }
+    // If update failed for any reason, fall through to the picker
+    console.error('[auth/callback] Auto-set username failed:', updateError.message);
+  }
+
+  // Username is taken (or update failed) — ask the user to pick one
   return Astro.redirect(
     `/auth/signup?social=true&suggested=${encodeURIComponent(suggested)}&next=${encodeURIComponent(next)}`,
   );
@@ -155,11 +178,12 @@ if (code) {
           if (profile?.username) {
             window.location.href = next;
           } else {
-            // New user without username
+            // New user without username — suggest GitHub username
             const meta = sessionData.user.user_metadata || {};
             let rawSuggestion =
               meta.preferred_username ||
               meta.user_name ||
+              meta.login ||
               (meta.full_name || meta.name || '')
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, '-')

@@ -7,7 +7,7 @@ if (Astro.locals.user) {
   if (!Astro.locals.user.username) {
     return Astro.redirect('/auth/signup?social=true');
   }
-  return Astro.redirect('/');
+  return Astro.redirect('/dashboard');
 }
 
 const registered = Astro.url.searchParams.get('registered');

@@ -1,7 +1,7 @@
 /**
  * api/auth/oauth.ts — Initiate OAuth sign-in via Supabase
  *
- * POST { provider: 'github' | 'google', next?: string }
+ * POST { provider: 'github', next?: string }
  *
  * Uses the server-side Supabase client so the PKCE code verifier is
  * stored in an httpOnly cookie (handled by @supabase/ssr).
@@ -14,7 +14,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { config } from '@/lib/config/unified-config';
 import { safeNext } from '@/lib/auth/safe-next';
 
-const ALLOWED_PROVIDERS = ['github', 'google'] as const;
+const ALLOWED_PROVIDERS = ['github'] as const;
 type OAuthProvider = (typeof ALLOWED_PROVIDERS)[number];
 
 export const POST: APIRoute = asyncHandler(async ({ request, cookies }) => {
@@ -36,8 +36,7 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies }) => {
     options: {
       redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
       // Scopes for richer profile data
-      ...(provider === 'github' && { scopes: 'read:user user:email' }),
-      ...(provider === 'google' && { scopes: 'openid email profile' }),
+      scopes: 'read:user user:email',
     },
   });
 
