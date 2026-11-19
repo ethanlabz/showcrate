@@ -9,7 +9,10 @@ import { config } from '@/lib/config/unified-config';
 
 // Singleton Resend instance
 let _resend: Resend | null = null;
-function getResend(): Resend {
+function getResend(): Resend | null {
+  if (!config.email.resendApiKey || config.email.resendApiKey === 'dev-resend-key') {
+    return null;
+  }
   if (!_resend) _resend = new Resend(config.email.resendApiKey);
   return _resend;
 }
@@ -22,17 +25,27 @@ export interface SendEmailOptions {
 }
 
 async function sendEmail(opts: SendEmailOptions): Promise<void> {
-  const { error } = await getResend().emails.send({
-    from: config.email.fromEmail,
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html,
-    text: opts.text,
-  });
+  try {
+    const resend = getResend();
+    if (!resend) {
+      console.warn('[emailService] RESEND_API_KEY is not configured. Skipping email send to:', opts.to);
+      return;
+    }
 
-  if (error) {
-    // Log but don't throw — email failures should not block user actions
-    console.error('[emailService] Failed to send email:', error.message);
+    const { error } = await resend.emails.send({
+      from: config.email.fromEmail,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+    });
+
+    if (error) {
+      // Log but don't throw — email failures should not block user actions
+      console.error('[emailService] Failed to send email:', error.message);
+    }
+  } catch (err: any) {
+    console.error('[emailService] Error sending email:', err?.message || err);
   }
 }
 

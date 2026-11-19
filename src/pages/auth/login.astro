@@ -44,4 +44,12 @@ const confirmed = Astro.url.searchParams.get('confirmed');
       </a>
     </p>
   </div>
+
+  <script>
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+  </script>
 </AuthLayout>

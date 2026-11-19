@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signupSchema } from '@/lib/validators/auth.schema';
 import type { SignupInput } from '@/lib/validators/auth.schema';
 import { createClient } from '@/lib/supabase/client';
@@ -18,6 +18,16 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'github' | null>(null);
   const [registered, setRegistered] = useState(false);
+
+  useEffect(() => {
+    // If already authenticated (e.g. back button into signup page), redirect to dashboard
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        window.location.replace('/dashboard');
+      }
+    });
+  }, []);
 
   function set(field: keyof SignupInput, value: string) {
     setValues((prev) => ({ ...prev, [field]: value }));

@@ -13,14 +13,13 @@ import { UserRepository } from '@/lib/repositories/UserRepository';
 
 const supabase = createServerClient(Astro.cookies);
 
-const code = Astro.url.searchParams.get('code');
-const next = safeNext(Astro.url.searchParams.get('next'));
+const code  = Astro.url.searchParams.get('code');
+const next  = safeNext(Astro.url.searchParams.get('next'));
 const error = Astro.url.searchParams.get('error');
 const errorDescription =
   Astro.url.searchParams.get('error_description') ||
   Astro.url.searchParams.get('error_message');
 
-// If provider returned an error in the query parameters
 if (error) {
   console.error('[auth/callback] OAuth error from provider:', error, errorDescription);
   return Astro.redirect(
@@ -28,7 +27,7 @@ if (error) {
   );
 }
 
-// Case 1: PKCE authorization code in query params
+// Case 1: PKCE authorization code in query params (Server exchange)
 if (code) {
   const { data: sessionData, error: sessionError } =
     await supabase.auth.exchangeCodeForSession(code);
@@ -43,7 +42,7 @@ if (code) {
 
   const user = sessionData.user;
 
-  // Check if this user already has a username (returning OAuth user)
+  // Returning user who already has a username
   const { data: profile } = await supabase
     .from('users')
     .select('username')
@@ -51,17 +50,15 @@ if (code) {
     .single();
 
   if (profile?.username) {
-    // Returning user — straight to destination
     return Astro.redirect(next);
   }
 
   // ── New OAuth user ────────────────────────────────────────────────────────────
-  // Build display info from provider metadata (stored by Supabase)
   const meta = user.user_metadata ?? {};
   const displayName = meta.full_name || meta.name || meta.preferred_username || null;
-  const avatarUrl = meta.avatar_url || meta.picture || null;
+  const avatarUrl   = meta.avatar_url || meta.picture || null;
 
-  // Build the GitHub username suggestion (prefer login/username fields)
+  // Build the GitHub username suggestion
   let rawSuggestion =
     meta.preferred_username ||
     meta.user_name ||
@@ -73,9 +70,7 @@ if (code) {
       .replace(/-{2,}/g, '-') ||
     'user';
 
-  if (rawSuggestion.length < 3) {
-    rawSuggestion = (rawSuggestion + 'user').slice(0, 10);
-  }
+  if (rawSuggestion.length < 3) rawSuggestion = (rawSuggestion + 'user').slice(0, 10);
   const suggested = rawSuggestion.slice(0, 39);
 
   // Upsert skeleton profile row using admin client so RLS doesn't block insert
@@ -87,27 +82,23 @@ if (code) {
       { onConflict: 'id' },
     );
 
-  // ── Try to auto-claim the GitHub username ─────────────────────────────────────
-  // Use the same server client (user is now authenticated) to check availability
+  // Try to auto-claim the GitHub username
   const userRepo = new UserRepository(supabase as any);
   const isAvailable = await userRepo.isUsernameAvailable(suggested);
 
   if (isAvailable) {
-    // Auto-set the username — user won't be asked
     const { error: updateError } = await adminClient
       .from('users')
       .update({ username: suggested })
       .eq('id', user.id);
 
     if (!updateError) {
-      // Username claimed — go straight to destination
       return Astro.redirect(next);
     }
-    // If update failed for any reason, fall through to the picker
     console.error('[auth/callback] Auto-set username failed:', updateError.message);
   }
 
-  // Username is taken (or update failed) — ask the user to pick one
+  // Username taken — ask the user to pick one
   return Astro.redirect(
     `/auth/signup?social=true&suggested=${encodeURIComponent(suggested)}&next=${encodeURIComponent(next)}`,
   );
@@ -137,7 +128,6 @@ if (code) {
         const searchParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
 
-        // Check for error in hash or search
         const error = searchParams.get('error') || hashParams.get('error');
         const errorDesc =
           searchParams.get('error_description') ||
@@ -146,14 +136,13 @@ if (code) {
           hashParams.get('message');
 
         if (error) {
-          window.location.href = `/auth/login?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDesc || '')}`;
+          window.location.replace(`/auth/login?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDesc || '')}`);
           return;
         }
 
         const supabase = createClient();
         const next = safeNext(searchParams.get('next') || hashParams.get('next'));
 
-        // Check if access_token is in hash (Implicit Grant)
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
 
@@ -164,11 +153,10 @@ if (code) {
           });
 
           if (setSessionError || !sessionData?.user) {
-            window.location.href = `/auth/login?error=oauth_failed&error_description=${encodeURIComponent(setSessionError?.message || '')}`;
+            window.location.replace(`/auth/login?error=oauth_failed&error_description=${encodeURIComponent(setSessionError?.message || '')}`);
             return;
           }
 
-          // Check if user has a username
           const { data: profile } = await supabase
             .from('users')
             .select('username')
@@ -176,9 +164,8 @@ if (code) {
             .single();
 
           if (profile?.username) {
-            window.location.href = next;
+            window.location.replace(next);
           } else {
-            // New user without username — suggest GitHub username
             const meta = sessionData.user.user_metadata || {};
             let rawSuggestion =
               meta.preferred_username ||
@@ -195,12 +182,11 @@ if (code) {
               rawSuggestion = (rawSuggestion + 'user').slice(0, 10);
             }
             const suggested = rawSuggestion.slice(0, 39);
-            window.location.href = `/auth/signup?social=true&suggested=${encodeURIComponent(suggested)}&next=${encodeURIComponent(next)}`;
+            window.location.replace(`/auth/signup?social=true&suggested=${encodeURIComponent(suggested)}&next=${encodeURIComponent(next)}`);
           }
           return;
         }
 
-        // Check if supabase client can pick up session automatically
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const { data: profile } = await supabase
@@ -210,15 +196,14 @@ if (code) {
             .single();
 
           if (profile?.username) {
-            window.location.href = next;
+            window.location.replace(next);
           } else {
-            window.location.href = `/auth/signup?social=true&next=${encodeURIComponent(next)}`;
+            window.location.replace(`/auth/signup?social=true&next=${encodeURIComponent(next)}`);
           }
           return;
         }
 
-        // No code, no tokens, no session
-        window.location.href = '/auth/login?error=missing_code';
+        window.location.replace('/auth/login?error=missing_code');
       }
 
       handleClientCallback();

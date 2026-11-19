@@ -36,6 +36,14 @@ export default function LoginForm() {
     } else if (errorCode) {
       setServerError(`Authentication failed: ${errorCode}`);
     }
+
+    // If already authenticated (e.g. back button into login page), redirect to dashboard
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        window.location.replace('/dashboard');
+      }
+    });
   }, []);
 
   function set(field: keyof LoginInput, value: string) {

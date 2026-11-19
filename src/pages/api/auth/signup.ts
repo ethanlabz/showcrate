@@ -22,12 +22,21 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies }) => {
     const { userId } = await authService.signup(parsed.data);
     return ok({ userId }, 201);
   } catch (err: any) {
+    console.error('[signup API error]:', err);
     if (err.code === 'USERNAME_TAKEN' || err.code === 'EMAIL_TAKEN') {
       return unprocessable(err.message);
     }
     if (err.message?.includes('fetch failed') || err.name === 'TypeError') {
       return unprocessable('Cannot connect to Supabase. Please ensure your .env file has valid SUPABASE_URL credentials.');
     }
-    throw err;
+    const msg = (err.message || '').toLowerCase();
+    if (
+      msg.includes('already registered') ||
+      msg.includes('already exists') ||
+      msg.includes('user already exists')
+    ) {
+      return unprocessable('An account with this email already exists');
+    }
+    return unprocessable(err.message || 'Registration failed. Please check your credentials and try again.');
   }
 });

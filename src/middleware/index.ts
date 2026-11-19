@@ -87,6 +87,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
+  // ── Step 2b: OAuth PKCE code catch-all ────────────────────────────────────
+  // If Supabase sends ?code= to any route other than /auth/callback (e.g. '/' or '/dashboard'),
+  // immediately forward to /auth/callback preserving all query parameters so the session can be created.
+  if (url.searchParams.has('code') && !normalizedPath.startsWith('/auth/callback')) {
+    const callbackUrl = new URL('/auth/callback', url.origin);
+    url.searchParams.forEach((value, key) => callbackUrl.searchParams.set(key, value));
+    return redirect(callbackUrl.toString(), 302);
+  }
+
   // ── Step 3: Marketing routes skip session resolution entirely ──────────
   // Rule 3 exception: '/', '/about', '/help', '/terms', '/privacy' must remain
   // static-cacheable and must NEVER call getUser().
@@ -166,18 +175,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // ── Step 5b: Homepage redirect for authenticated users ────────────────
   // Authenticated users must never land on '/'. Send them to /dashboard.
-  // Also forward any stray OAuth ?code= on '/' to the callback handler.
   if (normalizedPath === '/') {
-    const oauthCode = url.searchParams.get('code');
-    if (oauthCode) {
-      // OAuth callback landed on homepage instead of /auth/callback
-      // (happens when Supabase Site URL is set but allow-list is missing).
-      // Forward to the proper callback handler preserving all params.
-      const callbackUrl = new URL('/auth/callback', url.origin);
-      url.searchParams.forEach((value, key) => callbackUrl.searchParams.set(key, value));
-      return redirect(callbackUrl.toString(), 302);
-    }
-
     if (locals.viewer?.username) {
       const res = redirect('/dashboard', 302);
       res.headers.set('Cache-Control', 'private, no-store');
