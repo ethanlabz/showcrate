@@ -63,7 +63,9 @@ export class DocService {
     await this.assertWriteAccess(page.project_id, actorId);
 
     // Save current content as a version snapshot before overwriting
-    await this.createVersionSnapshot(pageId, page.content, actorId);
+    if (page.content) {
+      await this.createVersionSnapshot(pageId, page.content, actorId);
+    }
 
     return this.docRepo.update(pageId, input);
   }

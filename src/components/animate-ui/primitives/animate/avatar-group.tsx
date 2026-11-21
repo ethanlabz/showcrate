@@ -1,19 +1,18 @@
 'use client';
 
 import * as React from 'react';
-import { HTMLMotionProps, motion, type Transition } from 'motion/react';
+import { type HTMLMotionProps, motion, type Transition } from 'motion/react';
 
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipArrow,
-  type TooltipProviderProps,
-  type TooltipProps,
-  type TooltipContentProps,
-  type TooltipArrowProps,
-} from '@/components/animate-ui/primitives/animate/tooltip';
+type TooltipProviderProps = { id?: string; openDelay?: number; closeDelay?: number; transition?: Transition; children?: React.ReactNode };
+type TooltipProps = { side?: string; sideOffset?: number; align?: string; alignOffset?: number; children?: React.ReactNode };
+type TooltipContentProps = React.ComponentProps<'div'>;
+type TooltipArrowProps = React.ComponentProps<'div'> & { tipRadius?: number };
+
+const TooltipProvider = ({ children }: TooltipProviderProps) => <>{children}</>;
+const Tooltip = ({ children }: TooltipProps) => <>{children}</>;
+const TooltipTrigger = ({ children }: { children?: React.ReactNode; render?: React.ReactNode }) => <>{children}</>;
+const TooltipContent = (props: TooltipContentProps) => <div {...props} />;
+const TooltipArrow = (props: TooltipArrowProps) => <div {...props} />;
 
 type AvatarProps = Omit<HTMLMotionProps<'div'>, 'translate'> & {
   children: React.ReactNode;

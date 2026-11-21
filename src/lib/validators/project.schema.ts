@@ -13,6 +13,8 @@ export const updateProjectSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   tagline: z.string().max(200).optional().nullable(),
   coverUrl: z.url().optional().nullable(),
+  visibility: z.enum(['public', 'private', 'unlisted']).optional(),
+  published: z.boolean().optional(),
 });
 
 export const projectVisibilitySchema = z.object({

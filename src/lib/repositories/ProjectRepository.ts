@@ -117,13 +117,13 @@ export class ProjectRepository {
     if (error) throw error;
   }
 
-  async listShowcase(filters: ShowcaseFilters): Promise<{ projects: ProjectRow[]; total: number }> {
+  async listShowcase(filters: ShowcaseFilters): Promise<{ projects: any[]; total: number }> {
     const { search, page = 1, limit = 24 } = filters;
     const offset = (page - 1) * limit;
 
     let query = this.db
       .from('projects')
-      .select('*', { count: 'exact' })
+      .select('*, users(username, display_name, avatar_url)', { count: 'exact' })
       .eq('published', true)
       .eq('visibility', 'public')
       .is('deleted_at', null);
@@ -132,12 +132,51 @@ export class ProjectRepository {
       query = query.or(`name.ilike.%${search}%,tagline.ilike.%${search}%`);
     }
 
-    const { data, count, error } = await query
+    let { data, count, error } = await query
       .order('featured', { ascending: false })
       .order('view_count', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (error) throw error;
+    if (error) {
+      // Fallback without embedded relation if PostgREST relation is not mapped
+      let fallbackQuery = this.db
+        .from('projects')
+        .select('*', { count: 'exact' })
+        .eq('published', true)
+        .eq('visibility', 'public')
+        .is('deleted_at', null);
+
+      if (search) {
+        fallbackQuery = fallbackQuery.or(`name.ilike.%${search}%,tagline.ilike.%${search}%`);
+      }
+
+      const fallbackRes = await fallbackQuery
+        .order('featured', { ascending: false })
+        .order('view_count', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (fallbackRes.error) throw fallbackRes.error;
+
+      data = fallbackRes.data ?? [];
+      count = fallbackRes.count ?? 0;
+
+      if (data && data.length > 0) {
+        const ownerIds = Array.from(new Set(data.map((p: any) => p.owner_id).filter(Boolean)));
+        if (ownerIds.length > 0) {
+          const { data: usersData } = await this.db
+            .from('users')
+            .select('id, username, display_name, avatar_url')
+            .in('id', ownerIds);
+
+          const usersMap = new Map((usersData ?? []).map((u: any) => [u.id, u]));
+          data = data.map((p: any) => ({
+            ...p,
+            users: usersMap.get(p.owner_id) || null,
+          }));
+        }
+      }
+    }
+
     return { projects: data ?? [], total: count ?? 0 };
   }
 

@@ -6,7 +6,8 @@ import { publishProjectSchema } from '@/lib/validators/project.schema';
 import { ProjectService } from '@/lib/services/projectService';
 
 export const POST: APIRoute = asyncHandler(async ({ request, cookies, locals, params }) => {
-  if (!locals.user) return unauthorized();
+  const viewer = locals.viewer ?? locals.user;
+  if (!viewer) return unauthorized();
 
   const body = await request.json().catch(() => null);
   if (!body) return unprocessable('Invalid JSON body');
@@ -16,7 +17,10 @@ export const POST: APIRoute = asyncHandler(async ({ request, cookies, locals, pa
 
   const db = createServerClient(cookies);
   const projectService = new ProjectService(db);
-  await projectService.publishProject(params.projectId!, locals.user.id, parsed.data.published);
+  await projectService.publishProject(params.projectId!, viewer.id, parsed.data.published);
 
-  return ok({ message: parsed.data.published ? 'Project published' : 'Project unpublished' });
+  return ok({
+    message: parsed.data.published ? 'Project published' : 'Project unpublished',
+    published: parsed.data.published,
+  });
 });

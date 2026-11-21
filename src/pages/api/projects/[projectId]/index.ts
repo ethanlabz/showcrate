@@ -6,7 +6,8 @@ import { updateProjectSchema } from '@/lib/validators/project.schema';
 import { ProjectService } from '@/lib/services/projectService';
 
 export const PATCH: APIRoute = asyncHandler(async ({ request, cookies, locals, params }) => {
-  if (!locals.user) return unauthorized();
+  const viewer = locals.viewer ?? locals.user;
+  if (!viewer) return unauthorized();
 
   const body = await request.json().catch(() => null);
   if (!body) return unprocessable('Invalid JSON body');
@@ -16,17 +17,18 @@ export const PATCH: APIRoute = asyncHandler(async ({ request, cookies, locals, p
 
   const db = createServerClient(cookies);
   const projectService = new ProjectService(db);
-  const project = await projectService.updateProject(params.projectId!, locals.user.id, parsed.data);
+  const project = await projectService.updateProject(params.projectId!, viewer.id, parsed.data);
 
   return ok({ project });
 });
 
 export const DELETE: APIRoute = asyncHandler(async ({ cookies, locals, params }) => {
-  if (!locals.user) return unauthorized();
+  const viewer = locals.viewer ?? locals.user;
+  if (!viewer) return unauthorized();
 
   const db = createServerClient(cookies);
   const projectService = new ProjectService(db);
-  await projectService.deleteProject(params.projectId!, locals.user.id);
+  await projectService.deleteProject(params.projectId!, viewer.id);
 
   return ok({ message: 'Project deleted' });
 });

@@ -1,73 +1,122 @@
 ---
 import HomeLayout from '@/layouts/HomeLayout.astro';
-import { Timeline } from '@/components/pages/home/timeline';
-import { Rocket, Target, Users } from 'lucide-react';
+import ScrollReveal from '@/components/animations/ScrollReveal';
+import {
+  ClosingCta,
+  HeroActions,
+  Internals,
+  NotAtLaunch,
+  Principles,
+  Steps,
+} from '@/components/pages/home/about/AboutSections';
+
+// Below-the-fold islands hydrate slightly before they scroll into view, so the
+// reveal is ready when the user arrives instead of starting after a delay.
+const early = { rootMargin: '200px' };
 ---
 
 <HomeLayout title='About'>
-  <div class='relative min-h-screen'>
-    <!-- Hero Background -->
-    <div
-      class='absolute top-0 right-0 w-full h-150 bg-linear-to-b from-primary/10 to-transparent pointer-events-none'
-    >
-    </div>
+  <div class='relative'>
+    <!-- Hero glow -->
+    <ScrollReveal
+      direction='none'
+      duration={1.2}
+      aria-hidden='true'
+      client:load
+      className='pointer-events-none absolute inset-x-0 top-0 h-136 bg-linear-to-b from-primary/10 to-transparent'
+    />
 
-    <div
-      class='container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 text-center max-w-4xl mb-24'
+    <!-- Hero -->
+    <section
+      class='relative mx-auto max-w-5xl px-4 pt-32 pb-24 sm:px-6 lg:px-8 lg:pt-44 lg:pb-32'
     >
-      <h1
-        class='text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 font-sans bg-clip-text text-transparent bg-linear-to-b from-foreground to-foreground/50'
+      <ScrollReveal as='p' delay={0.1} client:load
+        className='mb-6 text-sm font-medium uppercase tracking-[0.2em] text-primary'
       >
-        We're on a mission to kill static docs.
-      </h1>
-      <p
-        class='text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto text-balance mb-12'
+        About Showcrate
+      </ScrollReveal>
+      <ScrollReveal as='h1' delay={0.25} client:load
+        className='max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight text-foreground text-balance sm:text-6xl md:text-7xl'
       >
-        Documentation shouldn't be a wall of text that gets outdated the moment
-        you hit publish. It should be a living, breathing playground.
-      </p>
+        Documentation that is live the moment you <span class='text-primary'>save</span>.
+      </ScrollReveal>
+      <ScrollReveal as='p' delay={0.4} client:load
+        className='mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty sm:text-xl'
+      >
+        Showcrate is a place to write up a project and put it on show. You
+        write in blocks, you save, and the page is published. Every project
+        deserves a stage.
+      </ScrollReveal>
 
-      <div
-        class='grid grid-cols-1 md:grid-cols-3 gap-6 text-left border-y border-border/50 py-12'
+      <HeroActions client:load />
+    </section>
+
+    <!-- What we believe -->
+    <section
+      aria-labelledby='principles-heading'
+      class='mx-auto max-w-5xl px-4 pb-24 sm:px-6 lg:px-8 lg:pb-32'
+    >
+      <ScrollReveal as='h2' id='principles-heading' client:visible={early}
+        className='mb-12 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl'
       >
-        <div>
-          <Users className='w-8 h-8 text-primary mb-4' />
-          <h3 class='font-bold text-xl mb-2'>For Developers</h3>
-          <p class='text-muted-foreground text-sm'>
-            Built by developers who were tired of maintaining complex doc sites.
-          </p>
-        </div>
-        <div>
-          <Rocket className='w-8 h-8 text-primary mb-4' />
-          <h3 class='font-bold text-xl mb-2'>Fast Execution</h3>
-          <p class='text-muted-foreground text-sm'>
-            We leverage WebContainers to run actual Node.js environments in the
-            browser.
-          </p>
-        </div>
-        <div>
-          <Target className='w-8 h-8 text-primary mb-4' />
-          <h3 class='font-bold text-xl mb-2'>Focused Mission</h3>
-          <p class='text-muted-foreground text-sm'>
-            Our single goal is to make learning APIs and libraries as
-            frictionless as possible.
-          </p>
-        </div>
+        Three decisions shape everything else.
+      </ScrollReveal>
+
+      <Principles client:visible={early} />
+    </section>
+
+    <!-- How it works -->
+    <section
+      aria-labelledby='how-heading'
+      class='border-y border-border bg-card/40'
+    >
+      <div class='mx-auto max-w-5xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32'>
+        <ScrollReveal as='h2' id='how-heading' client:visible={early}
+          className='mb-12 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl'
+        >
+          From idea to published in three steps.
+        </ScrollReveal>
+
+        <Steps client:visible={early} />
       </div>
-    </div>
+    </section>
 
-    <!-- Timeline Section -->
-    <div class='container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl'>
-      <div class='text-center mb-16'>
-        <h2 class='text-4xl font-bold tracking-tight mb-4 font-sans'>
-          Our Journey
-        </h2>
-        <p class='text-muted-foreground text-lg'>
-          How we got here and where we're going.
+    <!-- Under the hood -->
+    <section
+      aria-labelledby='internals-heading'
+      class='mx-auto max-w-5xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32'
+    >
+      <ScrollReveal as='div' client:visible={early} className='mb-12 max-w-2xl'>
+        <p
+          class='mb-4 text-sm font-medium uppercase tracking-[0.2em] text-primary'
+        >
+          For developers
         </p>
-      </div>
+        <h2
+          id='internals-heading'
+          class='text-3xl font-semibold tracking-tight text-foreground sm:text-4xl'
+        >
+          Built on Astro and Supabase, with the security rules where they belong.
+        </h2>
+      </ScrollReveal>
 
-      <Timeline client:load />
-    </div>
+      <Internals client:visible={early} />
+    </section>
+
+    <!-- Honest scope -->
+    <section
+      aria-labelledby='scope-heading'
+      class='mx-auto max-w-5xl px-4 pb-24 sm:px-6 lg:px-8 lg:pb-32'
+    >
+      <NotAtLaunch client:visible={early} />
+    </section>
+
+    <!-- Closing CTA -->
+    <section
+      aria-labelledby='cta-heading'
+      class='mx-auto max-w-5xl px-4 pb-32 text-center sm:px-6 lg:px-8'
+    >
+      <ClosingCta client:visible={early} />
+    </section>
   </div>
 </HomeLayout>

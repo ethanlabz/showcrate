@@ -11,7 +11,7 @@ export default defineConfig({
   adapter: netlify({
     devFeatures: false,
   }),
-  site: process.env.SITE_URL ?? 'http://localhost:4321',
+  site: process.env.SITE_URL ?? process.env.URL ?? 'http://localhost:4321',
   integrations: [
     react(),
     sitemap({

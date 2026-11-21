@@ -37,13 +37,7 @@ export const POST: APIRoute = asyncHandler(async ({ request, locals }) => {
       name: parsed.data.name,
       description: parsed.data.description ?? null,
       category: parsed.data.category,
-      structure: parsed.data.structure.map((p) => ({
-        slug: p.slug,
-        title: p.title,
-        content: p.content,
-        order_index: p.orderIndex,
-        is_index: p.isIndex,
-      })),
+      structure: parsed.data.structure,
       featured: parsed.data.featured,
     })
     .select()

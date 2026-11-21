@@ -58,7 +58,7 @@ function loadConfig(): Config {
     },
     site: {
       url:
-        (typeof process !== 'undefined' ? (process.env.SITE_URL || process.env.PUBLIC_SITE_URL) : undefined) ??
+        (typeof process !== 'undefined' ? (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.URL) : undefined) ??
         import.meta.env.SITE_URL ??
         import.meta.env.PUBLIC_SITE_URL ??
         'http://localhost:4321',

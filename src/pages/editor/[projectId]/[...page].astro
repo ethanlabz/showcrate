@@ -79,21 +79,28 @@ if (!activePage) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-// 3. Version count for concurrency control
-const { count: versionCount } = await supabase
-  .from('page_versions')
-  .select('id', { count: 'exact', head: true })
-  .eq('page_id', activePage.id);
+// 3. Parallelize version count and tree query
+const [versionsRes, treeRes] = await Promise.all([
+  supabase
+    .from('page_versions')
+    .select('id', { count: 'exact', head: true })
+    .eq('page_id', activePage.id),
+  supabase
+    .from('doc_pages')
+    .select('id, parent_id, kind, title, slug, order_index, is_index')
+    .eq('project_id', project.id)
+    .is('deleted_at', null)
+    .order('order_index', { ascending: true }),
+]);
 
-// 4. Query tree: Never select content for the tree query
-const { data: treeNodes } = await supabase
-  .from('doc_pages')
-  .select('id, parent_id, kind, title, slug, order_index, is_index')
-  .eq('project_id', project.id)
-  .is('deleted_at', null)
-  .order('order_index', { ascending: true });
+const versionCount = versionsRes.count;
+const treeNodes = treeRes.data;
 
 const treeRevision = project.tree_revision ?? 0;
+const serializedContent =
+  typeof activePage.content === 'string'
+    ? activePage.content
+    : JSON.stringify(activePage.content ?? []);
 ---
 
 <EditorLayout title={`Editor — ${project.name}`}>
@@ -113,7 +120,7 @@ const treeRevision = project.tree_revision ?? 0;
     initialPage={{
       id: activePage.id,
       title: activePage.title,
-      content: activePage.content ?? '[]',
+      content: serializedContent,
       revision: versionCount ?? 0,
       schema_version: 1,
       is_index: Boolean(activePage.is_index),

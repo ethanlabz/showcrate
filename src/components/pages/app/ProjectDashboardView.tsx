@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Check,
   FileText,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -96,6 +97,7 @@ export function ProjectDashboardView({
   const [filterOption, setFilterOption] = React.useState<FilterOption>('all');
   const [sortOpen, setSortOpen] = React.useState(false);
   const [filterOpen, setFilterOpen] = React.useState(false);
+  const [navigatingId, setNavigatingId] = React.useState<string | null>(null);
 
   const sortRef = React.useRef<HTMLDivElement>(null);
   const filterRef = React.useRef<HTMLDivElement>(null);
@@ -323,182 +325,226 @@ export function ProjectDashboardView({
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredAndSortedProjects.map((p) => (
-            <a
-              key={p.id}
-              href={`/editor/${p.id}`}
-              className="group block relative"
-            >
-              <div className="relative rounded-lg overflow-hidden border border-border/30 hover:border-border/60 transition-all duration-200 aspect-[3/4] bg-surface-raised/50 group-hover:border-accent/40">
-                {/* Document preview placeholder */}
-                <div className="absolute inset-3 rounded bg-white/[0.03] border border-white/[0.04] p-4 flex flex-col gap-2.5 overflow-hidden">
-                  <div className="h-3 w-3/5 rounded-sm bg-foreground/10" />
-                  <div className="h-0.5" />
-                  <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-11/12 rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-4/5 rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-2/3 rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-3" />
-                  <div className="h-2.5 w-2/5 rounded-sm bg-foreground/[0.08]" />
-                  <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-5/6 rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
-                  <div className="h-2 w-3/4 rounded-sm bg-foreground/[0.06]" />
-                </div>
+          {filteredAndSortedProjects.map((p) => {
+            const isOpening = navigatingId === p.id;
+            return (
+              <a
+                key={p.id}
+                href={`/editor/${p.id}`}
+                data-astro-reload
+                onClick={() => setNavigatingId(p.id)}
+                className="group block relative"
+              >
+                <div className={`relative rounded-lg overflow-hidden border transition-all duration-200 aspect-[3/4] bg-surface-raised/50 ${
+                  isOpening
+                    ? 'border-accent ring-1 ring-accent'
+                    : 'border-border/30 hover:border-border/60 group-hover:border-accent/40'
+                }`}>
+                  {/* Loading overlay when opening editor */}
+                  {isOpening && (
+                    <div className="absolute inset-0 z-20 bg-background/80 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-accent">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span className="text-xs font-medium text-foreground">Opening editor...</span>
+                    </div>
+                  )}
 
-                {/* Bottom gradient overlay with name + date */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
-                  <div className="flex items-end justify-between gap-2">
+                  {/* Document preview placeholder */}
+                  <div className="absolute inset-3 rounded bg-white/[0.03] border border-white/[0.04] p-4 flex flex-col gap-2.5 overflow-hidden">
+                    <div className="h-3 w-3/5 rounded-sm bg-foreground/10" />
+                    <div className="h-0.5" />
+                    <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-11/12 rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-4/5 rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-2/3 rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-3" />
+                    <div className="h-2.5 w-2/5 rounded-sm bg-foreground/[0.08]" />
+                    <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-5/6 rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-full rounded-sm bg-foreground/[0.06]" />
+                    <div className="h-2 w-3/4 rounded-sm bg-foreground/[0.06]" />
+                  </div>
+
+                  {/* Bottom gradient overlay with name + date */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-display font-bold text-sm text-white truncate group-hover:text-accent transition-colors">
+                          {p.name}
+                        </h3>
+                        <p className="text-[11px] text-white/50 mt-0.5 truncate">
+                          Last updated on {formatDate(p.updated_at)}
+                        </p>
+                      </div>
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.open(`/${viewerUsername || 'user'}/${p.slug}`, '_blank');
+                        }}
+                        className="text-[10px] text-white/70 hover:text-white px-2 py-0.5 rounded bg-black/40 hover:bg-black/60 border border-white/10 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        title="View public preview"
+                      >
+                        Preview
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      ) : viewMode === 'compact' ? (
+        /* COMPACT VIEW */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredAndSortedProjects.map((p) => {
+            const isOpening = navigatingId === p.id;
+            return (
+              <a
+                key={p.id}
+                href={`/editor/${p.id}`}
+                data-astro-reload
+                onClick={() => setNavigatingId(p.id)}
+                className={`group block rounded-lg border bg-surface/40 hover:bg-surface-raised/60 p-3.5 transition-all duration-200 relative ${
+                  isOpening ? 'border-accent ring-1 ring-accent' : 'border-border/40 hover:border-border/80'
+                }`}
+              >
+                {isOpening && (
+                  <div className="absolute inset-0 z-10 rounded-lg bg-background/80 backdrop-blur-xs flex items-center justify-center gap-2 text-accent">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-xs font-medium text-foreground">Opening editor...</span>
+                  </div>
+                )}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 text-accent shrink-0">
+                      <FolderKanban className="h-4 w-4" />
+                    </div>
                     <div className="min-w-0">
-                      <h3 className="font-display font-bold text-sm text-white truncate group-hover:text-accent transition-colors">
+                      <h3 className="font-display font-semibold text-sm text-foreground truncate group-hover:text-accent transition-colors">
                         {p.name}
                       </h3>
-                      <p className="text-[11px] text-white/50 mt-0.5 truncate">
-                        Last updated on {formatDate(p.updated_at)}
+                      <p className="text-[11px] font-mono text-muted-foreground truncate">
+                        /{p.slug}
                       </p>
                     </div>
+                  </div>
+
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                      p.published
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-surface-raised text-muted-foreground border border-border/40'
+                    }`}
+                  >
+                    {p.published ? 'Published' : 'Draft'}
+                  </span>
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-border/30 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Updated {formatDateShort(p.updated_at)}</span>
+                  <div className="flex items-center gap-2">
                     <span
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         window.open(`/${viewerUsername || 'user'}/${p.slug}`, '_blank');
                       }}
-                      className="text-[10px] text-white/70 hover:text-white px-2 py-0.5 rounded bg-black/40 hover:bg-black/60 border border-white/10 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      className="hover:text-foreground hover:underline cursor-pointer"
                       title="View public preview"
                     >
                       Preview
                     </span>
+                    <span>·</span>
+                    <span className="text-accent hover:underline group-hover:translate-x-0.5 transition-transform font-medium">
+                      Editor →
+                    </span>
                   </div>
                 </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      ) : viewMode === 'compact' ? (
-        /* COMPACT VIEW */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredAndSortedProjects.map((p) => (
-            <a
-              key={p.id}
-              href={`/editor/${p.id}`}
-              className="group block rounded-lg border border-border/40 hover:border-border/80 bg-surface/40 hover:bg-surface-raised/60 p-3.5 transition-all duration-200"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 text-accent shrink-0">
-                    <FolderKanban className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-display font-semibold text-sm text-foreground truncate group-hover:text-accent transition-colors">
-                      {p.name}
-                    </h3>
-                    <p className="text-[11px] font-mono text-muted-foreground truncate">
-                      /{p.slug}
-                    </p>
-                  </div>
-                </div>
-
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                    p.published
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-surface-raised text-muted-foreground border border-border/40'
-                  }`}
-                >
-                  {p.published ? 'Published' : 'Draft'}
-                </span>
-              </div>
-
-              <div className="mt-3 pt-2.5 border-t border-border/30 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>Updated {formatDateShort(p.updated_at)}</span>
-                <div className="flex items-center gap-2">
-                  <span
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      window.open(`/${viewerUsername || 'user'}/${p.slug}`, '_blank');
-                    }}
-                    className="hover:text-foreground hover:underline cursor-pointer"
-                    title="View public preview"
-                  >
-                    Preview
-                  </span>
-                  <span>·</span>
-                  <span className="text-accent hover:underline group-hover:translate-x-0.5 transition-transform font-medium">
-                    Editor →
-                  </span>
-                </div>
-              </div>
-            </a>
-          ))}
+              </a>
+            );
+          })}
         </div>
       ) : (
         /* LIST VIEW */
         <div className="rounded-xl border border-border/50 bg-surface/30 overflow-hidden divide-y divide-border/40">
-          {filteredAndSortedProjects.map((p) => (
-            <div
-              key={p.id}
-              className="p-3.5 sm:px-4 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-surface-raised/40 transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 text-accent shrink-0">
-                  <FileText className="h-4 w-4" />
+          {filteredAndSortedProjects.map((p) => {
+            const isOpening = navigatingId === p.id;
+            return (
+              <div
+                key={p.id}
+                className="p-3.5 sm:px-4 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-surface-raised/40 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 text-accent shrink-0">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <a
+                      href={`/editor/${p.id}`}
+                      data-astro-reload
+                      onClick={() => setNavigatingId(p.id)}
+                      className="font-display font-semibold text-sm text-foreground hover:text-accent truncate block transition-colors"
+                    >
+                      {p.name}
+                    </a>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                      <span className="font-mono text-[11px]">/{p.slug}</span>
+                      {p.tagline && (
+                        <>
+                          <span>•</span>
+                          <span className="truncate max-w-[200px] sm:max-w-xs">{p.tagline}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <a
-                    href={`/editor/${p.id}`}
-                    className="font-display font-semibold text-sm text-foreground hover:text-accent truncate block transition-colors"
+
+                <div className="flex items-center gap-3 shrink-0 ml-11 sm:ml-0 text-xs">
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      p.published
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-surface-raised text-muted-foreground border border-border/40'
+                    }`}
                   >
-                    {p.name}
-                  </a>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                    <span className="font-mono text-[11px]">/{p.slug}</span>
-                    {p.tagline && (
-                      <>
-                        <span>•</span>
-                        <span className="truncate max-w-[200px] sm:max-w-xs">{p.tagline}</span>
-                      </>
-                    )}
+                    {p.published ? 'Published' : 'Draft'}
+                  </span>
+
+                  <span className="text-[11px] text-muted-foreground hidden md:inline">
+                    {formatDateShort(p.updated_at)}
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href={`/${viewerUsername || 'user'}/${p.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 rounded bg-surface border border-border/50 hover:bg-surface-raised text-foreground text-[11px] font-medium transition-colors"
+                    >
+                      Preview
+                    </a>
+                    <a
+                      href={`/editor/${p.id}`}
+                      data-astro-reload
+                      onClick={() => setNavigatingId(p.id)}
+                      className="px-2.5 py-1 rounded bg-accent text-accent-foreground hover:bg-accent-hover text-[11px] font-medium transition-colors inline-flex items-center gap-1.5"
+                    >
+                      {isOpening ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Opening...</span>
+                        </>
+                      ) : (
+                        'Editor'
+                      )}
+                    </a>
                   </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-3 shrink-0 ml-11 sm:ml-0 text-xs">
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                    p.published
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-surface-raised text-muted-foreground border border-border/40'
-                  }`}
-                >
-                  {p.published ? 'Published' : 'Draft'}
-                </span>
-
-                <span className="text-[11px] text-muted-foreground hidden md:inline">
-                  {formatDateShort(p.updated_at)}
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  <a
-                    href={`/${viewerUsername || 'user'}/${p.slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-2.5 py-1 rounded bg-surface border border-border/50 hover:bg-surface-raised text-foreground text-[11px] font-medium transition-colors"
-                  >
-                    Preview
-                  </a>
-                  <a
-                    href={`/editor/${p.id}`}
-                    className="px-2.5 py-1 rounded bg-accent text-accent-foreground hover:bg-accent-hover text-[11px] font-medium transition-colors"
-                  >
-                    Editor
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

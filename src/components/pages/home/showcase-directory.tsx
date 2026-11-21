@@ -8,7 +8,7 @@ import ScrollReveal from '@/components/animations/ScrollReveal';
 // (Supabase, etc.) later. Set `href` on a project to make its card clickable.
 // ====================================================================================================
 
-interface Project {
+export interface ShowcaseProject {
   id: string;
   title: string;
   description: string;
@@ -16,9 +16,20 @@ interface Project {
   addedDate: string;
   featured: boolean;
   href?: string;
+  author?: {
+    username: string;
+    displayName?: string | null;
+    avatarUrl?: string | null;
+  };
 }
 
-const projects: Project[] = [
+export type Project = ShowcaseProject;
+
+export interface ShowcaseDirectoryProps {
+  initialProjects?: ShowcaseProject[];
+}
+
+const DEFAULT_SAMPLE_PROJECTS: ShowcaseProject[] = [
   {
     id: 'smart-attendance',
     title: 'Smart Attendance',
@@ -84,7 +95,7 @@ const projects: Project[] = [
   },
 ];
 
-const allTags = Array.from(new Set(projects.flatMap((p) => p.tags))).sort();
+
 
 type SortOption = 'featured' | 'newest' | 'az';
 type ViewMode = 'grid' | 'list';
@@ -209,10 +220,18 @@ function ProjectCard({
           isList ? 'shrink-0 gap-4' : 'mt-6 justify-between border-t border-border/50 pt-4'
         }`}
       >
-        <span>{formatDate(project.addedDate)}</span>
+        <div className='flex items-center gap-1.5 truncate'>
+          {project.author?.username && (
+            <span className='font-medium text-foreground/85'>
+              @{project.author.username}
+            </span>
+          )}
+          {project.author?.username && <span>•</span>}
+          <span>{formatDate(project.addedDate)}</span>
+        </div>
         <ArrowUpRight
           aria-hidden='true'
-          className={`h-4 w-4 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary ${
+          className={`h-4 w-4 shrink-0 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary ${
             project.href ? 'opacity-100' : 'opacity-30'
           }`}
         />
@@ -223,7 +242,13 @@ function ProjectCard({
 
 // ====================================================================================================
 
-export function ShowcaseDirectory() {
+export function ShowcaseDirectory({ initialProjects }: ShowcaseDirectoryProps = {}) {
+  const [projectsList, setProjectsList] = useState<ShowcaseProject[]>(() => {
+    return initialProjects && initialProjects.length > 0 ? initialProjects : DEFAULT_SAMPLE_PROJECTS;
+  });
+  const [isSampleData, setIsSampleData] = useState<boolean>(() => {
+    return !initialProjects || initialProjects.length === 0;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>('featured');
@@ -231,6 +256,46 @@ export function ShowcaseDirectory() {
   const [modKey, setModKey] = useState('Ctrl');
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!initialProjects || initialProjects.length === 0) {
+      let isMounted = true;
+      fetch('/api/projects')
+        .then((res) => res.json())
+        .then((data) => {
+          if (!isMounted) return;
+          const fetchedProjects = data?.projects ?? data?.data?.projects;
+          if (Array.isArray(fetchedProjects) && fetchedProjects.length > 0) {
+            const mapped: ShowcaseProject[] = fetchedProjects.map((p: any) => {
+              const user = Array.isArray(p.users) ? p.users[0] : p.users;
+              const username = user?.username;
+              return {
+                id: p.id,
+                title: p.name,
+                description: p.tagline || 'Documentation hosted on Showcrate.',
+                tags: ['Documentation', ...(p.featured ? ['Featured'] : [])],
+                addedDate: p.created_at || new Date().toISOString(),
+                featured: Boolean(p.featured),
+                href: username ? `/${username}/${p.slug}` : undefined,
+                author: username
+                  ? {
+                      username,
+                      displayName: user?.display_name || null,
+                      avatarUrl: user?.avatar_url || null,
+                    }
+                  : undefined,
+              };
+            });
+            setProjectsList(mapped);
+            setIsSampleData(false);
+          }
+        })
+        .catch(() => {});
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [initialProjects]);
 
   useEffect(() => {
     if (/Mac|iPhone|iPad/.test(navigator.platform)) setModKey('\u2318');
@@ -245,6 +310,10 @@ export function ShowcaseDirectory() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const allTags = useMemo(() => {
+    return Array.from(new Set(projectsList.flatMap((p) => p.tags))).sort();
+  }, [projectsList]);
+
   const toggleTag = (tag: string) =>
     setActiveTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
@@ -257,11 +326,12 @@ export function ShowcaseDirectory() {
 
   const visible = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    const result = projects.filter((p) => {
+    const result = projectsList.filter((p) => {
       const matchesSearch =
         !q ||
         p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q);
+        p.description.toLowerCase().includes(q) ||
+        Boolean(p.author?.username?.toLowerCase().includes(q));
       const matchesTags =
         activeTags.length === 0 || activeTags.every((t) => p.tags.includes(t));
       return matchesSearch && matchesTags;
@@ -278,7 +348,7 @@ export function ShowcaseDirectory() {
       }
       return a.title.localeCompare(b.title);
     });
-  }, [searchQuery, activeTags, sortOption]);
+  }, [projectsList, searchQuery, activeTags, sortOption]);
 
   const hasFilters = searchQuery !== '' || activeTags.length > 0;
 
@@ -298,10 +368,12 @@ export function ShowcaseDirectory() {
         <p className='mx-auto mt-5 max-w-2xl text-muted-foreground text-balance sm:text-lg'>
           Browse projects documented and presented on Showcrate.
         </p>
-        <span className='mt-5 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-md'>
-          <span className='h-1.5 w-1.5 rounded-full bg-primary' />
-          Sample data for demonstration
-        </span>
+        {/* <span className='mt-5 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-md'>
+          <span className={`h-1.5 w-1.5 rounded-full ${isSampleData ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+          {isSampleData
+            ? 'Sample data for demonstration'
+            : `${projectsList.length} published project${projectsList.length === 1 ? '' : 's'}`}
+        </span> */}
       </ScrollReveal>
 
       {/* Search */}

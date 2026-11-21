@@ -196,7 +196,7 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={isPathActive(`/editor/${activeProject.id}`)}
                     tooltip="Editor"
-                    render={<a href={`/editor/${activeProject.id}`} />}
+                    render={<a href={`/editor/${activeProject.id}`} data-astro-reload />}
                   >
                     <FileCode2 className="h-4 w-4" />
                     <span>Editor</span>

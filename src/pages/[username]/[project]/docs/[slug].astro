@@ -3,7 +3,7 @@
 // Serves individual documentation pages at /[username]/[project]/docs/[slug]
 import DocsLayout from '@/layouts/Docs.astro';
 import { createServerClient } from '@/lib/supabase/server';
-import { renderMarkdown } from '@/lib/render-markdown';
+import { renderBlocks } from '@/lib/render-blocks';
 
 const { username, project: projectSlug, slug } = Astro.params;
 
@@ -72,8 +72,8 @@ const { data: treeNodes } = await supabase
   .is('deleted_at', null)
   .order('order_index', { ascending: true });
 
-// 4. Render markdown content
-const html = await renderMarkdown(page.content ?? '');
+// 4. Render block content
+const html = await renderBlocks(page.content ?? '');
 ---
 
 <DocsLayout

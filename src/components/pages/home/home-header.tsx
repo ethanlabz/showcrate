@@ -9,8 +9,8 @@ import { Shine } from '@animate-ui/react/primitives/effects/shine';
 
 const navLinks = [
   { label: 'Showcase', href: '/showcase' },
-  { label: 'Templates', href: '/templates' },
-  { label: 'About', href: '/about' },
+  // { label: 'Templates', href: '/templates' },
+  { label: 'Features', href: '/features' },
   { label: 'Playground', href: '/playground' },
 ];
 

@@ -8,10 +8,17 @@ interface Props {
 }
 
 export default function SocialUsernameForm({ suggested, next }: Props) {
+  const [host, setHost] = useState('showcrate.netlify.app');
   const [username, setUsername] = useState(suggested);
   const [validationError, setValidationError] = useState('');
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.host) {
+      setHost(window.location.host);
+    }
+  }, []);
 
   // Validate live as the user types
   useEffect(() => {
@@ -66,10 +73,18 @@ export default function SocialUsernameForm({ suggested, next }: Props) {
           Username
         </label>
 
-        {/* Input with the showcrate.tech/ prefix — same style as SignupForm */}
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none pointer-events-none">
-            showcrate.tech/
+        {/* Input with domain prefix */}
+        <div
+          className={`flex items-center rounded-lg border bg-background px-3 py-2 text-sm transition-colors focus-within:ring-2 ${
+            validationError || serverError
+              ? 'border-destructive focus-within:ring-destructive/30'
+              : isValid
+              ? 'border-emerald-500 focus-within:ring-emerald-500/30'
+              : 'border-input focus-within:ring-ring'
+          }`}
+        >
+          <span className="text-muted-foreground select-none pointer-events-none whitespace-nowrap pr-1 text-xs">
+            {host}/
           </span>
           <input
             id="username"
@@ -81,13 +96,7 @@ export default function SocialUsernameForm({ suggested, next }: Props) {
               setUsername(e.target.value.toLowerCase());
               setServerError('');
             }}
-            className={`w-full rounded-lg border bg-background pl-[calc(theme(spacing.3)+8.5rem)] pr-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors ${
-              validationError || serverError
-                ? 'border-destructive focus:ring-destructive/30'
-                : isValid
-                ? 'border-emerald-500 focus:ring-emerald-500/30'
-                : 'border-input'
-            }`}
+            className="w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
             placeholder="yourname"
             disabled={loading}
             maxLength={39}
@@ -96,7 +105,7 @@ export default function SocialUsernameForm({ suggested, next }: Props) {
 
           {/* Green check when valid */}
           {isValid && !serverError && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 text-base leading-none select-none">
+            <span className="text-emerald-500 text-base leading-none select-none pl-2">
               ✓
             </span>
           )}

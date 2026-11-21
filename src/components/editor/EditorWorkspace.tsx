@@ -49,6 +49,41 @@ export interface DocTreeNode {
   children?: DocTreeNode[];
 }
 
+const VALID_BLOCKNOTE_TYPES = new Set([
+  'paragraph',
+  'heading',
+  'bulletListItem',
+  'numberedListItem',
+  'checkListItem',
+  'codeBlock',
+  'divider',
+  'quote',
+  'table',
+  'image',
+  'video',
+  'audio',
+  'file',
+]);
+
+function sanitizeBlocksForBlockNote(blocks: any[]): any[] {
+  if (!Array.isArray(blocks)) return [];
+  return blocks.map((b) => {
+    if (!b || typeof b !== 'object') return { type: 'paragraph' };
+    if (!VALID_BLOCKNOTE_TYPES.has(b.type)) {
+      return {
+        ...b,
+        type: 'paragraph',
+        props: {
+          textColor: 'default',
+          backgroundColor: 'default',
+          textAlignment: 'left',
+        },
+      };
+    }
+    return b;
+  });
+}
+
 export interface TrashNode {
   id: string;
   title: string;
@@ -219,8 +254,11 @@ export function EditorWorkspace({
   const parsedContent = React.useMemo(() => {
     try {
       if (!initialPage.content || initialPage.content === '[]') return undefined;
-      const parsed = JSON.parse(initialPage.content);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : undefined;
+      const parsed = typeof initialPage.content === 'string'
+        ? JSON.parse(initialPage.content)
+        : initialPage.content;
+      if (!Array.isArray(parsed) || parsed.length === 0) return undefined;
+      return sanitizeBlocksForBlockNote(parsed);
     } catch {
       return undefined;
     }
@@ -445,7 +483,7 @@ export function EditorWorkspace({
           newBlocks = [];
         }
         if (newBlocks.length > 0) {
-          editor.replaceBlocks(editor.document, newBlocks);
+          editor.replaceBlocks(editor.document, sanitizeBlocksForBlockNote(newBlocks));
         } else {
           editor.replaceBlocks(editor.document, [
             { type: 'paragraph', content: '' },
@@ -476,7 +514,8 @@ export function EditorWorkspace({
       });
 
       if (res.status === 409) {
-        const conflictData = await res.json();
+        const rawConflict = await res.json();
+        const conflictData = rawConflict.data ?? rawConflict;
         alert('The structure was modified elsewhere. Syncing latest tree...');
         if (conflictData.tree) setTreeNodes(conflictData.tree);
         if (conflictData.tree_revision !== undefined) setTreeRevision(conflictData.tree_revision);
@@ -484,18 +523,30 @@ export function EditorWorkspace({
       }
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        alert(errData.error || 'Tree action failed');
+        const rawErr = await res.json().catch(() => ({}));
+        const msg =
+          rawErr.error?.message ??
+          (typeof rawErr.error === 'string' ? rawErr.error : 'Tree action failed');
+        alert(msg);
         return false;
       }
 
-      const resData = await res.json();
-      setTreeRevision(resData.tree_revision);
+      const rawRes = await res.json();
+      const resData = rawRes.data ?? rawRes;
+      if (typeof resData.tree_revision === 'number') {
+        setTreeRevision(resData.tree_revision);
+      }
 
       if (payload.action === 'create') {
         const newNode = resData.affected_nodes?.[0];
         if (newNode) {
           setTreeNodes((prev) => [...prev, newNode]);
+          if (payload.parentId) {
+            setExpandedFolders((prev) => new Set([...prev, payload.parentId]));
+          }
+          if (newNode.kind === 'folder') {
+            setExpandedFolders((prev) => new Set([...prev, newNode.id]));
+          }
           if (newNode.kind === 'page') {
             handleSelectPage(newNode.id);
           }
@@ -518,15 +569,47 @@ export function EditorWorkspace({
           }
         }
       } else if (payload.action === 'move') {
-        setTreeNodes((prev) =>
-          prev.map((n) => (n.id === payload.nodeId ? { ...n, parent_id: payload.targetParentId } : n)),
-        );
+        if (Array.isArray(resData.affected_nodes) && resData.affected_nodes.length > 0) {
+          const map = new Map<string, DocTreeNode>(
+            resData.affected_nodes.map((n: DocTreeNode) => [n.id, n]),
+          );
+          setTreeNodes((prev) => prev.map((n) => map.get(n.id) ?? n));
+        } else {
+          setTreeNodes((prev) =>
+            prev.map((n) => (n.id === payload.nodeId ? { ...n, parent_id: payload.targetParentId } : n)),
+          );
+        }
       }
 
       return true;
     } catch (err: any) {
       alert(err.message || 'Network error performing tree action');
       return false;
+    }
+  };
+
+  // Publish state
+  const [isPublishing, setIsPublishing] = React.useState(false);
+
+  // Toggle publish status immediately
+  const handleTogglePublish = async () => {
+    const nextState = !projectPublished;
+    setIsPublishing(true);
+    try {
+      const res = await fetch(`/api/projects/${initialProject.id}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published: nextState }),
+      });
+      if (!res.ok) {
+        const rawErr = await res.json().catch(() => ({}));
+        throw new Error(rawErr.error?.message || rawErr.error || 'Failed to update publication status');
+      }
+      setProjectPublished(nextState);
+    } catch (err: any) {
+      alert(err.message || 'Error updating publication status');
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -550,8 +633,9 @@ export function EditorWorkspace({
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to update settings');
+        const rawData = await res.json().catch(() => ({}));
+        const errData = rawData.data ?? rawData;
+        throw new Error(errData.error?.message || errData.error || 'Failed to update settings');
       }
 
       setSettingsSuccess(true);
@@ -589,7 +673,7 @@ export function EditorWorkspace({
 
     try {
       const blocks = JSON.parse(v.content);
-      editor.replaceBlocks(editor.document, blocks);
+      editor.replaceBlocks(editor.document, sanitizeBlocksForBlockNote(blocks));
       dirtyRef.current = true;
       await flushSave();
       setActivePanel('none');
@@ -625,6 +709,7 @@ export function EditorWorkspace({
 
           <a
             href="/dashboard"
+            data-astro-reload
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors pr-2 border-r border-border/40"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -675,6 +760,28 @@ export function EditorWorkspace({
             )}
           </div>
 
+          {/* Publish / Published Button */}
+          <Button
+            size="sm"
+            disabled={isPublishing}
+            onClick={handleTogglePublish}
+            className={`h-8 gap-1.5 text-xs font-semibold cursor-pointer transition-colors ${
+              projectPublished
+                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                : 'bg-accent text-accent-foreground hover:bg-accent-hover'
+            }`}
+            title={projectPublished ? 'Click to unpublish project' : 'Click to publish project publicly'}
+          >
+            {isPublishing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : projectPublished ? (
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            ) : (
+              <Globe className="h-3.5 w-3.5" />
+            )}
+            <span>{projectPublished ? 'Published' : 'Publish'}</span>
+          </Button>
+
           {/* Versions Trigger */}
           <Button
             variant="ghost"
@@ -711,7 +818,7 @@ export function EditorWorkspace({
             target="_blank"
             rel="noreferrer"
           >
-            <Button size="sm" className="h-8 gap-1 text-xs bg-accent text-accent-foreground hover:bg-accent-hover font-medium cursor-pointer">
+            <Button size="sm" variant="outline" className="h-8 gap-1 text-xs border-border/60 hover:bg-surface-raised font-medium cursor-pointer">
               <span>Preview</span>
               <ExternalLink className="h-3 w-3" />
             </Button>
@@ -862,18 +969,20 @@ export function EditorWorkspace({
                         >
                           <MoveRight className="h-3 w-3" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Move "${node.title}" to trash?`)) {
-                              dispatchTreeAction({ action: 'delete', nodeId: node.id });
-                            }
-                          }}
-                          className="p-1 hover:text-destructive text-muted-foreground rounded"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                        {!node.is_index ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Move "${node.title}" to trash?`)) {
+                                dispatchTreeAction({ action: 'delete', nodeId: node.id });
+                              }
+                            }}
+                            className="p-1 hover:text-destructive text-muted-foreground rounded"
+                            title="Move to trash"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        ) : null}
                       </div>
                     </div>
 
@@ -922,7 +1031,11 @@ export function EditorWorkspace({
                 type="text"
                 value={pageTitle}
                 onChange={(e) => {
-                  setPageTitle(e.target.value);
+                  const val = e.target.value;
+                  setPageTitle(val);
+                  setTreeNodes((prev) =>
+                    prev.map((n) => (n.id === activePageId ? { ...n, title: val } : n)),
+                  );
                   dirtyRef.current = true;
                 }}
                 onBlur={() => {
@@ -945,7 +1058,7 @@ export function EditorWorkspace({
                   </div>
                 }
               >
-                <BlockNoteView editor={editor} theme={editorTheme} />
+                <BlockNoteView editor={editor as any} theme={editorTheme} />
               </React.Suspense>
             </div>
           </div>
@@ -1170,13 +1283,15 @@ export function EditorWorkspace({
 
                         <button
                           type="button"
-                          onClick={() => setProjectPublished((p) => !p)}
-                          className={`px-3 py-1 rounded text-xs font-medium border transition-colors cursor-pointer ${
+                          disabled={isPublishing}
+                          onClick={handleTogglePublish}
+                          className={`px-3 py-1 rounded text-xs font-medium border transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
                             projectPublished
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                               : 'bg-surface-raised text-muted-foreground border-border/50'
                           }`}
                         >
+                          {isPublishing && <Loader2 className="h-3 w-3 animate-spin" />}
                           {projectPublished ? 'Published' : 'Draft'}
                         </button>
                       </div>
@@ -1467,8 +1582,12 @@ export function EditorWorkspace({
                             }));
                             const tRes = await fetch(`/api/editor/tree?projectId=${initialProject.id}`);
                             if (tRes.ok) {
-                              const tData = await tRes.json();
+                              const rawT = await tRes.json();
+                              const tData = rawT.data ?? rawT;
                               setTreeNodes(tData.tree || []);
+                              if (typeof tData.tree_revision === 'number') {
+                                setTreeRevision(tData.tree_revision);
+                              }
                             }
                           }
                         }}

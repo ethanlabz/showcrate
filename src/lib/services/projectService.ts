@@ -73,6 +73,12 @@ export class ProjectService {
     }
 
     // Handle rename → new slug + 301 redirect
+    const updateData: any = { ...input };
+    if ('coverUrl' in input) {
+      updateData.cover_url = input.coverUrl;
+      delete updateData.coverUrl;
+    }
+
     if (input.name && input.name !== project.name) {
       const baseSlug = nameToSlug(input.name);
       const newSlug = await this.projectRepo.resolveUniqueSlug(actorId, baseSlug);
@@ -83,11 +89,11 @@ export class ProjectService {
           old_slug: project.slug,
           new_slug: newSlug,
         });
-        return this.projectRepo.update(projectId, { ...input, slug: newSlug });
+        return this.projectRepo.update(projectId, { ...updateData, slug: newSlug });
       }
     }
 
-    return this.projectRepo.update(projectId, input);
+    return this.projectRepo.update(projectId, updateData);
   }
 
   async setVisibility(
@@ -184,7 +190,7 @@ export class ProjectService {
               suffix++;
             }
             slug = finalSlug;
-            existingSlugs.add(slug);
+            existingSlugs.add(finalSlug);
           }
         }
 

@@ -177,7 +177,9 @@ export interface AdminAuditLogRow {
 export type UserInsert = Pick<UserRow, 'id' | 'username'> &
   Partial<Pick<UserRow, 'display_name' | 'avatar_url' | 'bio' | 'platform_role'>>;
 
-export type ProjectInsert = Omit<ProjectRow, 'id' | 'view_count' | 'created_at' | 'updated_at' | 'deleted_at'>;
+export type ProjectInsert = Omit<ProjectRow, 'id' | 'view_count' | 'tree_revision' | 'created_at' | 'updated_at' | 'deleted_at'> & {
+  tree_revision?: number;
+};
 
 export type DocPageInsert = Omit<DocPageRow, 'id' | 'created_at' | 'updated_at'>;
 

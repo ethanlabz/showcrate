@@ -7,6 +7,7 @@ import { safeNext } from '@/lib/auth/safe-next';
 type FieldErrors = Partial<Record<keyof SignupInput, string>>;
 
 export default function SignupForm() {
+  const [host, setHost] = useState('showcrate.netlify.app');
   const [values, setValues] = useState<SignupInput>({
     email: '',
     password: '',
@@ -20,6 +21,9 @@ export default function SignupForm() {
   const [registered, setRegistered] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.host) {
+      setHost(window.location.host);
+    }
     // If already authenticated (e.g. back button into signup page), redirect to dashboard
     const supabase = createClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -140,9 +144,13 @@ export default function SignupForm() {
         <label htmlFor="username" className="text-sm font-medium text-foreground">
           Username
         </label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none">
-            showcrate.tech/
+        <div
+          className={`flex items-center rounded-lg border bg-background px-3 py-2 text-sm transition-colors focus-within:ring-2 focus-within:ring-ring ${
+            errors.username ? 'border-destructive' : 'border-input'
+          }`}
+        >
+          <span className="text-muted-foreground select-none pointer-events-none whitespace-nowrap pr-1 text-xs">
+            {host}/
           </span>
           <input
             id="username"
@@ -150,7 +158,7 @@ export default function SignupForm() {
             autoComplete="username"
             value={values.username}
             onChange={(e) => set('username', e.target.value.toLowerCase())}
-            className={`w-full rounded-lg border bg-background pl-[calc(theme(spacing.3)+8.5rem)] pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors ${errors.username ? 'border-destructive' : 'border-input'}`}
+            className="w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
             placeholder="yourname"
             disabled={loading}
             maxLength={39}
